@@ -2,6 +2,7 @@ package settings
 
 import (
 	"log"
+
 	"github.com/spf13/viper"
 )
 
@@ -28,18 +29,25 @@ type AuthConfig struct {
 }
 
 type BaseConfig struct {
-	AppConfig
-	DatabaseConfig
-	AuthConfig
+	AppConfig     AppConfig     `mapstructure:"app"`
+	DatabaseConfig DatabaseConfig `mapstructure:"db"`
+	AuthConfig    AuthConfig    `mapstructure:"auth"`
 }
 
 func GetBaseConfig() BaseConfig {
+	viper.AutomaticEnv()
 	viper.SetConfigFile(".env")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("Error reading .env file: %v", err)
 	}
 
-	viper.AutomaticEnv()
+	envValues := map[string]interface{} {
+		"app.secret_key": viper.GetString("APP_SECRET_KEY"),
+		"db.host": viper.GetString("DB_HOST"),
+		"db.user": viper.GetString("DB_USER"),
+		"db.password": viper.GetString("DB_PASSWORD"),
+		"db.sslmode": viper.GetString("DB_SSLMODE"),
+	}
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -49,10 +57,14 @@ func GetBaseConfig() BaseConfig {
 		log.Fatalf("Error reading config.yaml file: %v", err)
 	}
 
-	var cfg BaseConfig
-	if err := viper.Unmarshal(&cfg); err != nil {
-        log.Fatalf("Error unmarshalling config into struct: %v", err)
-    }
+	for key, value := range envValues {
+		viper.Set(key, value)
+	}
 
-	return cfg
+	cfg := new(BaseConfig)
+	if err := viper.Unmarshal(&cfg); err != nil {
+		log.Fatalf("Error unmarshaling config into struct: %v", err)
+	}
+
+	return *cfg
 }
