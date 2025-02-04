@@ -4,7 +4,11 @@ import (
 	"log"
 
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
+
+var Config *BaseConfig
+var Logger *zap.Logger
 
 type AppConfig struct {
 	SecretKey string `mapstructure:"secret_key"`
@@ -34,7 +38,7 @@ type BaseConfig struct {
 	AuthConfig    AuthConfig    `mapstructure:"auth"`
 }
 
-func GetBaseConfig() BaseConfig {
+func InitBaseConfig() {
 	viper.AutomaticEnv()
 	viper.SetConfigFile(".env")
 	if err := viper.ReadInConfig(); err != nil {
@@ -65,6 +69,33 @@ func GetBaseConfig() BaseConfig {
 	if err := viper.Unmarshal(&cfg); err != nil {
 		log.Fatalf("Error unmarshaling config into struct: %v", err)
 	}
+	Config = cfg
+}
 
-	return *cfg
+func GetBaseConfig() *BaseConfig{
+	return Config
+}
+
+func InitLogger() {
+	mode := GetBaseConfig().AppConfig.Mode
+	var cfg zap.Config
+	if mode == "" {
+		log.Fatal("Config mode is not set")
+	} else if mode == "prod" {
+		cfg = zap.NewProductionConfig()
+	} else {
+		cfg = zap.NewDevelopmentConfig()
+		cfg.EncoderConfig.CallerKey = "caller"
+	}
+	logger, err := cfg.Build()
+
+	if err != nil {
+		log.Fatalf("Error initializing logger: %v", err)
+	}
+
+	Logger = logger
+}
+
+func GetLogger() *zap.Logger {
+	return Logger
 }
