@@ -1,0 +1,20 @@
+github: https://github.com/snickyyy/Online-Chat-Golang
+
+app:
+  secret_key: "${APP_SECRET_KEY}"
+  name: "GoChat"
+  mode: "dev"
+  port: 8000
+  debug: true
+
+db:
+  host: "${DB_HOST}"
+  port: 5432
+  user: "${DB_USER}"
+  password: "${DB_PASSWORD}"
+  database: "postgres"
+  sslmode: "${DB_SSL_MODE}"
+
+Auth:
+  access_token_ttl: 7200
+  refresh_token_ttl: 86400
