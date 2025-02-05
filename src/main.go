@@ -1,14 +1,19 @@
 package main
 
-import (
-	"libs/src/settings"
-)
+import "libs/src/settings"
 
 func main() {
 	settings.InitBaseConfig()
 	settings.InitLogger()
-	settings.InitDb()
 
 	logger := settings.GetLogger()
-	logger.Info("Initialized main function")
+	defer logger.Sync()
+
+	logger.Info("Initializing database...")
+	settings.InitDb()
+	
+	logger.Info("Initializing models...")
+	settings.MakeMigrations()
+
+
 }
