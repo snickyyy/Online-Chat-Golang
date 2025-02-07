@@ -1,8 +1,8 @@
 package settings
 
 import (
-	"fmt"
 
+	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
