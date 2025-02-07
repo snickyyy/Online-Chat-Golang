@@ -1,19 +1,13 @@
 package main
 
-import "libs/src/settings"
+import (
+	"fmt"
+)
 
 func main() {
-	settings.InitBaseConfig()
-	settings.InitLogger()
-
-	logger := settings.GetLogger()
-	defer logger.Sync()
-
-	logger.Info("Initializing database...")
-	settings.InitDb()
-	
-	logger.Info("Initializing models...")
-	settings.MakeMigrations()
-
-
+	app, err := InitializeApp()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(app)
 }
