@@ -10,7 +10,7 @@ import (
 var Db *gorm.DB
 var Models = []interface{}{}
 
-func InitDb(baseConfig *BaseConfig) (*gorm.DB, error){
+func GetDb(baseConfig *BaseConfig) (*gorm.DB, error){
 	
 	dbConfig := baseConfig.DatabaseConfig
 	if dbConfig.Host == "" {
@@ -26,10 +26,10 @@ func InitDb(baseConfig *BaseConfig) (*gorm.DB, error){
 	return db, nil
 }
 
-func GetDb() *gorm.DB {
-	return Db
-}
+// func GetDb() *gorm.DB {
+// 	return Db
+// }
 
-func MakeMigrations() {
-	GetDb().AutoMigrate(&Models)
-}
+// func MakeMigrations() {
+// 	GetDb().AutoMigrate(&Models)
+// }

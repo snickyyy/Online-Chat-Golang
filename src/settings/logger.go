@@ -6,7 +6,7 @@ import (
 )
 
 
-func InitLogger(config *BaseConfig) (*zap.Logger, error) {
+func GetLogger(config *BaseConfig) (*zap.Logger, error) {
 
 	mode := config.AppConfig.Mode
 

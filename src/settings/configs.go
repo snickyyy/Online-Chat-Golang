@@ -2,7 +2,7 @@ package settings
 
 import (
 	"fmt"
-	
+
 	"github.com/spf13/viper"
 )
 
@@ -36,7 +36,7 @@ type BaseConfig struct {
 
 func GetBaseConfig() (*BaseConfig, error){
 	viper.AutomaticEnv()
-	viper.SetConfigFile(".env")
+	viper.SetConfigFile("C:/main/GoLang/Online-Chat-Golang/.env")
 	
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("error reading .env file: %v", err)
