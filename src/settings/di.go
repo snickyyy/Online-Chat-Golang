@@ -37,7 +37,8 @@ func GetDI() *fx.App {
 		),
 		fx.Invoke(func(app *App) {
 			fmt.Println("App initialized:", app)
-		}),
+		},
+		MakeMigrations),
 	)
 	return di
 }

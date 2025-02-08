@@ -2,13 +2,15 @@ package settings
 
 import (
 	"fmt"
+	"libs/src/internal/domain/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var Db *gorm.DB
-var Models = []interface{}{}
+var Models = []interface{}{
+	&domain.User{},
+}
 
 func GetDb(baseConfig *BaseConfig) (*gorm.DB, error){
 	
@@ -22,14 +24,10 @@ func GetDb(baseConfig *BaseConfig) (*gorm.DB, error){
 	if err != nil {
 		return nil, fmt.Errorf("db connection error: %v", err)
 	}
-	Db = db
 	return db, nil
 }
 
-// func GetDb() *gorm.DB {
-// 	return Db
-// }
-
-// func MakeMigrations() {
-// 	GetDb().AutoMigrate(&Models)
-// }
+func MakeMigrations(app *App) {
+	app.Logger.Info("Migrating models")
+	app.DB.AutoMigrate(&Models)
+}
