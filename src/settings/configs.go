@@ -1,14 +1,10 @@
 package settings
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
-
-var Config *BaseConfig
-var Logger *zap.Logger
 
 type AppConfig struct {
 	SecretKey string `mapstructure:"secret_key"`
@@ -38,11 +34,12 @@ type BaseConfig struct {
 	AuthConfig    AuthConfig    `mapstructure:"auth"`
 }
 
-func InitBaseConfig() {
+func GetBaseConfig() (*BaseConfig, error){
 	viper.AutomaticEnv()
-	viper.SetConfigFile(".env")
+	viper.SetConfigFile("C:/main/GoLang/Online-Chat-Golang/.env")
+	
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading .env file: %v", err)
+		return nil, fmt.Errorf("error reading .env file: %v", err)
 	}
 
 	envValues := map[string]interface{} {
@@ -58,7 +55,7 @@ func InitBaseConfig() {
 	viper.AddConfigPath("./src/settings")
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config.yaml file: %v", err)
+		return nil, fmt.Errorf("error reading .yaml file: %v", err)
 	}
 
 	for key, value := range envValues {
@@ -67,35 +64,8 @@ func InitBaseConfig() {
 
 	cfg := new(BaseConfig)
 	if err := viper.Unmarshal(&cfg); err != nil {
-		log.Fatalf("Error unmarshaling config into struct: %v", err)
+		return nil, fmt.Errorf("error unmarshal config %v", err)
 	}
-	Config = cfg
+	return cfg, nil
 }
 
-func GetBaseConfig() *BaseConfig{
-	return Config
-}
-
-func InitLogger() {
-	mode := GetBaseConfig().AppConfig.Mode
-	var cfg zap.Config
-	if mode == "" {
-		log.Fatal("Config mode is not set")
-	} else if mode == "prod" {
-		cfg = zap.NewProductionConfig()
-	} else {
-		cfg = zap.NewDevelopmentConfig()
-		cfg.EncoderConfig.CallerKey = "caller"
-	}
-	logger, err := cfg.Build()
-
-	if err != nil {
-		log.Fatalf("Error initializing logger: %v", err)
-	}
-
-	Logger = logger
-}
-
-func GetLogger() *zap.Logger {
-	return Logger
-}
