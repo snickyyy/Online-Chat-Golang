@@ -14,7 +14,7 @@ var Models = []interface{}{
 
 func GetDb(baseConfig *BaseConfig) (*gorm.DB, error){
 	
-	dbConfig := baseConfig.DatabaseConfig
+	dbConfig := baseConfig.PostgresConfig
 	if dbConfig.Host == "" {
 		return nil, fmt.Errorf("db host is not set")
 	}

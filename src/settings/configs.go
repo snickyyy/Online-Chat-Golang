@@ -14,7 +14,7 @@ type AppConfig struct {
 	Mode      string `mapstructure:"mode"`
 }
 
-type DatabaseConfig struct {
+type PostgresConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	User     string `mapstructure:"user"`
@@ -23,15 +23,20 @@ type DatabaseConfig struct {
 	Sslmode  string `mapstructure:"sslmode"`
 }
 
+type MongoConfig struct {
+	Uri		string 
+}
+
 type AuthConfig struct {
 	AccessTokenTTL  int `mapstructure:"access_token_ttl"`
 	RefreshTokenTTL int `mapstructure:"refresh_token_ttl"`
 }
 
 type BaseConfig struct {
-	AppConfig     AppConfig     `mapstructure:"app"`
-	DatabaseConfig DatabaseConfig `mapstructure:"db"`
-	AuthConfig    AuthConfig    `mapstructure:"auth"`
+	AppConfig     	AppConfig     	`mapstructure:"app"`
+	PostgresConfig 	PostgresConfig 	`mapstructure:"db"`
+	AuthConfig    	AuthConfig    	`mapstructure:"auth"`
+	MongoConfig  	MongoConfig   	`mapstructure:"mongo"`
 }
 
 func GetBaseConfig() (*BaseConfig, error){
@@ -48,6 +53,7 @@ func GetBaseConfig() (*BaseConfig, error){
 		"db.user": viper.GetString("DB_USER"),
 		"db.password": viper.GetString("DB_PASSWORD"),
 		"db.sslmode": viper.GetString("DB_SSLMODE"),
+		"mongo.uri": viper.GetString("MONGO_URI"),
 	}
 
 	viper.SetConfigName("config")
@@ -68,4 +74,3 @@ func GetBaseConfig() (*BaseConfig, error){
 	}
 	return cfg, nil
 }
-
