@@ -29,5 +29,5 @@ func GetDb(baseConfig *BaseConfig) (*gorm.DB, error){
 
 func MakeMigrations(app *App) {
 	app.Logger.Info("Migrating models")
-	app.DB.AutoMigrate(&Models)
+	app.DB.AutoMigrate(Models...)
 }
