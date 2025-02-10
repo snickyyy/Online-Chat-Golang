@@ -33,10 +33,11 @@ func GetDI() *fx.App {
 				}
 				return db, nil
 			},
+			GetContext,
 			NewApp,
 		),
 		fx.Invoke(func(app *App) {
-			fmt.Println("App initialized:", app.Config.MongoConfig)
+			fmt.Println("App initialized:", app)
 		},
 		MakeMigrations),
 	)

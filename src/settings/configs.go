@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/viper"
@@ -14,6 +15,11 @@ type AppConfig struct {
 	Mode      string `mapstructure:"mode"`
 }
 
+type Ctx struct {
+	Ctx context.Context
+	Cancel context.CancelFunc
+}
+
 type PostgresConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
@@ -24,7 +30,7 @@ type PostgresConfig struct {
 }
 
 type MongoConfig struct {
-	Uri		string 
+	Uri		string
 }
 
 type AuthConfig struct {
@@ -73,4 +79,13 @@ func GetBaseConfig() (*BaseConfig, error){
 		return nil, fmt.Errorf("error unmarshal config %v", err)
 	}
 	return cfg, nil
+}
+
+func GetContext() *Ctx {
+	ctx, cancel := context.WithCancel(context.Background())
+	return &Ctx{
+		Ctx: ctx,
+		Cancel: cancel,
+	}
+
 }
