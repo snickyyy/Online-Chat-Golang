@@ -30,7 +30,7 @@ type PostgresConfig struct {
 }
 
 type MongoConfig struct {
-	Uri		string
+	Uri		string	`mapstructure:"uri"`
 }
 
 type AuthConfig struct {
