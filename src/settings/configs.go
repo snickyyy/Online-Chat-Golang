@@ -47,7 +47,7 @@ type BaseConfig struct {
 
 func GetBaseConfig() (*BaseConfig, error){
 	viper.AutomaticEnv()
-	viper.SetConfigFile("C:/main/GoLang/Online-Chat-Golang/.env")
+	viper.SetConfigFile("./.env")
 	
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("error reading .env file: %v", err)
@@ -64,7 +64,7 @@ func GetBaseConfig() (*BaseConfig, error){
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./src/settings")
+	viper.AddConfigPath("./settings")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("error reading .yaml file: %v", err)
