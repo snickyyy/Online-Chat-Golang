@@ -13,7 +13,6 @@ func GetDI() *fx.App {
 	// DI container
 	di := fx.New(
 		fx.Provide(
-			GetContext,
 			func() *BaseConfig {
 				baseConfig, err := GetBaseConfig()
 				if err != nil {
@@ -21,8 +20,8 @@ func GetDI() *fx.App {
 				}
 				return baseConfig
 			},
-			func(baseConfig *BaseConfig, ctx *Ctx) *mongo.Client {
-				client, err := GetMongoClient(baseConfig, ctx)
+			func(baseConfig *BaseConfig) *mongo.Client {
+				client, err := GetMongoClient(baseConfig)
 				if err != nil {
 					panic(err)
 				}
@@ -45,7 +44,7 @@ func GetDI() *fx.App {
 			NewApp,
 		),
 		fx.Invoke(func(app *App) {
-			fmt.Println("App initialized:", app)
+			fmt.Println("App initialized:", &app)
 		},
 		MakeMigrations),
 	)

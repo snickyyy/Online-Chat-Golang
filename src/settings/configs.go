@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var Context *Ctx
+
 type AppConfig struct {
 	SecretKey string `mapstructure:"secret_key"`
 	Host      string `mapstructure:"host"`
@@ -16,7 +18,7 @@ type AppConfig struct {
 }
 
 type Ctx struct {
-	Ctx context.Context
+	Ctx    context.Context
 	Cancel context.CancelFunc
 }
 
@@ -30,7 +32,7 @@ type PostgresConfig struct {
 }
 
 type MongoConfig struct {
-	Uri		string	`mapstructure:"uri"`
+	Uri string `mapstructure:"uri"`
 }
 
 type AuthConfig struct {
@@ -39,27 +41,27 @@ type AuthConfig struct {
 }
 
 type BaseConfig struct {
-	AppConfig     	AppConfig     	`mapstructure:"app"`
-	PostgresConfig 	PostgresConfig 	`mapstructure:"db"`
-	AuthConfig    	AuthConfig    	`mapstructure:"auth"`
-	MongoConfig  	MongoConfig   	`mapstructure:"mongo"`
+	AppConfig      AppConfig      `mapstructure:"app"`
+	PostgresConfig PostgresConfig `mapstructure:"db"`
+	AuthConfig     AuthConfig     `mapstructure:"auth"`
+	MongoConfig    MongoConfig    `mapstructure:"mongo"`
 }
 
-func GetBaseConfig() (*BaseConfig, error){
+func GetBaseConfig() (*BaseConfig, error) {
 	viper.AutomaticEnv()
-	viper.SetConfigFile("./.env")
-	
+	viper.SetConfigFile("C:/main/GoLang/Online-Chat-Golang/.env")
+
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("error reading .env file: %v", err)
 	}
 
-	envValues := map[string]interface{} {
+	envValues := map[string]interface{}{
 		"app.secret_key": viper.GetString("APP_SECRET_KEY"),
-		"db.host": viper.GetString("DB_HOST"),
-		"db.user": viper.GetString("DB_USER"),
-		"db.password": viper.GetString("DB_PASSWORD"),
-		"db.sslmode": viper.GetString("DB_SSLMODE"),
-		"mongo.uri": viper.GetString("MONGO_URI"),
+		"db.host":        viper.GetString("DB_HOST"),
+		"db.user":        viper.GetString("DB_USER"),
+		"db.password":    viper.GetString("DB_PASSWORD"),
+		"db.sslmode":     viper.GetString("DB_SSLMODE"),
+		"mongo.uri":      viper.GetString("MONGO_URI"),
 	}
 
 	viper.SetConfigName("config")
@@ -81,11 +83,10 @@ func GetBaseConfig() (*BaseConfig, error){
 	return cfg, nil
 }
 
-func GetContext() *Ctx {
+func InitContext() {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Ctx{
-		Ctx: ctx,
+	Context = &Ctx{
+		Ctx:    ctx,
 		Cancel: cancel,
 	}
-
 }
