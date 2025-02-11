@@ -20,7 +20,7 @@ func GetDI() *fx.App {
 				}
 				return baseConfig
 			},
-			func(baseConfig *BaseConfig) *mongo.Client {
+			func(baseConfig *BaseConfig) *mongo.Database {
 				client, err := GetMongoClient(baseConfig)
 				if err != nil {
 					panic(err)

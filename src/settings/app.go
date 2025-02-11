@@ -12,15 +12,15 @@ type App struct {
 	DB 			*gorm.DB
 	Logger 		*zap.Logger
 	Config 		*BaseConfig
-	MongoClient *mongo.Client
+	MongoDB 	*mongo.Database
 }
 
-func NewApp(db *gorm.DB, logger *zap.Logger, config *BaseConfig, mongodb *mongo.Client) *App {
+func NewApp(db *gorm.DB, logger *zap.Logger, config *BaseConfig, mongodb *mongo.Database) *App {
 	AppVar = &App{
         DB:     		db,
         Logger: 		logger,
         Config: 		config,
-		MongoClient: 	mongodb,
+		MongoDB: 	mongodb,
     }
     return AppVar
 }
