@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"libs/src/internal/domain/models"
 	"libs/src/internal/repositories"
 	"libs/src/settings"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func init() {
@@ -23,16 +24,15 @@ func main() {
 	repo := repositories.ChatRepository{
 		Db: settings.AppVar.MongoDB,
 	}
-	res, err := repo.Create(domain.Chat{
-		OwnerId: 1,
-		Title: "blabla",
-		Description: "blablablabla4",
-		Members: []int64{1,2,3,4,5,9},
-	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(res)
+	
+	res, _ := repo.Count(bson.M{"owner_id": 1})
+	fmt.Printf("Total chats: %d\n", res)
+
+	resf, _ := repo.GetOne(bson.M{"owner_id": 1})
+	fmt.Println(resf)
+
+	resa, _ := repo.GetAll(bson.M{"owner_id": 1}, 0,10)
+	fmt.Println(resa)
 
 	if err := diCont.Stop(settings.Context.Ctx); err != nil {
 		panic(err)
