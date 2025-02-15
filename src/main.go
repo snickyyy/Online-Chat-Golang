@@ -25,6 +25,7 @@ func main() {
 	repo := repositories.ChatRepository{}
 	repo.Db = settings.AppVar.MongoDB
 	repo.Schema = domain.Chat{}
+	repo.CollectionName = "chats"
 	
 	res, _ := repo.Count(bson.M{"owner_id": 1})
 	fmt.Printf("Total chats: %d\n", res)

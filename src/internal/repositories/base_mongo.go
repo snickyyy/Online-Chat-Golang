@@ -15,17 +15,18 @@ import (
 )
 
 type BaseRepository[T domain_interface.BaseMongoInterface] struct {
-	Db     *mongo.Database
-	Schema T
+	Db     			*mongo.Database
+	Schema 			T
+	CollectionName 	string
 }
 
-func (repo *BaseRepository[T]) Create(obj domain_interface.BaseMongoInterface) (*mongo.InsertOneResult, error) {
-	con := repo.Db.Collection(chatCollection)
+func (repo *BaseRepository[T]) Create(obj T) (*mongo.InsertOneResult, error) {
+	con := repo.Db.Collection(repo.CollectionName)
 	return con.InsertOne(settings.Context.Ctx, obj)
 }
 
 func (repo *BaseRepository[T]) GetOne(filters interface{}) (T, error) {
-	con := repo.Db.Collection(chatCollection)
+	con := repo.Db.Collection(repo.CollectionName)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
@@ -39,7 +40,7 @@ func (repo *BaseRepository[T]) GetOne(filters interface{}) (T, error) {
 func (repo *BaseRepository[T]) GetAll(filter interface{}, offset int64, limit int64) ([]T, error) {
 	result := []T{}
 
-	con := repo.Db.Collection(chatCollection)
+	con := repo.Db.Collection(repo.CollectionName)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -60,7 +61,7 @@ func (repo *BaseRepository[T]) GetAll(filter interface{}, offset int64, limit in
 }
 
 func (repo *BaseRepository[T]) UpdateById(id string, updateFields bson.M) (*mongo.UpdateResult, error) {
-	con := repo.Db.Collection(chatCollection)
+	con := repo.Db.Collection(repo.CollectionName)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -75,7 +76,7 @@ func (repo *BaseRepository[T]) UpdateById(id string, updateFields bson.M) (*mong
 }
 
 func (repo *BaseRepository[T]) DeleteById(id string) (*mongo.DeleteResult, error) {
-	con := repo.Db.Collection(chatCollection)
+	con := repo.Db.Collection(repo.CollectionName)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
@@ -90,7 +91,7 @@ func (repo *BaseRepository[T]) DeleteById(id string) (*mongo.DeleteResult, error
 }
 
 func (repo *BaseRepository[T]) Count(filters interface{}) (int64, error) {
-	con := repo.Db.Collection(chatCollection)
+	con := repo.Db.Collection(repo.CollectionName)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
