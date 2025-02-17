@@ -11,6 +11,7 @@ type User struct {
 	Email       string `gorm:"unique;size:255;not null;"`
 	Password    string `gorm:"not null"`
 	Description string `gorm:"size:255;"`
+	IsActive 	bool   `gorm:"not null;default:false;"`
 	Role        string `gorm:"size:50;not null;default:'anonymous'"`
 	Image       string
 }
