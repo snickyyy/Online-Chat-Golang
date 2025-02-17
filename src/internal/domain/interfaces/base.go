@@ -5,7 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type Stringer interface {
+type BaseModelsInterface interface {
 	String() string
 }
 

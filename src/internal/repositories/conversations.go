@@ -15,5 +15,9 @@ import domain "libs/src/internal/domain/models"
 // )
 
 type ChatRepository struct {
-	BaseRepository[domain.Chat]
+	BaseMongoRepository[domain.Chat]
+}
+
+type MessageRepository struct {
+	BaseMongoRepository[domain.Message]
 }

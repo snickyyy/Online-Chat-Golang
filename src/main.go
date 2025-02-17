@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/repositories"
 	"libs/src/settings"
+	_ "time"
 
-	"go.mongodb.org/mongo-driver/bson"
+	_ "go.mongodb.org/mongo-driver/bson"
 )
 
 func init() {
@@ -15,26 +15,22 @@ func init() {
 
 func main() {
 	defer settings.Context.Cancel()
-	
+
 	diCont := settings.GetDI()
 	err := diCont.Start(settings.Context.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	repo := repositories.ChatRepository{}
-	repo.Db = settings.AppVar.MongoDB
-	repo.Schema = domain.Chat{}
-	repo.CollectionName = "chats"
-	
-	res, _ := repo.Count(bson.M{"owner_id": 1})
-	fmt.Printf("Total chats: %d\n", res)
+	repo := repositories.UserRepository{}
+	repo.Model = domain.User{}
+	repo.Db = settings.AppVar.DB
 
-	resf, err := repo.GetOne(bson.M{"owner_id": 1})
-	fmt.Println(resf, err)
+	err = repo.ExecuteQuery("DROP TABLE users")
 
-	resa, _ := repo.GetAll(bson.M{"owner_id": 1}, 0,10)
-	fmt.Println(resa)
+	if err != nil {
+		panic(err)
+	}
 
 	if err := diCont.Stop(settings.Context.Ctx); err != nil {
 		panic(err)
