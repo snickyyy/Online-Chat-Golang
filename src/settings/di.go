@@ -3,6 +3,7 @@ package settings
 import (
 	"fmt"
 
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -18,6 +19,13 @@ func GetDI() *fx.App {
 					panic(err)
 				}
 				return baseConfig
+			},
+			func(baseConfig *BaseConfig) *mongo.Database {
+				client, err := GetMongoClient(baseConfig)
+				if err != nil {
+					panic(err)
+				}
+				return client
 			},
 			func(baseConfig *BaseConfig) *zap.Logger {
 				logger, err := GetLogger(baseConfig)
@@ -36,8 +44,9 @@ func GetDI() *fx.App {
 			NewApp,
 		),
 		fx.Invoke(func(app *App) {
-			fmt.Println("App initialized:", app)
-		}),
+			fmt.Println("App initialized:", &app)
+		},
+		MakeMigrations),
 	)
 	return di
 }
