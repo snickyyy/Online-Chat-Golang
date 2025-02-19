@@ -3,7 +3,6 @@ package main
 import (
 	"libs/src/settings"
 
-	_ "go.mongodb.org/mongo-driver/bson"
 )
 
 func init() {
@@ -23,5 +22,5 @@ func main() {
 
 	if err := diCont.Stop(settings.Context.Ctx); err != nil {
 		panic(err)
-    }
+	}
 }

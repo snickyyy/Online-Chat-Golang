@@ -21,3 +21,11 @@ auth:
 
 mongo:
   uri: "${MONGO_URI}"
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db:
+    session: 0
+    message: 1

@@ -22,6 +22,17 @@ type Ctx struct {
 	Cancel context.CancelFunc
 }
 
+type RedisDbs struct {
+	SessionDb 	int		`mapstructure:"session"`
+}
+
+type RedisConfig struct {
+	Host     string 	`mapstructure:"host"`
+	Port     int    	`mapstructure:"port"`
+	Password string 	`mapstructure:"password"`
+	DB       RedisDbs   `mapstructure:"db"`
+}
+
 type PostgresConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
@@ -45,6 +56,7 @@ type BaseConfig struct {
 	PostgresConfig PostgresConfig `mapstructure:"db"`
 	AuthConfig     AuthConfig     `mapstructure:"auth"`
 	MongoConfig    MongoConfig    `mapstructure:"mongo"`
+	RedisConfig    RedisConfig	  `mapstructure:"redis"`
 }
 
 func GetBaseConfig() (*BaseConfig, error) {

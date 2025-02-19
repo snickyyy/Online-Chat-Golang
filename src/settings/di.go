@@ -41,6 +41,7 @@ func GetDI() *fx.App {
 				}
 				return db, nil
 			},
+			NewRedisSessionClient,
 			NewApp,
 		),
 		fx.Invoke(func(app *App) {
