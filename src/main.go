@@ -1,10 +1,7 @@
 package main
 
 import (
-	domain "libs/src/internal/domain/models"
-	"libs/src/internal/repositories"
 	"libs/src/settings"
-	_ "time"
 
 	_ "go.mongodb.org/mongo-driver/bson"
 )
@@ -22,17 +19,9 @@ func main() {
 		panic(err)
 	}
 
-	repo := repositories.UserRepository{}
-	repo.Model = domain.User{}
-	repo.Db = settings.AppVar.DB
-
-	err = repo.ExecuteQuery("DROP TABLE users")
-
-	if err != nil {
-		panic(err)
-	}
+	settings.RunServer()
 
 	if err := diCont.Stop(settings.Context.Ctx); err != nil {
 		panic(err)
-	}
+    }
 }
