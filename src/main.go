@@ -2,7 +2,7 @@ package main
 
 import (
 	"libs/src/settings"
-
+	"libs/src/settings/server"
 )
 
 func init() {
@@ -18,7 +18,7 @@ func main() {
 		panic(err)
 	}
 
-	settings.RunServer()
+	server.RunServer()
 
 	if err := diCont.Stop(settings.Context.Ctx); err != nil {
 		panic(err)

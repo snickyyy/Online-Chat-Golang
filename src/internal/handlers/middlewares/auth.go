@@ -1,11 +1,14 @@
 package handler_middlewares
 
-import "github.com/gin-gonic/gin"
+import (
+	"libs/src/settings"
+
+	"github.com/gin-gonic/gin"
+)
 
 
-func HuiMiddleware(ctx *gin.Context) {
-	id := ctx.Param("id")
-	println("test1", id)
+func AuthMiddleware(ctx *gin.Context) {
+	settings.AppVar.Logger.Info("Test1")
 	ctx.Next()
-	println("test2", id)
+	settings.AppVar.Logger.Info("Test2")
 }

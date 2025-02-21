@@ -1,4 +1,4 @@
-package settings
+package server
 
 import (
 	handler_api "libs/src/internal/handlers/api"
@@ -10,13 +10,13 @@ import (
 )
 
 var middlewares = []gin.HandlerFunc{
-	handler_middlewares.HuiMiddleware,
+	handler_middlewares.AuthMiddleware,
 }
 
 func newServer(handler http.Handler) *http.Server {
 	return &http.Server{
-		Addr:    		":8000",
-        Handler: 		handler,
+		Addr:           ":8000",
+		Handler:        handler,
 		ReadTimeout:    2 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		IdleTimeout:    12 * time.Second,
@@ -31,8 +31,16 @@ func RunServer() {
 
 	router.GET("/", handler_api.Index)
 
+	router.Group("/accounts")
+	{
+		router.Group("/auth")
+		{
+
+		}
+	}
+
 	server := newServer(router)
 	if err := server.ListenAndServe(); err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 }
