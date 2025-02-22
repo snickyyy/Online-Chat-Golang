@@ -1,25 +1,27 @@
 package repositories
 
 import (
-	"libs/src/settings"
+	"context"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 type BaseRedisRepository struct {
 	Client 	*redis.Client
+	Ctx		context.Context
 }
 
-func (repo *BaseRedisRepository)GetByID(key string) (string, error) {
-	result, err := repo.Client.Get(settings.Context.Ctx, key).Result()
+func (repo *BaseRedisRepository)GetByKey(key string) (string, error) {
+	result, err := repo.Client.Get(repo.Ctx, key).Result()
 	if err != nil {
         return "", err
     }
 	return result, nil
 }
 
-func (repo *BaseRedisRepository) Create(key string, value interface{}) (string, error) {
-	result, err := repo.Client.Set(settings.Context.Ctx, key, value, 0).Result()
+func (repo *BaseRedisRepository) Create(key string, value any, expiration time.Duration) (string, error) {
+	result, err := repo.Client.Set(repo.Ctx, key, value, expiration).Result()
     if err != nil {
         return "", err
     }
@@ -27,7 +29,7 @@ func (repo *BaseRedisRepository) Create(key string, value interface{}) (string, 
 }
 
 func (repo *BaseRedisRepository) Delete(key string) (int64, error) {
-	res, err := repo.Client.Del(settings.Context.Ctx, key).Result()
+	res, err := repo.Client.Del(repo.Ctx, key).Result()
     if err != nil {
         return 0,err
     }
@@ -35,12 +37,12 @@ func (repo *BaseRedisRepository) Delete(key string) (int64, error) {
 }
 
 func (repo *BaseRedisRepository) CountAll() (int64, error) {
-	count, err := repo.Client.DBSize(settings.Context.Ctx).Result()
+	count, err := repo.Client.DBSize(repo.Ctx).Result()
     return count, err
 }
 
 func (repo *BaseRedisRepository) IsExist(key string) (bool, error) {
-	res, err := repo.Client.Exists(settings.Context.Ctx, key).Result()
+	res, err := repo.Client.Exists(repo.Ctx, key).Result()
 	if err != nil {
 		return false, err
 	}
