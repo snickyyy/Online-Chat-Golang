@@ -41,13 +41,8 @@ func (s *AuthService) GetUserByAuthSession(session string) (dto.UserDTO, error) 
 	return user, nil
 }
 
-func (s *AuthService) setSession(user dto.UserDTO) (string, error) {
-	toJson, err := json.Marshal(user)
-	if err != nil {
-		return "", err
-	}
-
-	encrypted, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(toJson))
+func (s *AuthService) setSession(payload string, ttl time.Duration) (string, error) {
+	encrypted, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(payload))
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +50,7 @@ func (s *AuthService) setSession(user dto.UserDTO) (string, error) {
 	newId := uuid.New().String()
 	_, err = s.RedisBaseRepository.Create(newId,
 		encrypted,
-		time.Duration(s.App.Config.AuthConfig.AuthSessionTTL)*time.Second,
+		ttl,
 	)
 	if err != nil {
 		return "", err
@@ -83,11 +78,39 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	}
 
 	go func() {
+		toJson, err := json.Marshal(
+			dto.UserDTO{
+				ID:        	user.ID,
+				Username:  	user.Username,
+				Email:     	user.Email,
+				IsActive:  	user.IsActive,
+				Role: 		user.Role,
+				CreatedAt: 	user.CreatedAt,
+			},
+		)
+		if err != nil {
+			settings.AppVar.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
+			return
+		}
+
+		sessionId, err := s.setSession(string(toJson), time.Duration(settings.AppVar.Config.AuthConfig.EmailConfirmTTL)*time.Second)
+		if err != nil {
+			settings.AppVar.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
+			return
+		}
+
+		url := fmt.Sprintf(
+			"Thank you for choosing our service, to confirm your registration, follow the url below\nhttp://%s:%d/accounts/auth/confirm-account/%s",
+			settings.AppVar.Config.AppConfig.DomainName,
+			settings.AppVar.Config.AppConfig.Port,
+			sessionId,
+		)
+
 		err = utils.SendMail(settings.AppVar.Mail,
 			settings.AppVar.Config.Mail.From,
 			user.Email,
 			"Online-Chat-Golang || Confirm registration",
-			"blablabla",
+			url,
 		)
 
 		if err != nil {

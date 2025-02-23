@@ -56,7 +56,8 @@ type MongoConfig struct {
 }
 
 type AuthConfig struct {
-	AuthSessionTTL int64 `mapstructure:"session_auth_ttl"`
+	AuthSessionTTL 	int64 `mapstructure:"session_auth_ttl"`
+	EmailConfirmTTL int64 `mapstructure:"confirm_email_ttl"`
 }
 
 type BaseConfig struct {

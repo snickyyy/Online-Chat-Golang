@@ -18,6 +18,7 @@ db:
 
 auth:
   session_auth_ttl: 86400
+  confirm_email_ttl: 3600
 
 mongo:
   uri: "${MONGO_URI}"
