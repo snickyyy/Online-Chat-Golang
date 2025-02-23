@@ -28,3 +28,10 @@ redis:
   db:
     session: 0
     message: 1
+
+mail:
+  username: "${MAIL_USERNAME}"
+  password: "${MAIL_PASSWORD}"
+  from:     "${MAIL_FROM}"
+  port:     "${MAIL_PORT}"
+  server:   "${MAIL_SERVER}"

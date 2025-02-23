@@ -17,6 +17,14 @@ type AppConfig struct {
 	Mode      string `mapstructure:"mode"`
 }
 
+type Mail struct {
+	Username 	string 	`mapstructure:"username"`
+	Password    string  `mapstructure:"password"`
+	From 		string 	`mapstructure:"from"`
+	Port 		int 	`mapstructure:"port"`
+	Server 		string 	`mapstructure:"server"`
+}
+
 type Ctx struct {
 	Ctx    context.Context
 	Cancel context.CancelFunc
@@ -51,11 +59,12 @@ type AuthConfig struct {
 }
 
 type BaseConfig struct {
-	AppConfig      AppConfig      `mapstructure:"app"`
-	PostgresConfig PostgresConfig `mapstructure:"db"`
-	AuthConfig     AuthConfig     `mapstructure:"auth"`
-	MongoConfig    MongoConfig    `mapstructure:"mongo"`
-	RedisConfig    RedisConfig	  `mapstructure:"redis"`
+	AppConfig      	AppConfig      	`mapstructure:"app"`
+	PostgresConfig 	PostgresConfig 	`mapstructure:"db"`
+	AuthConfig     	AuthConfig     	`mapstructure:"auth"`
+	MongoConfig    	MongoConfig    	`mapstructure:"mongo"`
+	RedisConfig    	RedisConfig	  	`mapstructure:"redis"`
+	Mail			Mail			`mapstructure:"mail"`
 }
 
 func GetBaseConfig() (*BaseConfig, error) {
@@ -75,6 +84,11 @@ func GetBaseConfig() (*BaseConfig, error) {
 		"db.password":    viper.GetString("DB_PASSWORD"),
 		"db.sslmode":     viper.GetString("DB_SSLMODE"),
 		"mongo.uri":      viper.GetString("MONGO_URI"),
+        "mail.username": viper.GetString("MAIL_USERNAME"),
+        "mail.password": viper.GetString("MAIL_PASSWORD"),
+        "mail.from": viper.GetString("MAIL_FROM"),
+        "mail.port": viper.GetInt("MAIL_PORT"),
+		"mail.server": viper.GetString("MAIL_SERVER"),
 	}
 
 	viper.SetConfigName("config")
