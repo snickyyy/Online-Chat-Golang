@@ -10,11 +10,12 @@ import (
 var Context *Ctx
 
 type AppConfig struct {
-	SecretKey string `mapstructure:"secret_key"`
-	Host      string `mapstructure:"host"`
-	Port      int    `mapstructure:"port"`
-	Debug     bool   `mapstructure:"debug"`
-	Mode      string `mapstructure:"mode"`
+	SecretKey 	string `mapstructure:"secret_key"`
+	Host     	string `mapstructure:"host"`
+	Port      	int    `mapstructure:"port"`
+	Debug     	bool   `mapstructure:"debug"`
+	Mode      	string `mapstructure:"mode"`
+	DomainName	string `mapstructure:"domain_name"`
 }
 
 type Mail struct {
