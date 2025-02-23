@@ -11,12 +11,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type AuthSessionService struct {
+type AuthService struct {
 	RedisBaseRepository repositories.BaseRedisRepository
 	App                 *settings.App
 }
 
-func (s *AuthSessionService) GetUserByAuthSession(session string) (dto.UserDTO, error) {
+func (s *AuthService) GetUserByAuthSession(session string) (dto.UserDTO, error) {
 	res, err := s.RedisBaseRepository.GetByKey(session)
 	if err != nil {
 		return dto.UserDTO{}, err
@@ -36,7 +36,7 @@ func (s *AuthSessionService) GetUserByAuthSession(session string) (dto.UserDTO, 
 	return user, nil
 }
 
-func (s *AuthSessionService) SetSession(user dto.UserDTO) (string, error) {
+func (s *AuthService) SetSession(user dto.UserDTO) (string, error) {
 	toJson, err := json.Marshal(user)
 	if err != nil {
 		return "", err

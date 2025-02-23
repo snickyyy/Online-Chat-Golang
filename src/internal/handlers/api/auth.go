@@ -10,8 +10,8 @@ import (
 )
 
 func Register(c *gin.Context) {
-	
-	service := services.AuthSessionService{
+
+	service := services.AuthService{
 		RedisBaseRepository: repositories.BaseRedisRepository{
 			Client: settings.AppVar.RedisSess,
 			Ctx:    settings.Context.Ctx,
