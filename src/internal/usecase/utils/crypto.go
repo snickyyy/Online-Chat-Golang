@@ -9,26 +9,25 @@ import (
 	"io"
 )
 
-
 func GenerateSecret() (string, error) {
 	b := make([]byte, 32)
-    _, err := rand.Read(b)
-    if err != nil {
-        return "", err
-    }
-    return base64.StdEncoding.EncodeToString(b), nil
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(b), nil
 }
 
 func Encrypt(secret string, plainText string) (string, error) {
 	block, err := aes.NewCipher([]byte(secret))
-    if err != nil {
-        return "", err
-    }
+	if err != nil {
+		return "", err
+	}
 
 	aesGCM, err := cipher.NewGCM(block)
 	if err != nil {
-        return "", err
-    }
+		return "", err
+	}
 
 	nonceSize := aesGCM.NonceSize()
 	nonce := make([]byte, nonceSize)
@@ -42,19 +41,19 @@ func Encrypt(secret string, plainText string) (string, error) {
 
 func Decrypt(secret string, encryptedStr string) (string, error) {
 	data, err := base64.URLEncoding.DecodeString(encryptedStr)
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		return "", err
+	}
 
 	block, err := aes.NewCipher([]byte(secret))
-    if err != nil {
-        return "", err
-    }
+	if err != nil {
+		return "", err
+	}
 
 	aesGCM, err := cipher.NewGCM(block)
 	if err != nil {
-        return "", err
-    }
+		return "", err
+	}
 
 	nonceSize := aesGCM.NonceSize()
 	if len(data) < nonceSize {

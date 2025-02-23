@@ -13,7 +13,7 @@ import (
 
 type AuthSessionService struct {
 	RedisBaseRepository repositories.BaseRedisRepository
-	App 				settings.App
+	App                 *settings.App
 }
 
 func (s *AuthSessionService) GetUserByAuthSession(session string) (dto.UserDTO, error) {
@@ -48,7 +48,10 @@ func (s *AuthSessionService) SetSession(user dto.UserDTO) (string, error) {
 	}
 
 	newId := uuid.New().String()
-	_, err = s.RedisBaseRepository.Create(newId, encrypted, time.Duration(s.App.Config.AuthConfig.AuthSessionTTL)*time.Second)
+	_, err = s.RedisBaseRepository.Create(newId,
+		encrypted,
+		time.Duration(s.App.Config.AuthConfig.AuthSessionTTL)*time.Second,
+	)
 	if err != nil {
 		return "", err
 	}

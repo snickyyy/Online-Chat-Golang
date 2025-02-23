@@ -31,11 +31,11 @@ func RunServer() {
 
 	router.GET("/", handler_api.Index)
 
-	router.Group("/accounts")
+	accounts := router.Group("/accounts")
 	{
-		router.Group("/auth")
+		auth := accounts.Group("/auth")
 		{
-
+			auth.GET("/register", handler_api.Register)
 		}
 	}
 
