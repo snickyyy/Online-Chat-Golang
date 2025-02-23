@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
@@ -13,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const ErrPasswordsDontMatch = errors.New("passwords don't match")
+var ErrPasswordsDontMatch = errors.New("passwords don't match")
 
 type AuthService struct {
 	RedisBaseRepository repositories.BaseRedisRepository
@@ -64,20 +65,35 @@ func (s *AuthService) setSession(user dto.UserDTO) (string, error) {
 }
 
 func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
+	fmt.Println(data)
 	if data.Password != data.ConfirmPassword {
 		return ErrPasswordsDontMatch
 	}
 
 	user := domain.User{
-		Username:   data.Username,
-        Email:      data.Email,
-        Password:   data.Password,
-		IsActive: 	false,
+		Username: data.Username,
+		Email:    data.Email,
+		Password: data.Password,
+		IsActive: false,
 	}
 
 	err := s.App.DB.Create(&user).Error
 	if err != nil {
-        return err
-    }
+		return err
+	}
+
+	go func() {
+		err = utils.SendMail(settings.AppVar.Mail,
+			settings.AppVar.Config.Mail.From,
+			user.Email,
+			"Online-Chat-Golang || Confirm registration",
+			"blablabla",
+		)
+
+		if err != nil {
+			settings.AppVar.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
+		}
+	}()
+
 	return nil
 }

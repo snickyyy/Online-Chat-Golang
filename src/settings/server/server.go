@@ -35,7 +35,7 @@ func RunServer() {
 	{
 		auth := accounts.Group("/auth")
 		{
-			auth.GET("/register", handler_api.Register)
+			auth.POST("/register", handler_api.Register)
 		}
 	}
 

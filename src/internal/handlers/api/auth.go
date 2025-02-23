@@ -10,6 +10,12 @@ import (
 )
 
 func Register(c *gin.Context) {
+	var registerData dto.RegisterRequest
+
+	if err := c.ShouldBindJSON(&registerData); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
 
 	service := services.AuthService{
 		RedisBaseRepository: repositories.BaseRedisRepository{
@@ -18,14 +24,11 @@ func Register(c *gin.Context) {
 		},
 		App: settings.AppVar,
 	}
-	id, err := service.SetSession(dto.UserDTO{
-		UserName: "snicky",
-		Email:    "snicky@blabla.com",
-	},
-	)
+
+	err := service.RegisterUser(registerData)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"session_id": id})
+	c.JSON(200, gin.H{"ok": true})
 }
