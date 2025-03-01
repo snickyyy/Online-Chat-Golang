@@ -6,3 +6,8 @@ type RegisterRequest struct {
 	Password    	string  `json:"password" binding:"required"`
 	ConfirmPassword string 	`json:"confirm_password" binding:"required"`
 }
+
+type RegisterResponse struct {
+	Message string `json:"message" binding:"required"`
+	Status  bool   `json:"status" binding:"required"`
+}
