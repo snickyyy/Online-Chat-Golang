@@ -38,8 +38,36 @@ func Register(c *gin.Context) {
 
 	err := service.RegisterUser(registerData)
 	if err != nil {
-		c.JSON(500, dto.ErrorResponse{Error: err.Error()})
+		c.JSON(400, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 	c.JSON(200, dto.RegisterResponse{Message: "success", Status: true})
+}
+
+// @Summary User confirm registration
+// @Description Confirm users email
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body dto.RegisterRequest true "Data"
+// @Success 200 {object} string "success"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /accounts/auth/confirm-account [get]
+func ConfirmAccount(c *gin.Context) {
+	session_id := c.Param("token")
+
+	service := services.AuthService{
+		RedisBaseRepository: repositories.BaseRedisRepository{
+			Client: settings.AppVar.RedisSess,
+			Ctx:    settings.Context.Ctx,
+		},
+		App: settings.AppVar,
+	}
+	err := service.ConfirmAccount(session_id)
+	if err != nil {
+		c.JSON(409, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+	c.JSON(200, "success")
 }

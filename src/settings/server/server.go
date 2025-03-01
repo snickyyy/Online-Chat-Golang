@@ -56,6 +56,7 @@ func RunServer() {
 		auth := accounts.Group("/auth")
 		{
 			auth.POST("/register", handler_api.Register)
+			auth.GET("/confirm-account/:token", handler_api.ConfirmAccount)
 		}
 	}
 

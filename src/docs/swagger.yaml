@@ -37,6 +37,36 @@ definitions:
 info:
   contact: {}
 paths:
+  /accounts/auth/confirm-account:
+    get:
+      consumes:
+      - application/json
+      description: Confirm users email
+      parameters:
+      - description: Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: User confirm registration
+      tags:
+      - Auth
   /accounts/auth/register:
     post:
       consumes:

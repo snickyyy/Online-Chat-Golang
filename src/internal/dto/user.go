@@ -8,7 +8,7 @@ type UserDTO struct {
 	Email       string 		`json:"email"`
 	Description string 		`json:"description"`
 	IsActive    bool   		`json:"is_active"`
-	Role        string 		`json:"role"`
+	Role        byte 		`json:"role"`
 	Image       string 		`json:"image"`
 	CreatedAt   time.Time 	`json:"created_at"`
 }

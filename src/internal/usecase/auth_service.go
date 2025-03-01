@@ -12,16 +12,19 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 var ErrPasswordsDontMatch = errors.New("passwords don't match")
+var ErrInvalidToken = errors.New("token is invalid")
 
 type AuthService struct {
 	RedisBaseRepository repositories.BaseRedisRepository
 	App                 *settings.App
 }
 
-func (s *AuthService) GetUserByAuthSession(session string) (dto.UserDTO, error) {
+func (s *AuthService) GetUserBySession(session string) (dto.UserDTO, error) {
 	res, err := s.RedisBaseRepository.GetByKey(session)
 	if err != nil {
 		return dto.UserDTO{}, err
@@ -59,6 +62,76 @@ func (s *AuthService) setSession(payload string, ttl time.Duration) (string, err
 	return newId, nil
 }
 
+func (s *AuthService) CheckSession(sessionId string) (int64, error) {
+	userDto, err := s.GetUserBySession(sessionId)
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return 0, ErrInvalidToken
+		}
+		return 0, err
+	}
+
+	userRepository := repositories.UserRepository{
+		BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
+			Model: domain.User{},
+			Db:    s.App.DB,
+		},
+	}
+
+	user, err := userRepository.GetById(userDto.ID)
+	if err != nil {
+		return 0, ErrInvalidToken
+	}
+
+	if user.IsActive {
+		return 0, ErrInvalidToken
+	}
+
+	if user.Email != userDto.Email {
+		return 0, ErrInvalidToken
+	}
+
+	return userDto.ID, nil
+}
+
+func (s *AuthService) ConfirmAccount(sessionId string) error {
+	userId, err := s.CheckSession(sessionId)
+	if err != nil {
+		return err
+	}
+
+	userRepository := repositories.UserRepository{
+		BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
+			Model: domain.User{},
+			Db:    s.App.DB,
+		},
+	}
+
+	user, err := userRepository.GetById(userId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrInvalidToken
+		}
+		return err
+	}
+
+	user.IsActive = true
+	user.Role = domain.USER
+
+	err = s.App.DB.Save(&user).Error
+	if err != nil {
+		return err
+	}
+
+	_, err = s.RedisBaseRepository.Delete(sessionId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	fmt.Println(data)
 	if data.Password != data.ConfirmPassword {
@@ -80,12 +153,12 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	go func() {
 		toJson, err := json.Marshal(
 			dto.UserDTO{
-				ID:        	user.ID,
-				Username:  	user.Username,
-				Email:     	user.Email,
-				IsActive:  	user.IsActive,
-				Role: 		user.Role,
-				CreatedAt: 	user.CreatedAt,
+				ID:        user.ID,
+				Username:  user.Username,
+				Email:     user.Email,
+				IsActive:  user.IsActive,
+				Role:      user.Role,
+				CreatedAt: user.CreatedAt,
 			},
 		)
 		if err != nil {
