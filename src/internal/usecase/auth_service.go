@@ -7,6 +7,7 @@ import (
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
+	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/internal/usecase/utils"
 	"libs/src/settings"
 	"time"
@@ -15,9 +16,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
-
-var ErrPasswordsDontMatch = errors.New("passwords don't match")
-var ErrInvalidToken = errors.New("token is invalid")
 
 type AuthService struct {
 	RedisBaseRepository repositories.BaseRedisRepository
@@ -66,7 +64,7 @@ func (s *AuthService) CheckSession(sessionId string) (int64, error) {
 	userDto, err := s.GetUserBySession(sessionId)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return 0, ErrInvalidToken
+			return 0, api_errors.ErrInvalidToken
 		}
 		return 0, err
 	}
@@ -80,15 +78,15 @@ func (s *AuthService) CheckSession(sessionId string) (int64, error) {
 
 	user, err := userRepository.GetById(userDto.ID)
 	if err != nil {
-		return 0, ErrInvalidToken
+		return 0, api_errors.ErrInvalidToken
 	}
 
 	if user.IsActive {
-		return 0, ErrInvalidToken
+		return 0, api_errors.ErrInvalidToken
 	}
 
 	if user.Email != userDto.Email {
-		return 0, ErrInvalidToken
+		return 0, api_errors.ErrInvalidToken
 	}
 
 	return userDto.ID, nil
@@ -110,7 +108,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) error {
 	user, err := userRepository.GetById(userId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrInvalidToken
+			return api_errors.ErrInvalidToken
 		}
 		return err
 	}
@@ -135,7 +133,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) error {
 func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	fmt.Println(data)
 	if data.Password != data.ConfirmPassword {
-		return ErrPasswordsDontMatch
+		return api_errors.ErrPasswordsDontMatch
 	}
 
 	user := domain.User{
