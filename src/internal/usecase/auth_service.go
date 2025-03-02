@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -131,7 +132,6 @@ func (s *AuthService) ConfirmAccount(sessionId string) error {
 }
 
 func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
-	fmt.Println(data)
 	if data.Password != data.ConfirmPassword {
 		return api_errors.ErrPasswordsDontMatch
 	}
@@ -141,11 +141,18 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		Email:    data.Email,
 		Password: data.Password,
 		IsActive: false,
+		Role:     domain.ANONYMOUS,
 	}
 
 	err := s.App.DB.Create(&user).Error
 	if err != nil {
-		return err
+		var pqErr *pgconn.PgError
+		if errors.As(err, &pqErr) {
+			if pqErr.Code == "23505" {
+				return api_errors.ErrUserAlreadyExists
+			}
+			return err
+		}
 	}
 
 	go func() {
