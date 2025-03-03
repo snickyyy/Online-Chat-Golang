@@ -175,15 +175,18 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		return api_errors.ErrPasswordsDontMatch
 	}
 
+	hashedPassword, err := utils.HashPassword(data.Password)
+	if err != nil {return err}
+
 	user := domain.User{
 		Username: data.Username,
 		Email:    data.Email,
-		Password: data.Password,
+		Password: hashedPassword,
 		IsActive: false,
 		Role:     domain.ANONYMOUS,
 	}
 
-	err := s.App.DB.Create(&user).Error
+	err = s.App.DB.Create(&user).Error
 	if err != nil {
 		var pqErr *pgconn.PgError
 		if errors.As(err, &pqErr) {
