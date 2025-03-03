@@ -64,10 +64,11 @@ func ConfirmAccount(c *gin.Context) {
 		},
 		App: settings.AppVar,
 	}
-	err := service.ConfirmAccount(session_id)
+	sess, err := service.ConfirmAccount(session_id)
 	if err != nil {
 		c.JSON(409, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
+	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
 	c.JSON(200, "success")
 }
