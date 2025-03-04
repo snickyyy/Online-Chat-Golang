@@ -272,3 +272,12 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 
 	return session, nil
 }
+
+func (s *AuthService) Logout(sessionId string) {
+	go func() {
+		_, err := s.RedisBaseRepository.Delete(sessionId)
+		if err != nil {
+			settings.AppVar.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
+		}
+	}()
+}

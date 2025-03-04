@@ -21,6 +21,12 @@ import (
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/register [post]
 func Register(c *gin.Context) {
+	_, err := c.Cookie("sessionID")
+	if err == nil {
+        c.JSON(403, dto.ErrorResponse{Error: "Already logged in"})
+        return
+    }
+
 	var registerData dto.RegisterRequest
 
 	if err := c.ShouldBindJSON(&registerData); err != nil {
@@ -36,7 +42,7 @@ func Register(c *gin.Context) {
 		App: settings.AppVar,
 	}
 
-	err := service.RegisterUser(registerData)
+	err = service.RegisterUser(registerData)
 	if err != nil {
 		c.JSON(400, dto.ErrorResponse{Error: err.Error()})
 		return
@@ -55,6 +61,11 @@ func Register(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/confirm-account [get]
 func ConfirmAccount(c *gin.Context) {
+	_, err := c.Cookie("sessionID")
+	if err == nil {
+        c.JSON(403, dto.ErrorResponse{Error: "Already logged in"})
+        return
+    }
 	session_id := c.Param("token")
 
 	service := services.AuthService{
@@ -73,8 +84,8 @@ func ConfirmAccount(c *gin.Context) {
 	c.JSON(200, "success")
 }
 
-// @Summary User confirm registration
-// @Description Confirm users email
+// @Summary Login
+// @Description Login to account
 // @Tags Auth
 // @Accept json
 // @Produce json
@@ -86,7 +97,7 @@ func ConfirmAccount(c *gin.Context) {
 func Login(c *gin.Context) {
 	_, err := c.Cookie("sessionID")
 	if err == nil {
-        c.JSON(400, dto.ErrorResponse{Error: "Already logged in"})
+        c.JSON(403, dto.ErrorResponse{Error: "Already logged in"})
         return
     }
 
@@ -112,4 +123,24 @@ func Login(c *gin.Context) {
 	}
 	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
 	c.JSON(200, "success")
+}
+
+// @Summary Logout
+// @Description Logout the session
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} string "success"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /accounts/auth/logout [get]
+func Logout(c *gin.Context) {
+	_, err := c.Cookie("sessionID")
+    if err != nil {
+        c.JSON(403, dto.ErrorResponse{Error: "Not logged in"})
+        return
+    }
+
+    c.SetCookie("sessionID", "", -1, "/", "", true, true)
+    c.JSON(200, "success")
 }

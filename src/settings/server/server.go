@@ -61,6 +61,7 @@ func RunServer() {
 			auth.POST("/register", handler_api.Register)
 			auth.GET("/confirm-account/:token", handler_api.ConfirmAccount)
 			auth.POST("/login", handler_api.Login)
+			auth.GET("/logout", handler_api.Logout)
 		}
 	}
 

@@ -81,7 +81,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Confirm users email
+      description: Login to account
       parameters:
       - description: Data
         in: body
@@ -104,7 +104,30 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: User confirm registration
+      summary: Login
+      tags:
+      - Auth
+  /accounts/auth/logout:
+    get:
+      consumes:
+      - application/json
+      description: Logout the session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Logout
       tags:
       - Auth
   /accounts/auth/register:

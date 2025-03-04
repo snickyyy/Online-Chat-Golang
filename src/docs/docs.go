@@ -63,7 +63,7 @@ const docTemplate = `{
         },
         "/accounts/auth/login": {
             "post": {
-                "description": "Confirm users email",
+                "description": "Login to account",
                 "consumes": [
                     "application/json"
                 ],
@@ -73,7 +73,7 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "User confirm registration",
+                "summary": "Login",
                 "parameters": [
                     {
                         "description": "Data",
@@ -85,6 +85,41 @@ const docTemplate = `{
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/auth/logout": {
+            "get": {
+                "description": "Logout the session",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout",
                 "responses": {
                     "200": {
                         "description": "success",
