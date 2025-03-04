@@ -72,3 +72,44 @@ func ConfirmAccount(c *gin.Context) {
 	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
 	c.JSON(200, "success")
 }
+
+// @Summary User confirm registration
+// @Description Confirm users email
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body dto.LoginRequest true "Data"
+// @Success 200 {object} string "success"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /accounts/auth/login [post]
+func Login(c *gin.Context) {
+	_, err := c.Cookie("sessionID")
+	if err == nil {
+        c.JSON(400, dto.ErrorResponse{Error: "Already logged in"})
+        return
+    }
+
+	var loginData dto.LoginRequest
+
+	if err := c.ShouldBindJSON(&loginData); err != nil {
+		c.JSON(409, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	service := services.AuthService{
+		RedisBaseRepository: repositories.BaseRedisRepository{
+			Client: settings.AppVar.RedisSess,
+			Ctx:    settings.Context.Ctx,
+		},
+		App: settings.AppVar,
+	}
+
+	sess, err := service.Login(loginData)
+	if err != nil {
+		c.JSON(409, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
+	c.JSON(200, "success")
+}

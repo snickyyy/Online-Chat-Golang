@@ -50,6 +50,52 @@
                 }
             }
         },
+        "/accounts/auth/login": {
+            "post": {
+                "description": "Confirm users email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User confirm registration",
+                "parameters": [
+                    {
+                        "description": "Data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/accounts/auth/register": {
             "post": {
                 "description": "Register a new user behind the selected fields",
@@ -105,6 +151,21 @@
             ],
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.LoginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username_or_email"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username_or_email": {
                     "type": "string"
                 }
             }

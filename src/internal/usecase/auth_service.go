@@ -240,3 +240,35 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 
 	return nil
 }
+
+func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
+	userRepository := repositories.UserRepository{
+        BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
+            Model: domain.User{},
+            Db:    s.App.DB,
+        },
+    }
+	blabla := data.UsernameOrEmail
+    users, err := userRepository.Filter("username = ? OR email = ?", blabla, blabla)
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            settings.AppVar.Logger.Warn(fmt.Sprintf("User not found: %s", data.UsernameOrEmail))
+            return "", err
+        }
+        settings.AppVar.Logger.Error(fmt.Sprintf("Error getting user in login: %v", err))
+        return "", err
+    }
+
+
+	if len(users) != 1 { return "", api_errors.ErrInvalidCredentials }
+
+	user := users[0]
+	if !utils.CheckPasswordHash(user.Password, data.Password) || !user.IsActive || user.Role == domain.ANONYMOUS{
+        return "", api_errors.ErrInvalidCredentials
+    }
+
+	session, err := s.setAuthSession(user)
+	if err != nil { return "", err }
+
+	return session, nil
+}

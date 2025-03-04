@@ -6,6 +6,16 @@ definitions:
     required:
     - error
     type: object
+  dto.LoginRequest:
+    properties:
+      password:
+        type: string
+      username_or_email:
+        type: string
+    required:
+    - password
+    - username_or_email
+    type: object
   dto.RegisterRequest:
     properties:
       confirm_password:
@@ -49,6 +59,36 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: User confirm registration
+      tags:
+      - Auth
+  /accounts/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Confirm users email
+      parameters:
+      - description: Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
       produces:
       - application/json
       responses:

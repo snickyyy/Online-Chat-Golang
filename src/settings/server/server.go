@@ -4,11 +4,13 @@ import (
 	_ "libs/src/docs"
 	handler_api "libs/src/internal/handlers/api"
 	handler_middlewares "libs/src/internal/handlers/middlewares"
-	swagger "github.com/swaggo/gin-swagger"
+
 	files "github.com/swaggo/files"
+	swagger "github.com/swaggo/gin-swagger"
 
 	"net/http"
 	"time"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,6 +28,7 @@ func newServer(handler http.Handler) *http.Server {
 		MaxHeaderBytes: 1 << 20,
 	}
 }
+
 // swag init --parseDependency --parseInternal --output ./docs
 
 // @title           Online-Chat API
@@ -57,6 +60,7 @@ func RunServer() {
 		{
 			auth.POST("/register", handler_api.Register)
 			auth.GET("/confirm-account/:token", handler_api.ConfirmAccount)
+			auth.POST("/login", handler_api.Login)
 		}
 	}
 
