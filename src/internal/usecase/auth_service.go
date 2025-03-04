@@ -33,14 +33,14 @@ func (s *AuthService) GetUserBySession(session string) (dto.UserDTO, error) {
 		return dto.UserDTO{}, err
 	}
 
-	var user dto.UserDTO
+	var user dto.AuthSession
 
 	err = json.Unmarshal([]byte(decryptResult), &user)
 	if err != nil {
 		return dto.UserDTO{}, err
 	}
 
-	return user, nil
+	return user.UserDTO, nil
 }
 
 func (s *AuthService) setSession(payload string, ttl time.Duration) (string, error) {
@@ -73,9 +73,9 @@ func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 		CreatedAt: user.CreatedAt,
 	}
 	payload := dto.AuthSession{
-		UserDTO: userDto,
-		TTL:     sess_ttl,
-		CreatedAt:    time.Now(),
+		UserDTO:   userDto,
+		TTL:       sess_ttl,
+		CreatedAt: time.Now(),
 	}
 
 	toJson, err := json.Marshal(payload)
@@ -91,7 +91,7 @@ func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 	return sessionId, nil
 }
 
-func (s *AuthService) CheckSession(sessionId string) (int64, error) {
+func (s *AuthService) CheckEmailSession(sessionId string) (int64, error) {
 	userDto, err := s.GetUserBySession(sessionId)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
@@ -124,7 +124,7 @@ func (s *AuthService) CheckSession(sessionId string) (int64, error) {
 }
 
 func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
-	userId, err := s.CheckSession(sessionId)
+	userId, err := s.CheckEmailSession(sessionId)
 	if err != nil {
 		return "", err
 	}
@@ -151,9 +151,8 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 		err = s.App.DB.Save(&user).Error
 		if err != nil {
 			settings.AppVar.Logger.Error(fmt.Sprintf("Error save user: %v", err))
-			}
-		}()
-
+		}
+	}()
 
 	go func() {
 		_, err = s.RedisBaseRepository.Delete(sessionId)
@@ -176,7 +175,9 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	}
 
 	hashedPassword, err := utils.HashPassword(data.Password)
-	if err != nil {return err}
+	if err != nil {
+		return err
+	}
 
 	user := domain.User{
 		Username: data.Username,
@@ -197,17 +198,24 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		}
 	}
 
+	sess_ttl := time.Now().Add(time.Duration(settings.AppVar.Config.AuthConfig.EmailConfirmTTL) * time.Second)
+	userDto := dto.UserDTO{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		IsActive:  user.IsActive,
+		Role:      user.Role,
+		CreatedAt: user.CreatedAt,
+	}
+	payload := dto.EmailSession{
+		AuthSession: dto.AuthSession{
+			UserDTO:   userDto,
+			TTL:       sess_ttl,
+			CreatedAt: time.Now(),
+		},
+	}
 	go func() {
-		toJson, err := json.Marshal(
-			dto.UserDTO{
-				ID:        user.ID,
-				Username:  user.Username,
-				Email:     user.Email,
-				IsActive:  user.IsActive,
-				Role:      user.Role,
-				CreatedAt: user.CreatedAt,
-			},
-		)
+		toJson, err := json.Marshal(payload)
 		if err != nil {
 			settings.AppVar.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
 			return
@@ -243,32 +251,34 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 
 func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 	userRepository := repositories.UserRepository{
-        BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
-            Model: domain.User{},
-            Db:    s.App.DB,
-        },
-    }
-	blabla := data.UsernameOrEmail
-    users, err := userRepository.Filter("username = ? OR email = ?", blabla, blabla)
-    if err != nil {
-        if errors.Is(err, gorm.ErrRecordNotFound) {
-            settings.AppVar.Logger.Warn(fmt.Sprintf("User not found: %s", data.UsernameOrEmail))
-            return "", err
-        }
-        settings.AppVar.Logger.Error(fmt.Sprintf("Error getting user in login: %v", err))
-        return "", err
-    }
+		BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
+			Model: domain.User{},
+			Db:    s.App.DB,
+		},
+	}
+	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			settings.AppVar.Logger.Warn(fmt.Sprintf("User not found: %s", data.UsernameOrEmail))
+			return "", err
+		}
+		settings.AppVar.Logger.Error(fmt.Sprintf("Error getting user in login: %v", err))
+		return "", err
+	}
 
-
-	if len(users) != 1 { return "", api_errors.ErrInvalidCredentials }
+	if len(users) != 1 {
+		return "", api_errors.ErrInvalidCredentials
+	}
 
 	user := users[0]
-	if !utils.CheckPasswordHash(user.Password, data.Password) || !user.IsActive || user.Role == domain.ANONYMOUS{
-        return "", api_errors.ErrInvalidCredentials
-    }
+	if !utils.CheckPasswordHash(user.Password, data.Password) || !user.IsActive || user.Role == domain.ANONYMOUS {
+		return "", api_errors.ErrInvalidCredentials
+	}
 
 	session, err := s.setAuthSession(user)
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 
 	return session, nil
 }

@@ -24,3 +24,7 @@ type AuthSession struct {
 	TTL     	time.Time 	`json:"ttl" binding:"required"`
 	CreatedAt 	time.Time 	`json:"created_at" binding:"required"`
 }
+
+type EmailSession struct {
+	AuthSession
+}
