@@ -5,7 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetMongoClient(config *BaseConfig) (*mongo.Database, error) {
+func GetMongoClient(config *BaseConfig, dbName string) (*mongo.Database, error) {
 	client, err := mongo.Connect(Context.Ctx, options.Client().ApplyURI(config.MongoConfig.Uri))
 	if err != nil {
 		return nil, err
@@ -15,6 +15,6 @@ func GetMongoClient(config *BaseConfig) (*mongo.Database, error) {
 		return nil, err
 	}
 
-	db := client.Database("OnlineChat")
+	db := client.Database(dbName)
 	return db, nil
 }

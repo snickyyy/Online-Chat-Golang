@@ -21,7 +21,7 @@ func GetDI() *fx.App {
 				return baseConfig
 			},
 			func(baseConfig *BaseConfig) *mongo.Database {
-				client, err := GetMongoClient(baseConfig)
+				client, err := GetMongoClient(baseConfig, "OnlineChat")
 				if err != nil {
 					panic(err)
 				}
