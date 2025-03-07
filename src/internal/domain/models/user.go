@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"reflect"
 	"fmt"
+	"libs/src/internal/dto"
+	"reflect"
 )
 
 const (
@@ -35,13 +36,13 @@ func (u User) String() string {
 	return result
 }
 
-// func NewUser(username, email, password, description, role, image string) *User {
-// 	return &User{
-// 		Username:    username,
-// 		Email:       email,
-// 		Password:    password,
-// 		Description: description,
-// 		Role:        role,
-// 		Image:       image,
-// 	}
-// }
+func (u *User) ToDTO() dto.UserDTO {
+	return dto.UserDTO{
+        ID:          u.ID,
+        Username:    u.Username,
+        Email:       u.Email,
+        Description: u.Description,
+        IsActive:    u.IsActive,
+        Role:        u.Role,
+    }
+}
