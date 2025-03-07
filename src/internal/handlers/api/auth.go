@@ -3,7 +3,6 @@ package handler_api
 import (
 	_ "libs/src/docs"
 	"libs/src/internal/dto"
-	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
 	"libs/src/settings"
 
@@ -34,13 +33,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	service := services.AuthService{
-		RedisBaseRepository: repositories.BaseRedisRepository{
-			Client: settings.AppVar.RedisSess,
-			Ctx:    settings.Context.Ctx,
-		},
-		App: settings.AppVar,
-	}
+	service := services.NewAuthService(settings.AppVar)
 
 	err = service.RegisterUser(registerData)
 	if err != nil {
@@ -68,13 +61,7 @@ func ConfirmAccount(c *gin.Context) {
     }
 	session_id := c.Param("token")
 
-	service := services.AuthService{
-		RedisBaseRepository: repositories.BaseRedisRepository{
-			Client: settings.AppVar.RedisSess,
-			Ctx:    settings.Context.Ctx,
-		},
-		App: settings.AppVar,
-	}
+	service := services.NewAuthService(settings.AppVar)
 	sess, err := service.ConfirmAccount(session_id)
 	if err != nil {
 		c.JSON(409, dto.ErrorResponse{Error: err.Error()})
@@ -108,13 +95,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	service := services.AuthService{
-		RedisBaseRepository: repositories.BaseRedisRepository{
-			Client: settings.AppVar.RedisSess,
-			Ctx:    settings.Context.Ctx,
-		},
-		App: settings.AppVar,
-	}
+	service := services.NewAuthService(settings.AppVar)
 
 	sess, err := service.Login(loginData)
 	if err != nil {

@@ -19,8 +19,25 @@ import (
 )
 
 type AuthService struct {
-	RedisBaseRepository repositories.BaseRedisRepository
+	RedisBaseRepository *repositories.BaseRedisRepository
+	UserRepository 		*repositories.UserRepository
 	App                 *settings.App
+}
+
+func NewAuthService(app *settings.App) *AuthService {
+	return &AuthService{
+		RedisBaseRepository: &repositories.BaseRedisRepository{
+			Client: settings.AppVar.RedisSess,
+			Ctx:    settings.Context.Ctx,
+		},
+		UserRepository: &repositories.UserRepository{
+			BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
+				Model: domain.User{},
+				Db:    app.DB,
+			},
+		},
+		App: app,
+	}
 }
 
 func (s *AuthService) GetUserBySession(session string) (dto.UserDTO, error) {
@@ -100,12 +117,7 @@ func (s *AuthService) CheckEmailSession(sessionId string) (int64, error) {
 		return 0, err
 	}
 
-	userRepository := repositories.UserRepository{
-		BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
-			Model: domain.User{},
-			Db:    s.App.DB,
-		},
-	}
+	userRepository := s.UserRepository
 
 	user, err := userRepository.GetById(userDto.ID)
 	if err != nil {
@@ -129,12 +141,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 		return "", err
 	}
 
-	userRepository := repositories.UserRepository{
-		BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
-			Model: domain.User{},
-			Db:    s.App.DB,
-		},
-	}
+	userRepository := s.UserRepository
 
 	user, err := userRepository.GetById(userId)
 	if err != nil {
@@ -250,12 +257,8 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 }
 
 func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
-	userRepository := repositories.UserRepository{
-		BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
-			Model: domain.User{},
-			Db:    s.App.DB,
-		},
-	}
+	userRepository := s.UserRepository
+	
 	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

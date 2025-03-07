@@ -4,7 +4,6 @@ import (
 	"fmt"
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
-	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
 	"libs/src/settings"
 
@@ -29,13 +28,7 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
-	service := services.AuthService{
-		RedisBaseRepository: repositories.BaseRedisRepository{
-			Client: settings.AppVar.RedisSess,
-			Ctx:    settings.Context.Ctx,
-		},
-		App: settings.AppVar,
-	}
+	service := services.NewAuthService(settings.AppVar)
 
 	user, err = service.GetUserBySession(sid)
 	if err != nil {
