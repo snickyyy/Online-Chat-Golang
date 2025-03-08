@@ -116,11 +116,13 @@ func Login(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/logout [get]
 func Logout(c *gin.Context) {
-	_, err := c.Cookie("sessionID")
+	cookie, err := c.Cookie("sessionID")
     if err != nil {
         c.JSON(403, dto.ErrorResponse{Error: "Not logged in"})
         return
     }
+	
+	services.NewAuthService(settings.AppVar).Logout(cookie)
 
     c.SetCookie("sessionID", "", -1, "/", "", true, true)
     c.JSON(200, "success")
