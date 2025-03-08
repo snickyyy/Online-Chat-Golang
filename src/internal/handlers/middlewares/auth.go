@@ -23,7 +23,7 @@ func AuthMiddleware(c *gin.Context) {
 	if err != nil {
 		user = unknown
 		c.Set("user", user)
-		c.Set("isAuth", false)
+		c.Set("user.state.isActive", false)
 		c.Next()
 		return
 	}
@@ -34,18 +34,18 @@ func AuthMiddleware(c *gin.Context) {
 	if err != nil {
 		settings.AppVar.Logger.Error(fmt.Sprintf("Error getting session: %s", sid))
 		user = unknown
-		c.Set("isAuth", false)
+		c.Set("user.state.isActive", false)
 		c.Next()
 		return
 	}
 
 	if !user.IsActive || user.Role == domain.ANONYMOUS {
 		user = unknown
-		c.Set("isAuth", false)
+		c.Set("user.state.isActive", false)
 		c.Next()
 		return
 	}
-	c.Set("isAuth", true)
+	c.Set("user.state.isActive", true)
 	c.Set("user", user)
 	c.Next()
 }
