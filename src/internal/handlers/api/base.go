@@ -1,12 +1,13 @@
 package handler_api
 
 import (
-	"time"
+	"libs/src/internal/dto"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Index(ctx *gin.Context) {
-	time.Sleep(time.Second / 2)
-	ctx.JSON(200, "Hello, Gin!")
+	bla, _ := ctx.Get("user")
+	user, _ := bla.(dto.UserDTO)
+	ctx.JSON(200, user)
 }

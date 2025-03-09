@@ -6,6 +6,7 @@ app:
   mode: "dev"
   port: 8000
   debug: true
+  domain_name: "127.0.0.1"
 
 db:
   host: "${DB_HOST}"
@@ -16,8 +17,23 @@ db:
   sslmode: "${DB_SSL_MODE}"
 
 auth:
-  access_token_ttl: 7200
-  refresh_token_ttl: 86400
+  session_auth_ttl: 86400
+  confirm_email_ttl: 3600
 
 mongo:
   uri: "${MONGO_URI}"
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db:
+    session: 0
+    message: 1
+
+mail:
+  username: "${MAIL_USERNAME}"
+  password: "${MAIL_PASSWORD}"
+  from:     "${MAIL_FROM}"
+  port:     "${MAIL_PORT}"
+  server:   "${MAIL_SERVER}"

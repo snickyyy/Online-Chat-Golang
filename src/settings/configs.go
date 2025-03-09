@@ -3,6 +3,8 @@ package settings
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -10,16 +12,36 @@ import (
 var Context *Ctx
 
 type AppConfig struct {
-	SecretKey string `mapstructure:"secret_key"`
-	Host      string `mapstructure:"host"`
-	Port      int    `mapstructure:"port"`
-	Debug     bool   `mapstructure:"debug"`
-	Mode      string `mapstructure:"mode"`
+	SecretKey  string `mapstructure:"secret_key"`
+	Host       string `mapstructure:"host"`
+	Port       int    `mapstructure:"port"`
+	Debug      bool   `mapstructure:"debug"`
+	Mode       string `mapstructure:"mode"`
+	DomainName string `mapstructure:"domain_name"`
+}
+
+type Mail struct {
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	From     string `mapstructure:"from"`
+	Port     int    `mapstructure:"port"`
+	Server   string `mapstructure:"server"`
 }
 
 type Ctx struct {
 	Ctx    context.Context
 	Cancel context.CancelFunc
+}
+
+type RedisDbs struct {
+	SessionDb int `mapstructure:"session"`
+}
+
+type RedisConfig struct {
+	Host     string   `mapstructure:"host"`
+	Port     int      `mapstructure:"port"`
+	Password string   `mapstructure:"password"`
+	DB       RedisDbs `mapstructure:"db"`
 }
 
 type PostgresConfig struct {
@@ -36,8 +58,8 @@ type MongoConfig struct {
 }
 
 type AuthConfig struct {
-	AccessTokenTTL  int `mapstructure:"access_token_ttl"`
-	RefreshTokenTTL int `mapstructure:"refresh_token_ttl"`
+	AuthSessionTTL  int64 `mapstructure:"session_auth_ttl"`
+	EmailConfirmTTL int64 `mapstructure:"confirm_email_ttl"`
 }
 
 type BaseConfig struct {
@@ -45,13 +67,16 @@ type BaseConfig struct {
 	PostgresConfig PostgresConfig `mapstructure:"db"`
 	AuthConfig     AuthConfig     `mapstructure:"auth"`
 	MongoConfig    MongoConfig    `mapstructure:"mongo"`
+	RedisConfig    RedisConfig    `mapstructure:"redis"`
+	Mail           Mail           `mapstructure:"mail"`
 }
 
 func GetBaseConfig() (*BaseConfig, error) {
+	basePath, _ := os.Getwd()
 	viper.AutomaticEnv()
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
-	viper.AddConfigPath("../")
+	viper.AddConfigPath(filepath.Dir(basePath))
 
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("error reading .env file: %v", err)
@@ -64,11 +89,16 @@ func GetBaseConfig() (*BaseConfig, error) {
 		"db.password":    viper.GetString("DB_PASSWORD"),
 		"db.sslmode":     viper.GetString("DB_SSLMODE"),
 		"mongo.uri":      viper.GetString("MONGO_URI"),
+		"mail.username":  viper.GetString("MAIL_USERNAME"),
+		"mail.password":  viper.GetString("MAIL_PASSWORD"),
+		"mail.from":      viper.GetString("MAIL_FROM"),
+		"mail.port":      viper.GetInt("MAIL_PORT"),
+		"mail.server":    viper.GetString("MAIL_SERVER"),
 	}
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./settings")
+	viper.AddConfigPath(filepath.Join(basePath, "settings"))
 
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("error reading .yaml file: %v", err)

@@ -2,8 +2,7 @@ package main
 
 import (
 	"libs/src/settings"
-
-	_ "go.mongodb.org/mongo-driver/bson"
+	"libs/src/settings/server"
 )
 
 func init() {
@@ -19,9 +18,9 @@ func main() {
 		panic(err)
 	}
 
-	settings.RunServer()
+	server.RunServer()
 
 	if err := diCont.Stop(settings.Context.Ctx); err != nil {
 		panic(err)
-    }
+	}
 }
