@@ -3,7 +3,6 @@ package handler_api
 import (
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"net/http"
 
@@ -25,15 +24,6 @@ func UserProfile(c *gin.Context) {
 	service := services.NewUserService(settings.AppVar)
 
 	username := c.Param("username")
-
-	if username == "n" {
-		tryUserUsername := c.MustGet("user").(dto.UserDTO).Username;
-		if tryUserUsername == "" {
-			c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: api_errors.ErrProfileNotFound.Error()})
-			return
-		}
-		username = tryUserUsername
-	}
 
 	profile, err := service.GetUserProfile(username)
 	if err != nil {

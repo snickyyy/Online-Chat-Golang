@@ -32,7 +32,7 @@ func AuthMiddleware(c *gin.Context) {
 
 	user, err = service.GetUserBySession(sid)
 	if err != nil {
-		settings.AppVar.Logger.Error(fmt.Sprintf("Error getting session: %s", sid))
+		settings.AppVar.Logger.Error(fmt.Sprintf("Error getting session: %s || error: %s", sid, err))
 		user = unknown
 		c.Set("user.state.isActive", false)
 		c.Next()
