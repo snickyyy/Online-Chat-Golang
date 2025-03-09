@@ -63,6 +63,10 @@ func RunServer() {
 			auth.POST("/login", handler_api.Login)
 			auth.GET("/logout", handler_api.Logout)
 		}
+		profile := accounts.Group("/profile")
+		{
+            profile.GET("/:username", handler_api.UserProfile)
+        }
 	}
 
 	server := newServer(router)

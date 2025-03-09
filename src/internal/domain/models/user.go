@@ -12,6 +12,12 @@ const (
 	ADMIN 		= 2
 )
 
+var RolesToLabels map[int]string = map[int]string{
+	ANONYMOUS: "anonymous",
+	USER:     "user",
+    ADMIN:    "admin",
+}
+
 type User struct {
 	BaseModel
 	Username    string 	`gorm:"unique;size:40;not null;"`

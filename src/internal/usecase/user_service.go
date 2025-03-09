@@ -2,7 +2,9 @@ package services
 
 import (
 	domain "libs/src/internal/domain/models"
+	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
+	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/internal/usecase/utils"
 	"libs/src/settings"
 )
@@ -41,4 +43,23 @@ func (s *UserService) CreateSuperUser(username string, email string, password st
         return err
     }
 	return nil
+}
+
+func (s *UserService) GetUserProfile(username string) (*dto.UserProfile, error) {
+	user, err := s.UserRepository.Filter("username = ?", username)
+	if err != nil { return nil, err }
+
+	if len(user) != 1 { return nil, api_errors.ErrProfileNotFound }
+
+	oneUser := user[0]
+
+	profile := &dto.UserProfile{
+		Username: 		oneUser.Username,
+		Description: 	oneUser.Description,
+		Role: 			domain.RolesToLabels[int(oneUser.Role)],	
+		Image: 			oneUser.Image,
+		CreatedAt: 		oneUser.CreatedAt,	
+	}
+
+	return profile, nil
 }

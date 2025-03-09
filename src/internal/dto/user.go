@@ -12,3 +12,11 @@ type UserDTO struct {
 	Image       string 		`json:"image"`
 	CreatedAt   time.Time 	`json:"created_at"`
 }
+
+type UserProfile struct {
+	Username    string 		`json:"username"`
+	Description string 		`json:"description"`
+	Role		string 		`json:"role"`
+	Image       string 		`json:"image"`
+	CreatedAt   time.Time 	`json:"created_at"`
+}
