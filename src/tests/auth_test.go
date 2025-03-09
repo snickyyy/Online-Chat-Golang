@@ -72,8 +72,9 @@ func (suite *AppTestSuite) TestLogin() {
     res, err := suite.client.Post(url, contType, bytes.NewBuffer(dataSuccess))
     suite.NoError(err)
     suite.Equal(http.StatusOK, res.StatusCode)
-	suite.NotEmpty(res.Cookies())
-    log.Println("Response status code: ", res.StatusCode)
+	cookieFromLogin := res.Cookies()
+	suite.NotEmpty(cookieFromLogin)
+    log.Println("Response status code: ", res.StatusCode, res.Cookies())
 
     dataFail, _ := json.Marshal(dto.LoginRequest{
         UsernameOrEmail: "testuser",
@@ -82,8 +83,18 @@ func (suite *AppTestSuite) TestLogin() {
     res, err = suite.client.Post(url, contType, bytes.NewBuffer(dataFail))
     suite.NoError(err)
 	suite.Equal(http.StatusConflict, res.StatusCode)
+
+	// TEST LOGOUT
+	urlLogout := "http://127.0.0.1:8000/accounts/auth/logout"
+    req, err := http.NewRequest("GET", urlLogout, nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+    req.AddCookie(cookieFromLogin[0])
+
+    resLogout, err := suite.client.Do(req)
+    suite.NoError(err)
+    suite.Equal(http.StatusOK, resLogout.StatusCode)
+    log.Println("Response status code: ", resLogout.StatusCode)
 }
 
-func (suite *AppTestSuite) TestLogout() {
-	// TODO: Make test logout
-}
