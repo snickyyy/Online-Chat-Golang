@@ -32,5 +32,9 @@ func (suite *AppTestSuite) TestGetProfile() {
 
 	res, err = suite.client.Get(url + "testprofile1")
 	suite.NoError(err)
-	suite.Equal(http.StatusOK, res.StatusCode) // blablabla
+	suite.Equal(http.StatusOK, res.StatusCode)
+
+	res, err = suite.client.Get(url + "profileNonConfirm")
+	suite.NoError(err)
+	suite.Equal(http.StatusNotFound, res.StatusCode)
 }

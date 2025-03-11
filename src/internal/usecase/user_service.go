@@ -53,6 +53,8 @@ func (s *UserService) GetUserProfile(username string) (*dto.UserProfile, error) 
 
 	oneUser := user[0]
 
+	if !oneUser.IsActive || oneUser.Role == domain.ANONYMOUS { return nil, api_errors.ErrProfileNotFound }
+
 	profile := &dto.UserProfile{
 		Username: 		oneUser.Username,
 		Description: 	oneUser.Description,
