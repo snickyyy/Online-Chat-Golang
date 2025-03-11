@@ -52,6 +52,8 @@ func (suite *AppTestSuite) TestRegister() {
 	suite.Equal(http.StatusBadRequest, res.StatusCode)
 	log.Println("Response status code: ", res.StatusCode)
 
+	defer res.Body.Close()
+
 }
 
 func (suite *AppTestSuite) TestLogin() {
@@ -96,5 +98,7 @@ func (suite *AppTestSuite) TestLogin() {
     suite.NoError(err)
     suite.Equal(http.StatusOK, resLogout.StatusCode)
     log.Println("Response status code: ", resLogout.StatusCode)
+
+	defer res.Body.Close()
 }
 
