@@ -20,3 +20,14 @@ type UserProfile struct {
 	Image       string 		`json:"image"`
 	CreatedAt   time.Time 	`json:"created_at"`
 }
+
+type ChangeUserProfileRequest struct {
+	NewUsername    *string  	`json:"new_username"`
+	NewDescription *string   	`json:"new_description"`
+	NewImage       *string   	`json:"new_image"`
+}
+
+type ChangeUserProfileResponse struct {
+	ChangedFields 	ChangeUserProfileRequest 	`json:"changed_fields"`
+	Message 		string 						`json:"message"`
+}

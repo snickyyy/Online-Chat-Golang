@@ -188,6 +188,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/accounts/profile/edit": {
+            "patch": {
+                "description": "Edit user profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Edit profile",
+                "parameters": [
+                    {
+                        "description": "Data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangeUserProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserProfile"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/accounts/profile/{username}": {
             "get": {
                 "description": "View user profile",
@@ -234,6 +280,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.ChangeUserProfileRequest": {
+            "type": "object",
+            "properties": {
+                "new_description": {
+                    "type": "string"
+                },
+                "new_image": {
+                    "type": "string"
+                },
+                "new_username": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ErrorResponse": {
             "type": "object",
             "required": [
@@ -309,10 +369,10 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "email": {
+                "image": {
                     "type": "string"
                 },
-                "image": {
+                "role": {
                     "type": "string"
                 },
                 "username": {

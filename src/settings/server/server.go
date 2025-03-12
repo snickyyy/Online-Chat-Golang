@@ -66,6 +66,7 @@ func RunServer() {
 		profile := accounts.Group("/profile")
 		{
             profile.GET("/:username", handler_api.UserProfile)
+			profile.PATCH("/edit", handler_api.ChangeUserProfile)
         }
 	}
 
