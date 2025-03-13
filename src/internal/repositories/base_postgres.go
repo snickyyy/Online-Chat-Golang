@@ -71,11 +71,7 @@ func (repo *BasePostgresRepository[T]) DeleteById(id int64) error {
 func (repo *BasePostgresRepository[T]) UpdateById(id int64, updateFields map[string]interface{}) error {
 	var obj T
 
-	repo.Db.First(&obj, id)
-
-	// TODO: optimizate this query (all in one query)
-
-	result := repo.Db.Model(&obj).Select(slices.Collect(maps.Keys(updateFields))).Updates(updateFields)
+	result := repo.Db.Model(&obj).Where("id = ?", id).Select(slices.Collect(maps.Keys(updateFields))).Updates(updateFields)
 	if result.Error != nil {
 		return result.Error
 	}
