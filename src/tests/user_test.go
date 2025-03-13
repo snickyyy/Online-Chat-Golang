@@ -64,12 +64,18 @@ func (suite *AppTestSuite) TestChangeProfile() {
 	body, _ := json.Marshal(changeBody)
 
 	request, err := http.NewRequest("PATCH", url, bytes.NewBuffer(body))
-	request.AddCookie(&http.Cookie{Name: "sessionID", Value: sess})
 	suite.NoError(err)
+	resProfile, err := suite.client.Do(request)
+	suite.NoError(err)
+	suite.Equal(http.StatusUnauthorized, resProfile.StatusCode)
+
+	request, err = http.NewRequest("PATCH", url, bytes.NewBuffer(body))
+	suite.NoError(err)
+	request.AddCookie(&http.Cookie{Name: "sessionID", Value: sess})
 	_, err = suite.client.Do(request)
 	suite.NoError(err)
 
-	resProfile, err := suite.client.Get(urlGetProfile + "TestProfileEditNewUsername")
+	resProfile, err = suite.client.Get(urlGetProfile + "TestProfileEditNewUsername")
 	suite.NoError(err)
 	suite.Equal(http.StatusOK, resProfile.StatusCode)
 	encode, _ := io.ReadAll(resProfile.Body)
