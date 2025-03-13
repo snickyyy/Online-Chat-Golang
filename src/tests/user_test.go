@@ -1,6 +1,9 @@
 package tests
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
 	"libs/src/settings"
@@ -18,10 +21,10 @@ func (suite *AppTestSuite) TestGetProfile() {
 
 	err = authService.RegisterUser(
 		dto.RegisterRequest{
-			Username: "profileNonConfirm",
-			Email:    "profileNonConfirm@test.com",
-            Password: "test123",
-            ConfirmPassword: "test123",
+			Username:        "profileNonConfirm",
+			Email:           "profileNonConfirm@test.com",
+			Password:        "test123",
+			ConfirmPassword: "test123",
 		},
 	)
 	suite.NoError(err)
@@ -37,4 +40,42 @@ func (suite *AppTestSuite) TestGetProfile() {
 	res, err = suite.client.Get(url + "profileNonConfirm")
 	suite.NoError(err)
 	suite.Equal(http.StatusNotFound, res.StatusCode)
+
+	defer res.Body.Close()
+}
+
+func (suite *AppTestSuite) TestChangeProfile() {
+	urlGetProfile := "http://127.0.0.1:8000/accounts/profile/"
+	url := "http://127.0.0.1:8000/accounts/profile/edit"
+
+	userService := services.NewUserService(settings.AppVar)
+	authService := services.NewAuthService(settings.AppVar)
+
+	err := userService.CreateSuperUser("TestProfileEdit", "profileEditTest@test.com", "test123")
+	suite.NoError(err)
+
+	sess, err := authService.Login(dto.LoginRequest{UsernameOrEmail: "TestProfileEdit", Password: "test123"})
+	suite.NoError(err)
+
+	changeBody := dto.ChangeUserProfileRequest{
+		NewUsername: new(string),
+	}
+	*changeBody.NewUsername = "TestProfileEditNewUsername"
+	body, _ := json.Marshal(changeBody)
+
+	request, err := http.NewRequest("PATCH", url, bytes.NewBuffer(body))
+	request.AddCookie(&http.Cookie{Name: "sessionID", Value: sess})
+	suite.NoError(err)
+	_, err = suite.client.Do(request)
+	suite.NoError(err)
+
+	resProfile, err := suite.client.Get(urlGetProfile + "TestProfileEditNewUsername")
+	suite.NoError(err)
+	suite.Equal(http.StatusOK, resProfile.StatusCode)
+	encode, _ := io.ReadAll(resProfile.Body)
+	var profile dto.UserProfile
+	json.Unmarshal(encode, &profile)
+	suite.Equal(profile.Username, "TestProfileEditNewUsername")
+
+	defer resProfile.Body.Close()
 }

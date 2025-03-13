@@ -34,38 +34,38 @@ func (r *BasePostgresRepository[T]) Create(obj *T) (interface{}, error) {
 
 func (r *BasePostgresRepository[T]) GetById(id int64) (T, error) {
 	var obj T
-    result := r.Db.First(&obj, id)
-    if result.Error != nil {
-        return obj, result.Error
-    }
-    return obj, nil
+	result := r.Db.First(&obj, id)
+	if result.Error != nil {
+		return obj, result.Error
+	}
+	return obj, nil
 }
 
 func (repo *BasePostgresRepository[T]) GetAll() ([]T, error) {
 	var result []T
-    stmt := repo.Db.Find(&result)
-    if stmt.Error != nil {
-        return result, stmt.Error
-    }
-    return result, nil
+	stmt := repo.Db.Find(&result)
+	if stmt.Error != nil {
+		return result, stmt.Error
+	}
+	return result, nil
 }
 
-func (repo *BasePostgresRepository[T]) Filter(query string, args... interface{}) ([]T, error) {
+func (repo *BasePostgresRepository[T]) Filter(query string, args ...interface{}) ([]T, error) {
 	var result []T
-    stmt := repo.Db.Where(query, args...).Find(&result)
-    if stmt.Error != nil {
-        return result, stmt.Error
-    }
-    return result, nil
+	stmt := repo.Db.Where(query, args...).Find(&result)
+	if stmt.Error != nil {
+		return result, stmt.Error
+	}
+	return result, nil
 }
 
 func (repo *BasePostgresRepository[T]) DeleteById(id int64) error {
 	var obj T
-    result := repo.Db.Where("id = ?", id).Delete(&obj)
+	result := repo.Db.Where("id = ?", id).Delete(&obj)
 	if result.Error != nil {
-        return result.Error
-    }
-    return nil
+		return result.Error
+	}
+	return nil
 }
 
 func (repo *BasePostgresRepository[T]) UpdateById(id int64, updateFields map[string]interface{}) error {
@@ -73,31 +73,33 @@ func (repo *BasePostgresRepository[T]) UpdateById(id int64, updateFields map[str
 
 	repo.Db.First(&obj, id)
 
+	// TODO: optimizate this query (all in one query)
+
 	result := repo.Db.Model(&obj).Select(slices.Collect(maps.Keys(updateFields))).Updates(updateFields)
-    if result.Error != nil {
-        return result.Error
-    }
-    return nil
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
 
-func (repo *BasePostgresRepository[T]) Count(filter string, args...interface{}) (int64, error) {
+func (repo *BasePostgresRepository[T]) Count(filter string, args ...interface{}) (int64, error) {
 	var obj T
 	var count int64
-    result := repo.Db.Model(&obj)
+	result := repo.Db.Model(&obj)
 	if filter != "" {
-        result = result.Where(filter, args...)
-    }
+		result = result.Where(filter, args...)
+	}
 	result.Count(&count)
-    if result.Error != nil {
-        return 0, result.Error
-    }
-    return count, nil
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return count, nil
 }
 
-func (repo *BasePostgresRepository[T]) ExecuteQuery(query string, args... interface{}) error {
-    stmt := repo.Db.Exec(query, args...)
-    if stmt.Error != nil {
-        return stmt.Error
-    }
-    return nil
+func (repo *BasePostgresRepository[T]) ExecuteQuery(query string, args ...interface{}) error {
+	stmt := repo.Db.Exec(query, args...)
+	if stmt.Error != nil {
+		return stmt.Error
+	}
+	return nil
 }
