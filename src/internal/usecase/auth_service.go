@@ -20,7 +20,7 @@ import (
 
 type AuthService struct {
 	RedisBaseRepository *repositories.BaseRedisRepository
-	UserRepository 		*repositories.UserRepository
+	UserRepository      *repositories.UserRepository
 	App                 *settings.App
 }
 
@@ -258,7 +258,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 
 func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 	userRepository := s.UserRepository
-	
+
 	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
