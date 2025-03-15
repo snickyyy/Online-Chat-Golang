@@ -19,8 +19,9 @@ type BasePostgresRepository[T domain.BaseModelsInterface] struct {
 func (r *BasePostgresRepository[T]) Create(obj *T) (interface{}, error) {
 	result := r.Db.Create(obj)
 	if result.Error != nil {
-		return 0, result.Error
+		return 0, parsePgError(result.Error)
 	}
+
 	v := reflect.ValueOf(obj).Elem()
 
 	field := v.FieldByName("ID")
@@ -36,7 +37,7 @@ func (r *BasePostgresRepository[T]) GetById(id int64) (T, error) {
 	var obj T
 	result := r.Db.First(&obj, id)
 	if result.Error != nil {
-		return obj, result.Error
+		return obj, parsePgError(result.Error)
 	}
 	return obj, nil
 }
@@ -45,7 +46,7 @@ func (repo *BasePostgresRepository[T]) GetAll() ([]T, error) {
 	var result []T
 	stmt := repo.Db.Find(&result)
 	if stmt.Error != nil {
-		return result, stmt.Error
+		return result, parsePgError(stmt.Error)
 	}
 	return result, nil
 }
@@ -54,7 +55,7 @@ func (repo *BasePostgresRepository[T]) Filter(query string, args ...interface{})
 	var result []T
 	stmt := repo.Db.Where(query, args...).Find(&result)
 	if stmt.Error != nil {
-		return result, stmt.Error
+		return result, parsePgError(stmt.Error)
 	}
 	return result, nil
 }
@@ -63,7 +64,7 @@ func (repo *BasePostgresRepository[T]) DeleteById(id int64) error {
 	var obj T
 	result := repo.Db.Where("id = ?", id).Delete(&obj)
 	if result.Error != nil {
-		return result.Error
+		return parsePgError(result.Error)
 	}
 	return nil
 }
@@ -72,8 +73,9 @@ func (repo *BasePostgresRepository[T]) UpdateById(id int64, updateFields map[str
 	var obj T
 
 	result := repo.Db.Model(&obj).Where("id = ?", id).Select(slices.Collect(maps.Keys(updateFields))).Updates(updateFields)
+
 	if result.Error != nil {
-		return result.Error
+		return parsePgError(result.Error)
 	}
 	return nil
 }
@@ -87,7 +89,7 @@ func (repo *BasePostgresRepository[T]) Count(filter string, args ...interface{})
 	}
 	result.Count(&count)
 	if result.Error != nil {
-		return 0, result.Error
+		return 0, parsePgError(result.Error)
 	}
 	return count, nil
 }
@@ -95,7 +97,7 @@ func (repo *BasePostgresRepository[T]) Count(filter string, args ...interface{})
 func (repo *BasePostgresRepository[T]) ExecuteQuery(query string, args ...interface{}) error {
 	stmt := repo.Db.Exec(query, args...)
 	if stmt.Error != nil {
-		return stmt.Error
+		return parsePgError(stmt.Error)
 	}
 	return nil
 }

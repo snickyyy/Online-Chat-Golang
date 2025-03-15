@@ -8,8 +8,6 @@ import (
 	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/internal/usecase/utils"
 	"libs/src/settings"
-
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type UserService struct {
@@ -104,12 +102,8 @@ func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessi
 
 	err = s.UserRepository.UpdateById(user.ID, updateData)
 	if err != nil {
-		var pqErr *pgconn.PgError
-		if errors.As(err, &pqErr) {
-			if pqErr.Code == "23505" {
-				return api_errors.ErrUserAlreadyExists
-			}
-			return err
+		if errors.Is(err, repositories.ErrDuplicate) {
+			return api_errors.ErrUserAlreadyExists
 		}
 	}
 

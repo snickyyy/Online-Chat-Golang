@@ -16,6 +16,7 @@ import (
 
 var middlewares = []gin.HandlerFunc{
 	handler_middlewares.AuthMiddleware,
+	handler_middlewares.ErrorHandler,
 }
 
 func newServer(handler http.Handler) *http.Server {
@@ -65,9 +66,9 @@ func RunServer() {
 		}
 		profile := accounts.Group("/profile")
 		{
-            profile.GET("/:username", handler_api.UserProfile)
+			profile.GET("/:username", handler_api.UserProfile)
 			profile.PATCH("/edit", handler_api.ChangeUserProfile)
-        }
+		}
 	}
 
 	server := newServer(router)

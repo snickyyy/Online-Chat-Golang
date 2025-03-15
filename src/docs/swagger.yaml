@@ -75,12 +75,11 @@ paths:
       - application/json
       description: Confirm users email
       parameters:
-      - description: Data
-        in: body
-        name: user
+      - description: Token to confirm account
+        in: path
+        name: token
         required: true
-        schema:
-          $ref: '#/definitions/dto.RegisterRequest'
+        type: string
       produces:
       - application/json
       responses:

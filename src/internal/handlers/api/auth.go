@@ -4,6 +4,7 @@ import (
 	_ "libs/src/docs"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
+	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"net/http"
 
@@ -23,14 +24,14 @@ import (
 func Register(c *gin.Context) {
 	_, err := c.Cookie("sessionID")
 	if err == nil {
-		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "Already logged in"})
+		c.Error(api_errors.ErrAlreadyLoggedIn)
 		return
 	}
 
 	var registerData dto.RegisterRequest
 
 	if err := c.ShouldBindJSON(&registerData); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
+		c.Error(api_errors.ErrInvalidBody)
 		return
 	}
 
@@ -38,7 +39,7 @@ func Register(c *gin.Context) {
 
 	err = service.RegisterUser(registerData)
 	if err != nil {
-		c.JSON(http.StatusConflict, err)
+		c.Error(err)
 		return
 	}
 	c.JSON(http.StatusOK, dto.RegisterResponse{Message: "success", Status: true})
@@ -49,7 +50,7 @@ func Register(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param user body dto.RegisterRequest true "Data"
+// @Param token path string true "Token to confirm account"
 // @Success 200 {object} string "success"
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -57,7 +58,7 @@ func Register(c *gin.Context) {
 func ConfirmAccount(c *gin.Context) {
 	_, err := c.Cookie("sessionID")
 	if err == nil {
-		c.JSON(403, dto.ErrorResponse{Error: "Already logged in"})
+		c.Error(api_errors.ErrAlreadyLoggedIn)
 		return
 	}
 	session_id := c.Param("token")
@@ -65,7 +66,7 @@ func ConfirmAccount(c *gin.Context) {
 	service := services.NewAuthService(settings.AppVar)
 	sess, err := service.ConfirmAccount(session_id)
 	if err != nil {
-		c.JSON(http.StatusConflict, dto.ErrorResponse{Error: err.Error()})
+		c.Error(err)
 		return
 	}
 	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
@@ -85,14 +86,14 @@ func ConfirmAccount(c *gin.Context) {
 func Login(c *gin.Context) {
 	_, err := c.Cookie("sessionID")
 	if err == nil {
-		c.JSON(http.StatusForbidden, dto.ErrorResponse{Error: "Already logged in"})
+		c.Error(api_errors.ErrAlreadyLoggedIn)
 		return
 	}
 
 	var loginData dto.LoginRequest
 
 	if err := c.ShouldBindJSON(&loginData); err != nil {
-		c.JSON(http.StatusConflict, dto.ErrorResponse{Error: err.Error()})
+		c.Error(api_errors.ErrInvalidBody)
 		return
 	}
 
@@ -100,7 +101,7 @@ func Login(c *gin.Context) {
 
 	sess, err := service.Login(loginData)
 	if err != nil {
-		c.JSON(http.StatusConflict, dto.ErrorResponse{Error: err.Error()})
+		c.Error(err)
 		return
 	}
 	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
@@ -119,7 +120,7 @@ func Login(c *gin.Context) {
 func Logout(c *gin.Context) {
 	cookie, err := c.Cookie("sessionID")
 	if err != nil {
-		c.JSON(403, dto.ErrorResponse{Error: "Not logged in"})
+		c.Error(api_errors.ErrNotLoggedIn)
 		return
 	}
 

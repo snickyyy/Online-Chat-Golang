@@ -27,13 +27,12 @@ func UserProfile(c *gin.Context) {
 
 	profile, err := service.GetUserProfile(username)
 	if err != nil {
-		c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: err.Error()})
+		c.Error(err)
 		return
 	}
 
 	c.JSON(200, profile)
 }
-
 
 // @Summary Edit profile
 // @Description Edit user profile
@@ -49,19 +48,19 @@ func ChangeUserProfile(c *gin.Context) {
 	sessId, err := c.Cookie("sessionID")
 	var requestData dto.ChangeUserProfileRequest
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Error: api_errors.ErrNeedLoginForChangeProfile.Error()})
+		c.Error(api_errors.ErrNeedLoginForChangeProfile)
 		return
 	}
 
 	if err := c.ShouldBindJSON(&requestData); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
+		c.Error(api_errors.ErrInvalidBody)
 		return
 	}
 
 	service := services.NewUserService(settings.AppVar)
 	err = service.ChangeUserProfile(requestData, sessId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
+		c.Error(err)
 		return
 	}
 	c.JSON(http.StatusOK, dto.ChangeUserProfileResponse{ChangedFields: requestData, Message: "success"})

@@ -13,9 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
 type AuthService struct {
@@ -43,11 +41,11 @@ func NewAuthService(app *settings.App) *AuthService {
 func (s *AuthService) GetUserBySession(session string) (dto.UserDTO, error) {
 	res, err := s.RedisBaseRepository.GetByKey(session)
 	if err != nil {
-		return dto.UserDTO{}, err
+		return dto.UserDTO{}, api_errors.ErrInvalidSession
 	}
 	decryptResult, err := utils.Decrypt(s.App.Config.AppConfig.SecretKey, res)
 	if err != nil {
-		return dto.UserDTO{}, err
+		return dto.UserDTO{}, api_errors.ErrInvalidSession
 	}
 
 	var user dto.AuthSession
@@ -145,17 +143,19 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 
 	user, err := userRepository.GetById(userId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, repositories.ErrRecordNotFound) {
 			return "", api_errors.ErrInvalidToken
 		}
 		return "", err
 	}
 
-	user.IsActive = true
-	user.Role = domain.USER
+	changeFields := map[string]any{
+		"IsActive": true,
+		"Role":     domain.USER,
+	}
 
 	go func() {
-		err = s.App.DB.Save(&user).Error
+		err = userRepository.UpdateById(user.ID, changeFields)
 		if err != nil {
 			settings.AppVar.Logger.Error(fmt.Sprintf("Error save user: %v", err))
 		}
@@ -194,14 +194,10 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		Role:     domain.ANONYMOUS,
 	}
 
-	err = s.App.DB.Create(&user).Error
+	_, err = s.UserRepository.Create(&user)
 	if err != nil {
-		var pqErr *pgconn.PgError
-		if errors.As(err, &pqErr) {
-			if pqErr.Code == "23505" {
-				return api_errors.ErrUserAlreadyExists
-			}
-			return err
+		if errors.Is(err, repositories.ErrDuplicate) {
+			return api_errors.ErrUserAlreadyExists
 		}
 	}
 
@@ -261,12 +257,8 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 
 	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			settings.AppVar.Logger.Warn(fmt.Sprintf("User not found: %s", data.UsernameOrEmail))
-			return "", err
-		}
 		settings.AppVar.Logger.Error(fmt.Sprintf("Error getting user in login: %v", err))
-		return "", err
+		return "", api_errors.ErrInvalidCredentials
 	}
 
 	if len(users) != 1 {

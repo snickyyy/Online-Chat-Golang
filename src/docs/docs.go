@@ -30,13 +30,11 @@ const docTemplate = `{
                 "summary": "User confirm registration",
                 "parameters": [
                     {
-                        "description": "Data",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RegisterRequest"
-                        }
+                        "type": "string",
+                        "description": "Token to confirm account",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {

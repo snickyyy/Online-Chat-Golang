@@ -3,11 +3,8 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"log"
 	"net/http"
@@ -44,10 +41,8 @@ func (suite *AppTestSuite) TestRegister() {
 	})
 	res, err = suite.client.Post(url, contType, bytes.NewBuffer(dataUnique))
 	suite.NoError(err)
-	responseBody, _ := io.ReadAll(res.Body)
 	suite.NoError(err)
-	suite.Equal(string(responseBody), fmt.Sprintf(`{"error":"%s"}`, api_errors.ErrUserAlreadyExists))
-	suite.Equal(http.StatusBadRequest, res.StatusCode)
+	suite.Equal(http.StatusConflict, res.StatusCode)
 	log.Println("Response status code: ", res.StatusCode)
 
 	defer res.Body.Close()
@@ -82,7 +77,7 @@ func (suite *AppTestSuite) TestLogin() {
 	})
 	res, err = suite.client.Post(url, contType, bytes.NewBuffer(dataFail))
 	suite.NoError(err)
-	suite.Equal(http.StatusConflict, res.StatusCode)
+	suite.Equal(http.StatusUnauthorized, res.StatusCode)
 
 	// TEST LOGOUT
 	urlLogout := "http://127.0.0.1:8000/accounts/auth/logout"
