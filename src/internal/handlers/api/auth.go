@@ -4,7 +4,9 @@ import (
 	_ "libs/src/docs"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
+	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,27 +22,28 @@ import (
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/register [post]
 func Register(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	_, err := c.Cookie("sessionID")
 	if err == nil {
-        c.JSON(403, dto.ErrorResponse{Error: "Already logged in"})
-        return
-    }
+		c.Error(api_errors.ErrAlreadyLoggedIn)
+		return
+	}
 
 	var registerData dto.RegisterRequest
 
 	if err := c.ShouldBindJSON(&registerData); err != nil {
-		c.JSON(400, dto.ErrorResponse{Error: err.Error()})
+		c.Error(api_errors.ErrInvalidBody)
 		return
 	}
 
-	service := services.NewAuthService(settings.AppVar)
+	service := services.NewAuthService(app)
 
 	err = service.RegisterUser(registerData)
 	if err != nil {
-		c.JSON(400, dto.ErrorResponse{Error: err.Error()})
+		c.Error(err)
 		return
 	}
-	c.JSON(200, dto.RegisterResponse{Message: "success", Status: true})
+	c.JSON(http.StatusOK, dto.RegisterResponse{Message: "success", Status: true})
 }
 
 // @Summary User confirm registration
@@ -48,27 +51,28 @@ func Register(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param user body dto.RegisterRequest true "Data"
+// @Param token path string true "Token to confirm account"
 // @Success 200 {object} string "success"
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/confirm-account [get]
 func ConfirmAccount(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	_, err := c.Cookie("sessionID")
 	if err == nil {
-        c.JSON(403, dto.ErrorResponse{Error: "Already logged in"})
-        return
-    }
-	session_id := c.Param("token")
-
-	service := services.NewAuthService(settings.AppVar)
-	sess, err := service.ConfirmAccount(session_id)
-	if err != nil {
-		c.JSON(409, dto.ErrorResponse{Error: err.Error()})
+		c.Error(api_errors.ErrAlreadyLoggedIn)
 		return
 	}
-	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
-	c.JSON(200, "success")
+	session_id := c.Param("token")
+
+	service := services.NewAuthService(app)
+	sess, err := service.ConfirmAccount(session_id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.SetCookie("sessionID", sess, int(app.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
+	c.JSON(http.StatusOK, "success")
 }
 
 // @Summary Login
@@ -82,28 +86,29 @@ func ConfirmAccount(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/login [post]
 func Login(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	_, err := c.Cookie("sessionID")
 	if err == nil {
-        c.JSON(403, dto.ErrorResponse{Error: "Already logged in"})
-        return
-    }
+		c.Error(api_errors.ErrAlreadyLoggedIn)
+		return
+	}
 
 	var loginData dto.LoginRequest
 
 	if err := c.ShouldBindJSON(&loginData); err != nil {
-		c.JSON(409, dto.ErrorResponse{Error: err.Error()})
+		c.Error(api_errors.ErrInvalidBody)
 		return
 	}
 
-	service := services.NewAuthService(settings.AppVar)
+	service := services.NewAuthService(app)
 
 	sess, err := service.Login(loginData)
 	if err != nil {
-		c.JSON(409, dto.ErrorResponse{Error: err.Error()})
+		c.Error(err)
 		return
 	}
-	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
-	c.JSON(200, "success")
+	c.SetCookie("sessionID", sess, int(app.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
+	c.JSON(http.StatusOK, "success")
 }
 
 // @Summary Logout
@@ -116,14 +121,15 @@ func Login(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/logout [get]
 func Logout(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	cookie, err := c.Cookie("sessionID")
-    if err != nil {
-        c.JSON(403, dto.ErrorResponse{Error: "Not logged in"})
-        return
-    }
-	
-	services.NewAuthService(settings.AppVar).Logout(cookie)
+	if err != nil {
+		c.Error(api_errors.ErrNotLoggedIn)
+		return
+	}
 
-    c.SetCookie("sessionID", "", -1, "/", "", true, true)
-    c.JSON(200, "success")
+	services.NewAuthService(app).Logout(cookie)
+
+	c.SetCookie("sessionID", "", -1, "/", "", true, true)
+	c.JSON(200, "success")
 }

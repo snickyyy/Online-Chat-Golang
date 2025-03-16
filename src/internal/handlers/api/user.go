@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 // @Summary Profile
 // @Description View user profile
 // @Tags profile
@@ -22,24 +21,50 @@ import (
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/profile/{username} [get]
 func UserProfile(c *gin.Context) {
-	service := services.NewUserService(settings.AppVar)
+	app := c.MustGet("app").(*settings.App)
+	service := services.NewUserService(app)
 
 	username := c.Param("username")
 
-	if username == "n" {
-		tryUserUsername := c.MustGet("user").(dto.UserDTO).Username;
-		if tryUserUsername == "" {
-			c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: api_errors.ErrProfileNotFound.Error()})
-			return
-		}
-		username = tryUserUsername
-	}
-
 	profile, err := service.GetUserProfile(username)
 	if err != nil {
-        c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: err.Error()})
-        return
-    }
+		c.Error(err)
+		return
+	}
 
-    c.JSON(200, profile)
+	c.JSON(200, profile)
+}
+
+// @Summary Edit profile
+// @Description Edit user profile
+// @Tags profile
+// @Accept json
+// @Produce json
+// @Param user body dto.ChangeUserProfileRequest true "Data"
+// @Success 200 {object} dto.UserProfile
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /accounts/profile/edit [patch]
+func ChangeUserProfile(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+	sessId, err := c.Cookie("sessionID")
+	var requestData dto.ChangeUserProfileRequest
+	if err != nil {
+		c.Error(api_errors.ErrNeedLoginForChangeProfile)
+		return
+	}
+
+	if err := c.ShouldBindJSON(&requestData); err != nil {
+		c.Error(api_errors.ErrInvalidBody)
+		return
+	}
+
+	service := services.NewUserService(app)
+	err = service.ChangeUserProfile(requestData, sessId)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.ChangeUserProfileResponse{ChangedFields: requestData, Message: "success"})
+
 }
