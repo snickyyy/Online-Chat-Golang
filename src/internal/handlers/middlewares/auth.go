@@ -11,6 +11,8 @@ import (
 )
 
 func AuthMiddleware(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+
 	var user dto.UserDTO
 
 	unknown := dto.UserDTO{
@@ -28,11 +30,11 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
-	service := services.NewAuthService(settings.AppVar)
+	service := services.NewAuthService(app)
 
 	user, err = service.GetUserBySession(sid)
 	if err != nil {
-		settings.AppVar.Logger.Error(fmt.Sprintf("Error getting session: %s || error: %s", sid, err))
+		app.Logger.Error(fmt.Sprintf("Error getting session: %s || error: %s", sid, err))
 		user = unknown
 		c.Set("user.state.isActive", false)
 		c.Next()

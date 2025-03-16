@@ -15,6 +15,7 @@ import (
 )
 
 var middlewares = []gin.HandlerFunc{
+	handler_middlewares.DependenciesMiddleware,
 	handler_middlewares.AuthMiddleware,
 	handler_middlewares.ErrorHandler,
 }

@@ -22,6 +22,7 @@ import (
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/register [post]
 func Register(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	_, err := c.Cookie("sessionID")
 	if err == nil {
 		c.Error(api_errors.ErrAlreadyLoggedIn)
@@ -35,7 +36,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	service := services.NewAuthService(settings.AppVar)
+	service := services.NewAuthService(app)
 
 	err = service.RegisterUser(registerData)
 	if err != nil {
@@ -56,6 +57,7 @@ func Register(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/confirm-account [get]
 func ConfirmAccount(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	_, err := c.Cookie("sessionID")
 	if err == nil {
 		c.Error(api_errors.ErrAlreadyLoggedIn)
@@ -63,13 +65,13 @@ func ConfirmAccount(c *gin.Context) {
 	}
 	session_id := c.Param("token")
 
-	service := services.NewAuthService(settings.AppVar)
+	service := services.NewAuthService(app)
 	sess, err := service.ConfirmAccount(session_id)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
+	c.SetCookie("sessionID", sess, int(app.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
 	c.JSON(http.StatusOK, "success")
 }
 
@@ -84,6 +86,7 @@ func ConfirmAccount(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/login [post]
 func Login(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	_, err := c.Cookie("sessionID")
 	if err == nil {
 		c.Error(api_errors.ErrAlreadyLoggedIn)
@@ -97,14 +100,14 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	service := services.NewAuthService(settings.AppVar)
+	service := services.NewAuthService(app)
 
 	sess, err := service.Login(loginData)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	c.SetCookie("sessionID", sess, int(settings.AppVar.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
+	c.SetCookie("sessionID", sess, int(app.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
 	c.JSON(http.StatusOK, "success")
 }
 
@@ -118,13 +121,14 @@ func Login(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/logout [get]
 func Logout(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	cookie, err := c.Cookie("sessionID")
 	if err != nil {
 		c.Error(api_errors.ErrNotLoggedIn)
 		return
 	}
 
-	services.NewAuthService(settings.AppVar).Logout(cookie)
+	services.NewAuthService(app).Logout(cookie)
 
 	c.SetCookie("sessionID", "", -1, "/", "", true, true)
 	c.JSON(200, "success")

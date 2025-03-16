@@ -25,7 +25,7 @@ type AuthService struct {
 func NewAuthService(app *settings.App) *AuthService {
 	return &AuthService{
 		RedisBaseRepository: &repositories.BaseRedisRepository{
-			Client: settings.AppVar.RedisSess,
+			Client: app.RedisSess,
 			Ctx:    settings.Context.Ctx,
 		},
 		UserRepository: &repositories.UserRepository{
@@ -78,7 +78,7 @@ func (s *AuthService) setSession(payload string, ttl time.Duration) (string, err
 }
 
 func (s *AuthService) setAuthSession(user domain.User) (string, error) {
-	sess_ttl := time.Now().Add(time.Duration(settings.AppVar.Config.AuthConfig.AuthSessionTTL) * time.Second)
+	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.AuthSessionTTL) * time.Second)
 	userDto := dto.UserDTO{
 		ID:        user.ID,
 		Username:  user.Username,
@@ -98,7 +98,7 @@ func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 		return "", err
 	}
 
-	sessionId, err := s.setSession(string(toJson), time.Duration(settings.AppVar.Config.AuthConfig.AuthSessionTTL)*time.Second)
+	sessionId, err := s.setSession(string(toJson), time.Duration(s.App.Config.AuthConfig.AuthSessionTTL)*time.Second)
 	if err != nil {
 		return "", err
 	}
@@ -157,14 +157,14 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 	go func() {
 		err = userRepository.UpdateById(user.ID, changeFields)
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error save user: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error save user: %v", err))
 		}
 	}()
 
 	go func() {
 		_, err = s.RedisBaseRepository.Delete(sessionId)
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error delete email confirm session: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error delete email confirm session: %v", err))
 		}
 	}()
 
@@ -201,7 +201,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		}
 	}
 
-	sess_ttl := time.Now().Add(time.Duration(settings.AppVar.Config.AuthConfig.EmailConfirmTTL) * time.Second)
+	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL) * time.Second)
 	userDto := dto.UserDTO{
 		ID:        user.ID,
 		Username:  user.Username,
@@ -220,32 +220,32 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	go func() {
 		toJson, err := json.Marshal(payload)
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
 			return
 		}
 
-		sessionId, err := s.setSession(string(toJson), time.Duration(settings.AppVar.Config.AuthConfig.EmailConfirmTTL)*time.Second)
+		sessionId, err := s.setSession(string(toJson), time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL)*time.Second)
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
 			return
 		}
 
 		url := fmt.Sprintf(
 			"Thank you for choosing our service, to confirm your registration, follow the url below\nhttp://%s:%d/accounts/auth/confirm-account/%s",
-			settings.AppVar.Config.AppConfig.DomainName,
-			settings.AppVar.Config.AppConfig.Port,
+			s.App.Config.AppConfig.DomainName,
+			s.App.Config.AppConfig.Port,
 			sessionId,
 		)
 
-		err = utils.SendMail(settings.AppVar.Mail,
-			settings.AppVar.Config.Mail.From,
+		err = utils.SendMail(s.App.Mail,
+			s.App.Config.Mail.From,
 			user.Email,
 			"Online-Chat-Golang || Confirm registration",
 			url,
 		)
 
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
 		}
 	}()
 
@@ -257,7 +257,7 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 
 	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
 	if err != nil {
-		settings.AppVar.Logger.Error(fmt.Sprintf("Error getting user in login: %v", err))
+		s.App.Logger.Error(fmt.Sprintf("Error getting user in login: %v", err))
 		return "", api_errors.ErrInvalidCredentials
 	}
 
@@ -282,7 +282,7 @@ func (s *AuthService) Logout(sessionId string) {
 	go func() {
 		_, err := s.RedisBaseRepository.Delete(sessionId)
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
 		}
 	}()
 }

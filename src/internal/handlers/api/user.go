@@ -21,7 +21,8 @@ import (
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/profile/{username} [get]
 func UserProfile(c *gin.Context) {
-	service := services.NewUserService(settings.AppVar)
+	app := c.MustGet("app").(*settings.App)
+	service := services.NewUserService(app)
 
 	username := c.Param("username")
 
@@ -45,6 +46,7 @@ func UserProfile(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/profile/edit [patch]
 func ChangeUserProfile(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	sessId, err := c.Cookie("sessionID")
 	var requestData dto.ChangeUserProfileRequest
 	if err != nil {
@@ -57,7 +59,7 @@ func ChangeUserProfile(c *gin.Context) {
 		return
 	}
 
-	service := services.NewUserService(settings.AppVar)
+	service := services.NewUserService(app)
 	err = service.ChangeUserProfile(requestData, sessId)
 	if err != nil {
 		c.Error(err)
