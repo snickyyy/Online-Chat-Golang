@@ -119,7 +119,7 @@ func Login(c *gin.Context) {
 // @Success 200 {object} string "success"
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
-// @Router /accounts/auth/logout [get]
+// @Router /accounts/auth/logout [delete]
 func Logout(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	cookie, err := c.Cookie("sessionID")

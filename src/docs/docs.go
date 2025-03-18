@@ -106,7 +106,7 @@ const docTemplate = `{
             }
         },
         "/accounts/auth/logout": {
-            "get": {
+            "delete": {
                 "description": "Logout the session",
                 "consumes": [
                     "application/json"
@@ -215,6 +215,52 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.UserProfile"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/profile/reset-password": {
+            "put": {
+                "description": "Reset user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Reset password",
+                "parameters": [
+                    {
+                        "description": "Data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ResetPasswordResponse"
                         }
                     },
                     "400": {
@@ -355,6 +401,28 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "boolean"
+                }
+            }
+        },
+        "dto.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "username_or_email"
+            ],
+            "properties": {
+                "username_or_email": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ResetPasswordResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
                 }
             }
         },

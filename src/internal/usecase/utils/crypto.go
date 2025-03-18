@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"math/big"
 )
 
 func GenerateSecret() (string, error) {
@@ -67,4 +68,12 @@ func Decrypt(secret string, encryptedStr string) (string, error) {
 	}
 
 	return string(decrypted), nil
+}
+
+func GenerateSecureCode(min, max int) (int, error) {
+	num, err := rand.Int(rand.Reader, big.NewInt(int64(max-min+1)))
+	if err != nil {
+		return 0, err
+	}
+	return int(num.Int64()) + min, nil
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"libs/src/internal/domain/enums"
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
@@ -79,14 +80,7 @@ func (s *AuthService) setSession(payload string, ttl time.Duration) (string, err
 
 func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.AuthSessionTTL) * time.Second)
-	userDto := dto.UserDTO{
-		ID:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		IsActive:  user.IsActive,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt,
-	}
+	userDto := user.ToDTO()
 	payload := dto.AuthSession{
 		UserDTO:   userDto,
 		TTL:       sess_ttl,
@@ -151,7 +145,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 
 	changeFields := map[string]any{
 		"IsActive": true,
-		"Role":     domain.USER,
+		"Role":     enums.USER,
 	}
 
 	go func() {
@@ -191,7 +185,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		Email:    data.Email,
 		Password: hashedPassword,
 		IsActive: false,
-		Role:     domain.ANONYMOUS,
+		Role:     enums.ANONYMOUS,
 	}
 
 	_, err = s.UserRepository.Create(&user)
@@ -202,14 +196,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	}
 
 	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL) * time.Second)
-	userDto := dto.UserDTO{
-		ID:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		IsActive:  user.IsActive,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt,
-	}
+	userDto := user.ToDTO()
 	payload := dto.EmailSession{
 		AuthSession: dto.AuthSession{
 			UserDTO:   userDto,
@@ -230,7 +217,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 			return
 		}
 
-		url := fmt.Sprintf(
+		msg := fmt.Sprintf(
 			"Thank you for choosing our service, to confirm your registration, follow the url below\nhttp://%s:%d/accounts/auth/confirm-account/%s",
 			s.App.Config.AppConfig.DomainName,
 			s.App.Config.AppConfig.Port,
@@ -241,7 +228,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 			s.App.Config.Mail.From,
 			user.Email,
 			"Online-Chat-Golang || Confirm registration",
-			url,
+			msg,
 		)
 
 		if err != nil {
@@ -266,7 +253,7 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 	}
 
 	user := users[0]
-	if !utils.CheckPasswordHash(user.Password, data.Password) || !user.IsActive || user.Role == domain.ANONYMOUS {
+	if !utils.CheckPasswordHash(user.Password, data.Password) || !user.IsActive || user.Role == enums.ANONYMOUS {
 		return "", api_errors.ErrInvalidCredentials
 	}
 

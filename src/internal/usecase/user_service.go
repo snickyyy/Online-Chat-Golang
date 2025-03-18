@@ -1,18 +1,24 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/google/uuid"
+	"libs/src/internal/domain/enums"
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
 	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/internal/usecase/utils"
 	"libs/src/settings"
+	"time"
 )
 
 type UserService struct {
-	App            *settings.App
-	UserRepository *repositories.UserRepository
+	App             *settings.App
+	UserRepository  *repositories.UserRepository
+	RedisRepository *repositories.BaseRedisRepository
 }
 
 func NewUserService(app *settings.App) *UserService {
@@ -23,6 +29,10 @@ func NewUserService(app *settings.App) *UserService {
 				Model: domain.User{},
 				Db:    app.DB,
 			},
+		},
+		RedisRepository: &repositories.BaseRedisRepository{
+			Client: app.RedisSess,
+			Ctx:    settings.Context.Ctx,
 		},
 	}
 }
@@ -39,7 +49,7 @@ func (s *UserService) CreateSuperUser(username string, email string, password st
 			Email:    email,
 			Password: passToHash,
 			IsActive: true,
-			Role:     domain.ADMIN,
+			Role:     enums.ADMIN,
 		},
 	)
 	if err != nil {
@@ -60,14 +70,14 @@ func (s *UserService) GetUserProfile(username string) (*dto.UserProfile, error) 
 
 	oneUser := user[0]
 
-	if !oneUser.IsActive || oneUser.Role == domain.ANONYMOUS {
+	if !oneUser.IsActive || oneUser.Role == enums.ANONYMOUS {
 		return nil, api_errors.ErrProfileNotFound
 	}
 
 	profile := &dto.UserProfile{
 		Username:    oneUser.Username,
 		Description: oneUser.Description,
-		Role:        domain.RolesToLabels[int(oneUser.Role)],
+		Role:        enums.RolesToLabels[int(oneUser.Role)],
 		Image:       oneUser.Image,
 		CreatedAt:   oneUser.CreatedAt,
 	}
@@ -82,7 +92,7 @@ func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessi
 		return err
 	}
 
-	if user.Role == domain.ANONYMOUS || !user.IsActive {
+	if user.Role == enums.ANONYMOUS || !user.IsActive {
 		return api_errors.ErrNeedLoginForChangeProfile
 	}
 
@@ -106,7 +116,74 @@ func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessi
 			return api_errors.ErrUserAlreadyExists
 		}
 	}
-
 	return nil
+}
 
+func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, error) {
+	users, err := s.UserRepository.Filter("email = ? OR username = ?", request.UsernameOrEmail, request.UsernameOrEmail)
+
+	if err != nil {
+		return -1, err
+	}
+	if len(users) != 1 {
+		return -1, api_errors.ErrUserNotFound
+	}
+
+	user := users[0]
+	if !user.IsActive || user.Role == enums.ANONYMOUS {
+		return -1, api_errors.ErrUserNotFound
+	}
+	userDto := user.ToDTO()
+
+	secretCode, err := utils.GenerateSecureCode(1000, 9999)
+	if err != nil {
+		return -1, err
+	}
+
+	resetPasswordDto := dto.ResetPasswordSession{
+		User: userDto,
+		Code: secretCode,
+	}
+	toJson, _ := json.Marshal(&resetPasswordDto)
+	encrypt, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(toJson))
+	if err != nil {
+		return -1, err
+	}
+
+	sessionBody := dto.SessionDTO{
+		SessionID: uuid.New().String(),
+		Expire:    time.Now().Add(time.Duration(s.App.Config.AuthConfig.ResetPasswordTTL) * time.Second),
+		Type:      enums.RESET_PASSWORD,
+		Payload:   encrypt,
+	}
+	_, err = s.RedisRepository.SetDTO(sessionBody)
+	if err != nil {
+		s.App.Logger.Error(fmt.Sprintf("Error while set session to redis: %s", err.Error()))
+		return -1, err
+	}
+
+	go func() {
+		msg := fmt.Sprintf(
+			"For To confirm password reset, follow the link\nhttp://%s:%d/accounts/profile/reset-password/%s",
+			s.App.Config.AppConfig.DomainName,
+			s.App.Config.AppConfig.Port,
+			sessionBody.SessionID,
+		)
+
+		for i := 1; i <= 3; i++ {
+			err = utils.SendMail(s.App.Mail,
+				s.App.Config.Mail.From,
+				user.Email,
+				"Online-Chat-Golang || Reset-password",
+				msg,
+			)
+
+			if err == nil {
+				break
+			}
+			s.App.Logger.Error(fmt.Sprintf("Error registering user: %v || try: %d", err, i))
+			time.Sleep(time.Duration(i) * time.Second)
+		}
+	}()
+	return secretCode, nil
 }

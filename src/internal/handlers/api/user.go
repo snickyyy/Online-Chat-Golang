@@ -66,5 +66,31 @@ func ChangeUserProfile(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, dto.ChangeUserProfileResponse{ChangedFields: requestData, Message: "success"})
+}
 
+// @Summary Reset password
+// @Description Reset user password
+// @Tags profile
+// @Accept json
+// @Produce json
+// @Param user body dto.ResetPasswordRequest true "Data"
+// @Success 200 {object} dto.ResetPasswordResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /accounts/profile/reset-password [put]
+func ResetPassword(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+	var requestData dto.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&requestData); err != nil {
+		c.Error(api_errors.ErrInvalidBody)
+		return
+	}
+
+	service := services.NewUserService(app)
+	code, err := service.ResetPassword(requestData)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.ResetPasswordResponse{Message: "success", Code: code})
 }

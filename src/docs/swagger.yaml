@@ -53,6 +53,20 @@ definitions:
     - message
     - status
     type: object
+  dto.ResetPasswordRequest:
+    properties:
+      username_or_email:
+        type: string
+    required:
+    - username_or_email
+    type: object
+  dto.ResetPasswordResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
   dto.UserProfile:
     properties:
       created_at:
@@ -129,7 +143,7 @@ paths:
       tags:
       - Auth
   /accounts/auth/logout:
-    get:
+    delete:
       consumes:
       - application/json
       description: Logout the session
@@ -238,6 +252,36 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Edit profile
+      tags:
+      - profile
+  /accounts/profile/reset-password:
+    put:
+      consumes:
+      - application/json
+      description: Reset user password
+      parameters:
+      - description: Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ResetPasswordResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Reset password
       tags:
       - profile
 swagger: "2.0"

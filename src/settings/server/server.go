@@ -63,12 +63,13 @@ func RunServer() {
 			auth.POST("/register", handler_api.Register)
 			auth.GET("/confirm-account/:token", handler_api.ConfirmAccount)
 			auth.POST("/login", handler_api.Login)
-			auth.GET("/logout", handler_api.Logout)
+			auth.DELETE("/logout", handler_api.Logout)
 		}
 		profile := accounts.Group("/profile")
 		{
 			profile.GET("/:username", handler_api.UserProfile)
 			profile.PATCH("/edit", handler_api.ChangeUserProfile)
+			profile.PUT("/reset-password", handler_api.ResetPassword)
 		}
 	}
 

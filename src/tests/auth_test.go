@@ -81,7 +81,7 @@ func (suite *AppTestSuite) TestLogin() {
 
 	// TEST LOGOUT
 	urlLogout := "http://127.0.0.1:8000/accounts/auth/logout"
-	req, err := http.NewRequest("GET", urlLogout, nil)
+	req, err := http.NewRequest("DELETE", urlLogout, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

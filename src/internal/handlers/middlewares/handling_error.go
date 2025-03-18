@@ -67,6 +67,11 @@ func parseError(err error) (int, gin.H) {
 			"error": "User is not logged in",
 		}
 	}
+	if errors.Is(err, api_errors.ErrUserNotFound) {
+		return http.StatusNotFound, gin.H{
+			"error": "User not found",
+		}
+	}
 
 	return http.StatusInternalServerError, gin.H{
 		"error": "Internal server error",
