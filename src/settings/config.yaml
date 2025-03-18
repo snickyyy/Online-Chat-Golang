@@ -20,6 +20,7 @@ auth:
   session_auth_ttl: 86400
   confirm_email_ttl: 3600
   reset_password_ttl: 600
+  time_to_change_password: 86400
 
 mongo:
   uri: "${MONGO_URI}"
@@ -32,7 +33,7 @@ redis:
     session: "session:"
     message: "message:"
     confirm_email: "confirm_email:"
-    reset_password: "reset_password:"
+    confirm_reset_password: "confirm_reset_password:"
 
 mail:
   username: "${MAIL_USERNAME}"

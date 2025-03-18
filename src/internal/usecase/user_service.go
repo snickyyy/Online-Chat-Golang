@@ -156,7 +156,7 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 		Type:      enums.RESET_PASSWORD,
 		Payload:   encrypt,
 	}
-	_, err = s.RedisRepository.SetDTO(s.App.Config.RedisConfig.Prefixes.ResetPassword, sessionBody)
+	_, err = s.RedisRepository.SetDTO(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, sessionBody)
 	if err != nil {
 		s.App.Logger.Error(fmt.Sprintf("Error while set session to redis: %s", err.Error()))
 		return -1, err
