@@ -26,7 +26,7 @@ type AuthService struct {
 func NewAuthService(app *settings.App) *AuthService {
 	return &AuthService{
 		RedisBaseRepository: &repositories.BaseRedisRepository{
-			Client: app.RedisSess,
+			Client: app.RedisClient,
 			Ctx:    settings.Context.Ctx,
 		},
 		UserRepository: &repositories.UserRepository{
@@ -39,8 +39,8 @@ func NewAuthService(app *settings.App) *AuthService {
 	}
 }
 
-func (s *AuthService) GetUserBySession(session string) (dto.UserDTO, error) {
-	res, err := s.RedisBaseRepository.GetByKey(session)
+func (s *AuthService) GetUserBySession(prefix string, session string) (dto.UserDTO, error) {
+	res, err := s.RedisBaseRepository.GetByKey(prefix, session)
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidSession
 	}
@@ -59,7 +59,7 @@ func (s *AuthService) GetUserBySession(session string) (dto.UserDTO, error) {
 	return user.UserDTO, nil
 }
 
-func (s *AuthService) setSession(payload string, ttl time.Duration) (string, error) {
+func (s *AuthService) setSession(prefix string, payload string, ttl time.Duration) (string, error) {
 	encrypted, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(payload))
 	if err != nil {
 		return "", err
@@ -67,6 +67,7 @@ func (s *AuthService) setSession(payload string, ttl time.Duration) (string, err
 
 	newId := uuid.New().String()
 	_, err = s.RedisBaseRepository.Create(
+		prefix,
 		newId,
 		encrypted,
 		ttl,
@@ -92,7 +93,11 @@ func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 		return "", err
 	}
 
-	sessionId, err := s.setSession(string(toJson), time.Duration(s.App.Config.AuthConfig.AuthSessionTTL)*time.Second)
+	sessionId, err := s.setSession(
+		s.App.Config.RedisConfig.Prefixes.SessionPrefix,
+		string(toJson),
+		time.Duration(s.App.Config.AuthConfig.AuthSessionTTL)*time.Second,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -101,7 +106,7 @@ func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 }
 
 func (s *AuthService) CheckEmailSession(sessionId string) (int64, error) {
-	userDto, err := s.GetUserBySession(sessionId)
+	userDto, err := s.GetUserBySession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return 0, api_errors.ErrInvalidToken
@@ -136,6 +141,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 	userRepository := s.UserRepository
 
 	user, err := userRepository.GetById(userId)
+	// TODO: Оптимизировать тут что бы был только 1 запрос(юзер возвращался с CheckEmailSession
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {
 			return "", api_errors.ErrInvalidToken
@@ -156,7 +162,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 	}()
 
 	go func() {
-		_, err = s.RedisBaseRepository.Delete(sessionId)
+		_, err = s.RedisBaseRepository.Delete(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error delete email confirm session: %v", err))
 		}
@@ -211,7 +217,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 			return
 		}
 
-		sessionId, err := s.setSession(string(toJson), time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL)*time.Second)
+		sessionId, err := s.setSession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, string(toJson), time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL)*time.Second)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
 			return
@@ -267,7 +273,7 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 
 func (s *AuthService) Logout(sessionId string) {
 	go func() {
-		_, err := s.RedisBaseRepository.Delete(sessionId)
+		_, err := s.RedisBaseRepository.Delete(s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
 		}

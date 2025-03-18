@@ -41,14 +41,14 @@ func GetDI() *fx.App {
 				}
 				return db, nil
 			},
-			NewRedisSessionClient,
+			NewRedisClient,
 			NewMail,
 			NewApp,
 		),
 		fx.Invoke(func(app *App) {
 			fmt.Println("App initialized:", &app)
 		},
-		MakeMigrations),
+			MakeMigrations),
 	)
 	return di
 }

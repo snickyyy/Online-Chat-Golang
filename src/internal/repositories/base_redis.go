@@ -14,8 +14,9 @@ type BaseRedisRepository struct {
 	Ctx    context.Context
 }
 
-func (repo *BaseRedisRepository) SetDTO(obj dto.SessionDTO) (string, error) {
+func (repo *BaseRedisRepository) SetDTO(prefix string, obj dto.SessionDTO) (string, error) {
 	toJson, _ := json.Marshal(obj)
+	obj.SessionID = prefix + obj.SessionID
 	result, err := repo.Client.Set(
 		repo.Ctx,
 		obj.SessionID,
@@ -27,24 +28,24 @@ func (repo *BaseRedisRepository) SetDTO(obj dto.SessionDTO) (string, error) {
 	return result, nil
 }
 
-func (repo *BaseRedisRepository) GetByKey(key string) (string, error) {
-	result, err := repo.Client.Get(repo.Ctx, key).Result()
+func (repo *BaseRedisRepository) GetByKey(prefix string, key string) (string, error) {
+	result, err := repo.Client.Get(repo.Ctx, prefix+key).Result()
 	if err != nil {
 		return "", err
 	}
 	return result, nil
 }
 
-func (repo *BaseRedisRepository) Create(key string, value any, expiration time.Duration) (string, error) {
-	result, err := repo.Client.Set(repo.Ctx, key, value, expiration).Result()
+func (repo *BaseRedisRepository) Create(prefix string, key string, value any, expiration time.Duration) (string, error) {
+	result, err := repo.Client.Set(repo.Ctx, prefix+key, value, expiration).Result()
 	if err != nil {
 		return "", err
 	}
 	return result, nil
 }
 
-func (repo *BaseRedisRepository) Delete(key string) (int64, error) {
-	res, err := repo.Client.Del(repo.Ctx, key).Result()
+func (repo *BaseRedisRepository) Delete(prefix string, key string) (int64, error) {
+	res, err := repo.Client.Del(repo.Ctx, prefix+key).Result()
 	if err != nil {
 		return 0, err
 	}
@@ -56,8 +57,8 @@ func (repo *BaseRedisRepository) CountAll() (int64, error) {
 	return count, err
 }
 
-func (repo *BaseRedisRepository) IsExist(key string) (bool, error) {
-	res, err := repo.Client.Exists(repo.Ctx, key).Result()
+func (repo *BaseRedisRepository) IsExist(prefix string, key string) (bool, error) {
+	res, err := repo.Client.Exists(repo.Ctx, prefix+key).Result()
 	if err != nil {
 		return false, err
 	}

@@ -32,7 +32,7 @@ func AuthMiddleware(c *gin.Context) {
 
 	service := services.NewAuthService(app)
 
-	user, err = service.GetUserBySession(sid)
+	user, err = service.GetUserBySession(app.Config.RedisConfig.Prefixes.SessionPrefix, sid)
 	if err != nil {
 		app.Logger.Error(fmt.Sprintf("Error getting session: %s || error: %s", sid, err))
 		user = unknown

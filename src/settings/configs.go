@@ -33,15 +33,18 @@ type Ctx struct {
 	Cancel context.CancelFunc
 }
 
-type RedisDbs struct {
-	SessionDb int `mapstructure:"session"`
+type RedisPrefixes struct {
+	SessionPrefix string `mapstructure:"session"`
+	ConfirmEmail  string `mapstructure:"confirm_email"`
+	Message       string `mapstructure:"message"`
+	ResetPassword string `mapstructure:"reset_password"`
 }
 
 type RedisConfig struct {
-	Host     string   `mapstructure:"host"`
-	Port     int      `mapstructure:"port"`
-	Password string   `mapstructure:"password"`
-	DB       RedisDbs `mapstructure:"db"`
+	Host     string        `mapstructure:"host"`
+	Port     int           `mapstructure:"port"`
+	Password string        `mapstructure:"password"`
+	Prefixes RedisPrefixes `mapstructure:"prefixes"`
 }
 
 type PostgresConfig struct {

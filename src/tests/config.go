@@ -43,8 +43,11 @@ func GetTestConfig() *settings.BaseConfig {
 		RedisConfig: settings.RedisConfig{
 			Host: "localhost",
 			Port: 6379,
-			DB: settings.RedisDbs{
-				SessionDb: 2,
+			Prefixes: settings.RedisPrefixes{
+				SessionPrefix: "session:",
+				ConfirmEmail:  "confirm_email:",
+				Message:       "message:",
+				ResetPassword: "reset_password:",
 			},
 		},
 		Mail: settings.Mail{},

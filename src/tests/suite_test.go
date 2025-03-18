@@ -44,7 +44,7 @@ func (suite *AppTestSuite) SetupSuite() {
 		suite.FailNow("Failed to initialize MongoDB client", err)
 	}
 
-	redis := settings.NewRedisSessionClient(baseCfg)
+	redis := settings.NewRedisClient(baseCfg)
 	mail := gomail.Dialer{}
 
 	app := settings.NewApp(
@@ -82,8 +82,8 @@ func (suite *AppTestSuite) TearDownSuite() {
 
 	settings.AppVar.MongoDB.Drop(settings.Context.Ctx)
 
-	settings.AppVar.RedisSess.FlushAll(settings.Context.Ctx)
-	settings.AppVar.RedisSess.Close()
+	settings.AppVar.RedisClient.FlushAll(settings.Context.Ctx)
+	settings.AppVar.RedisClient.Close()
 }
 
 func TestAppTestSuite(t *testing.T) {

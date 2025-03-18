@@ -31,7 +31,7 @@ func NewUserService(app *settings.App) *UserService {
 			},
 		},
 		RedisRepository: &repositories.BaseRedisRepository{
-			Client: app.RedisSess,
+			Client: app.RedisClient,
 			Ctx:    settings.Context.Ctx,
 		},
 	}
@@ -87,7 +87,7 @@ func (s *UserService) GetUserProfile(username string) (*dto.UserProfile, error) 
 
 func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessionId string) error {
 	authService := NewAuthService(s.App)
-	user, err := authService.GetUserBySession(sessionId)
+	user, err := authService.GetUserBySession(s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 		Type:      enums.RESET_PASSWORD,
 		Payload:   encrypt,
 	}
-	_, err = s.RedisRepository.SetDTO(sessionBody)
+	_, err = s.RedisRepository.SetDTO(s.App.Config.RedisConfig.Prefixes.ResetPassword, sessionBody)
 	if err != nil {
 		s.App.Logger.Error(fmt.Sprintf("Error while set session to redis: %s", err.Error()))
 		return -1, err
