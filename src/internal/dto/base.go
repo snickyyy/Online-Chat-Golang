@@ -10,6 +10,6 @@ type ErrorResponse struct {
 type SessionDTO struct {
 	SessionID string    `json:"id" binding:"required"`
 	Expire    time.Time `json:"exp" binding:"required"`
-	Type      int       `json:"type" binding:"required"`
+	Prefix    string    `json:"prefix" binding:"required"`
 	Payload   string    `json:"payload" binding:"required"`
 }

@@ -153,7 +153,7 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 	sessionBody := dto.SessionDTO{
 		SessionID: uuid.New().String(),
 		Expire:    time.Now().Add(time.Duration(s.App.Config.AuthConfig.ResetPasswordTTL) * time.Second),
-		Type:      enums.RESET_PASSWORD,
+		Prefix:    s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword,
 		Payload:   encrypt,
 	}
 	_, err = s.RedisRepository.SetDTO(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, sessionBody)
