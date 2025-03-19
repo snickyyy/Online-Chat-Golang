@@ -82,10 +82,8 @@ func (s *AuthService) setSession(session dto.SessionDTO) (string, error) {
 	return session.SessionID, nil
 }
 
-func (s *AuthService) setAuthSession(user domain.User) (string, error) {
+func (s *AuthService) setAuthSession(userDto dto.UserDTO) (string, error) {
 	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.AuthSessionTTL) * time.Second)
-
-	userDto := user.ToDTO()
 
 	encoding, _ := json.Marshal(
 		dto.AuthSession{
@@ -113,28 +111,28 @@ func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 	return sessionId, nil
 }
 
-func (s *AuthService) CheckEmailSession(sessionId string) (int64, error) {
+func (s *AuthService) CheckEmailSession(sessionId string) (dto.UserDTO, error) {
 	res, err := s.RedisBaseRepository.GetByKey(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
 	if err != nil {
-		return 0, api_errors.ErrInvalidSession
+		return dto.UserDTO{}, api_errors.ErrInvalidSession
 	}
 
 	var sessionBody dto.SessionDTO
 
 	err = json.Unmarshal([]byte(res), &sessionBody)
 	if err != nil {
-		return 0, api_errors.ErrInvalidToken
+		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
 	decryptResult, err := utils.Decrypt(s.App.Config.AppConfig.SecretKey, sessionBody.Payload)
 	if err != nil {
-		return 0, api_errors.ErrInvalidToken
+		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
 	var emailSessionBody dto.EmailSession
 	err = json.Unmarshal([]byte(decryptResult), &emailSessionBody)
 	if err != nil {
-		return 0, api_errors.ErrInvalidToken
+		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
 	userDto := emailSessionBody.UserDTO
@@ -143,40 +141,22 @@ func (s *AuthService) CheckEmailSession(sessionId string) (int64, error) {
 
 	user, err := userRepository.GetById(userDto.ID)
 	if err != nil {
-		return 0, api_errors.ErrInvalidToken
+		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
-	if user.Role != enums.ANONYMOUS {
-		return 0, api_errors.ErrInvalidToken
+	if user.Role != enums.ANONYMOUS || user.IsActive || user.Email != userDto.Email {
+		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
-
-	if user.IsActive {
-		return 0, api_errors.ErrInvalidToken
-	}
-
-	if user.Email != userDto.Email {
-		return 0, api_errors.ErrInvalidToken
-	}
-
-	return user.ID, nil
+	return user.ToDTO(), nil
 }
 
 func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
-	userId, err := s.CheckEmailSession(sessionId)
+	userDto, err := s.CheckEmailSession(sessionId)
 	if err != nil {
 		return "", err
 	}
 
 	userRepository := s.UserRepository
-
-	user, err := userRepository.GetById(userId)
-	// TODO: Оптимизировать тут что бы был только 1 запрос(юзер возвращался с CheckEmailSession
-	if err != nil {
-		if errors.Is(err, repositories.ErrRecordNotFound) {
-			return "", api_errors.ErrInvalidToken
-		}
-		return "", err
-	}
 
 	changeFields := map[string]any{
 		"IsActive": true,
@@ -184,7 +164,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 	}
 
 	go func() {
-		err = userRepository.UpdateById(user.ID, changeFields)
+		err = userRepository.UpdateById(userDto.ID, changeFields)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error save user: %v", err))
 		}
@@ -197,7 +177,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 		}
 	}()
 
-	session, err := s.setAuthSession(user)
+	session, err := s.setAuthSession(userDto)
 	if err != nil {
 		return "", err
 	}
@@ -301,7 +281,7 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 		return "", api_errors.ErrInvalidCredentials
 	}
 
-	session, err := s.setAuthSession(user)
+	session, err := s.setAuthSession(user.ToDTO())
 	if err != nil {
 		return "", err
 	}
