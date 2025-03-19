@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 )
 
 type AuthService struct {
@@ -44,60 +43,69 @@ func (s *AuthService) GetUserBySession(prefix string, session string) (dto.UserD
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidSession
 	}
-	decryptResult, err := utils.Decrypt(s.App.Config.AppConfig.SecretKey, res)
+
+	var sessionBody dto.SessionDTO
+
+	err = json.Unmarshal([]byte(res), &sessionBody)
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidSession
 	}
 
-	var user dto.AuthSession
+	decryptResult, err := utils.Decrypt(s.App.Config.AppConfig.SecretKey, sessionBody.Payload)
+	if err != nil {
+		return dto.UserDTO{}, api_errors.ErrInvalidSession
+	}
 
-	err = json.Unmarshal([]byte(decryptResult), &user)
+	var authSessionBody dto.AuthSession
+
+	err = json.Unmarshal([]byte(decryptResult), &authSessionBody)
 	if err != nil {
 		return dto.UserDTO{}, err
 	}
 
-	return user.UserDTO, nil
+	return authSessionBody.UserDTO, nil
 }
 
-func (s *AuthService) setSession(prefix string, payload string, ttl time.Duration) (string, error) {
-	encrypted, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(payload))
-	if err != nil {
-		return "", err
-	}
+func (s *AuthService) setSession(session dto.SessionDTO) (string, error) {
+	encoding, _ := json.Marshal(&session)
 
-	newId := uuid.New().String()
-	_, err = s.RedisBaseRepository.Create(
-		prefix,
-		newId,
-		encrypted,
-		ttl,
+	_, err := s.RedisBaseRepository.Create(
+		session.Prefix,
+		session.SessionID,
+		string(encoding),
+		session.Expire.Sub(time.Now()),
 	)
 	if err != nil {
 		return "", err
 	}
 
-	return newId, nil
+	return session.SessionID, nil
 }
 
 func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.AuthSessionTTL) * time.Second)
-	userDto := user.ToDTO()
-	payload := dto.AuthSession{
-		UserDTO:   userDto,
-		TTL:       sess_ttl,
-		CreatedAt: time.Now(),
-	}
 
-	toJson, err := json.Marshal(payload)
+	userDto := user.ToDTO()
+
+	encoding, _ := json.Marshal(
+		dto.AuthSession{
+			UserDTO: userDto,
+		},
+	)
+
+	encrypt, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(encoding))
 	if err != nil {
 		return "", err
 	}
 
-	sessionId, err := s.setSession(
-		s.App.Config.RedisConfig.Prefixes.SessionPrefix,
-		string(toJson),
-		time.Duration(s.App.Config.AuthConfig.AuthSessionTTL)*time.Second,
-	)
+	session := dto.SessionDTO{
+		SessionID: uuid.New().String(),
+		Expire:    sess_ttl,
+		Prefix:    s.App.Config.RedisConfig.Prefixes.SessionPrefix,
+		Payload:   string(encrypt),
+	}
+
+	sessionId, err := s.setSession(session)
 	if err != nil {
 		return "", err
 	}
@@ -106,18 +114,39 @@ func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 }
 
 func (s *AuthService) CheckEmailSession(sessionId string) (int64, error) {
-	userDto, err := s.GetUserBySession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
+	res, err := s.RedisBaseRepository.GetByKey(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return 0, api_errors.ErrInvalidToken
-		}
-		return 0, err
+		return 0, api_errors.ErrInvalidSession
 	}
+
+	var sessionBody dto.SessionDTO
+
+	err = json.Unmarshal([]byte(res), &sessionBody)
+	if err != nil {
+		return 0, api_errors.ErrInvalidToken
+	}
+
+	decryptResult, err := utils.Decrypt(s.App.Config.AppConfig.SecretKey, sessionBody.Payload)
+	if err != nil {
+		return 0, api_errors.ErrInvalidToken
+	}
+
+	var emailSessionBody dto.EmailSession
+	err = json.Unmarshal([]byte(decryptResult), &emailSessionBody)
+	if err != nil {
+		return 0, api_errors.ErrInvalidToken
+	}
+
+	userDto := emailSessionBody.UserDTO
 
 	userRepository := s.UserRepository
 
 	user, err := userRepository.GetById(userDto.ID)
 	if err != nil {
+		return 0, api_errors.ErrInvalidToken
+	}
+
+	if user.Role != enums.ANONYMOUS {
 		return 0, api_errors.ErrInvalidToken
 	}
 
@@ -129,7 +158,7 @@ func (s *AuthService) CheckEmailSession(sessionId string) (int64, error) {
 		return 0, api_errors.ErrInvalidToken
 	}
 
-	return userDto.ID, nil
+	return user.ID, nil
 }
 
 func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
@@ -204,11 +233,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL) * time.Second)
 	userDto := user.ToDTO()
 	payload := dto.EmailSession{
-		AuthSession: dto.AuthSession{
-			UserDTO:   userDto,
-			TTL:       sess_ttl,
-			CreatedAt: time.Now(),
-		},
+		UserDTO: userDto,
 	}
 	go func() {
 		toJson, err := json.Marshal(payload)
@@ -217,7 +242,20 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 			return
 		}
 
-		sessionId, err := s.setSession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, string(toJson), time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL)*time.Second)
+		encrypt, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(toJson))
+		if err != nil {
+			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
+			return
+		}
+
+		session := dto.SessionDTO{
+			SessionID: uuid.New().String(),
+			Expire:    sess_ttl,
+			Prefix:    s.App.Config.RedisConfig.Prefixes.ConfirmEmail,
+			Payload:   string(encrypt),
+		}
+
+		sessionId, err := s.setSession(session)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
 			return

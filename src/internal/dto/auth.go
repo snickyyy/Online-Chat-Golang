@@ -1,7 +1,5 @@
 package dto
 
-import "time"
-
 type RegisterRequest struct {
 	Username        string `json:"username" binding:"required,min=4,max=28"`
 	Email           string `json:"email" binding:"required,email"`
@@ -20,11 +18,9 @@ type RegisterResponse struct {
 }
 
 type AuthSession struct {
-	UserDTO 	UserDTO 	`json:"user_dto" binding:"required"`
-	TTL     	time.Time 	`json:"ttl" binding:"required"`
-	CreatedAt 	time.Time 	`json:"created_at" binding:"required"`
+	UserDTO UserDTO `json:"user_dto" binding:"required"`
 }
 
 type EmailSession struct {
-	AuthSession
+	UserDTO UserDTO `json:"user_dto" binding:"required"`
 }
