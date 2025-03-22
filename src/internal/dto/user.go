@@ -40,8 +40,3 @@ type ResetPasswordResponse struct {
 	Message string `json:"message"`
 	Code    int    `json:"code"`
 }
-
-type ResetPasswordSession struct {
-	User UserDTO `json:"user"`
-	Code int     `json:"code"`
-}

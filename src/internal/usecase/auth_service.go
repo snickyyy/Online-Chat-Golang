@@ -19,6 +19,7 @@ import (
 type AuthService struct {
 	RedisBaseRepository *repositories.BaseRedisRepository
 	UserRepository      *repositories.UserRepository
+	SessionService      *SessionService
 	App                 *settings.App
 }
 
@@ -34,55 +35,12 @@ func NewAuthService(app *settings.App) *AuthService {
 				Db:    app.DB,
 			},
 		},
-		App: app,
+		SessionService: NewSessionService(app),
+		App:            app,
 	}
 }
 
-func (s *AuthService) GetUserBySession(prefix string, session string) (dto.UserDTO, error) {
-	res, err := s.RedisBaseRepository.GetByKey(prefix, session)
-	if err != nil {
-		return dto.UserDTO{}, api_errors.ErrInvalidSession
-	}
-
-	var sessionBody dto.SessionDTO
-
-	err = json.Unmarshal([]byte(res), &sessionBody)
-	if err != nil {
-		return dto.UserDTO{}, api_errors.ErrInvalidSession
-	}
-
-	decryptResult, err := utils.Decrypt(s.App.Config.AppConfig.SecretKey, sessionBody.Payload)
-	if err != nil {
-		return dto.UserDTO{}, api_errors.ErrInvalidSession
-	}
-
-	var authSessionBody dto.AuthSession
-
-	err = json.Unmarshal([]byte(decryptResult), &authSessionBody)
-	if err != nil {
-		return dto.UserDTO{}, err
-	}
-
-	return authSessionBody.UserDTO, nil
-}
-
-func (s *AuthService) setSession(session dto.SessionDTO) (string, error) {
-	encoding, _ := json.Marshal(&session)
-
-	_, err := s.RedisBaseRepository.Create(
-		session.Prefix,
-		session.SessionID,
-		string(encoding),
-		session.Expire.Sub(time.Now()),
-	)
-	if err != nil {
-		return "", err
-	}
-
-	return session.SessionID, nil
-}
-
-func (s *AuthService) setAuthSession(userDto dto.UserDTO) (string, error) {
+func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
 	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.AuthSessionTTL) * time.Second)
 
 	encoding, _ := json.Marshal(
@@ -103,7 +61,7 @@ func (s *AuthService) setAuthSession(userDto dto.UserDTO) (string, error) {
 		Payload:   string(encrypt),
 	}
 
-	sessionId, err := s.setSession(session)
+	sessionId, err := s.SessionService.SetSession(session)
 	if err != nil {
 		return "", err
 	}
@@ -111,35 +69,13 @@ func (s *AuthService) setAuthSession(userDto dto.UserDTO) (string, error) {
 	return sessionId, nil
 }
 
-func (s *AuthService) CheckEmailSession(sessionId string) (dto.UserDTO, error) {
-	res, err := s.RedisBaseRepository.GetByKey(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
-	if err != nil {
-		return dto.UserDTO{}, api_errors.ErrInvalidSession
-	}
-
-	var sessionBody dto.SessionDTO
-
-	err = json.Unmarshal([]byte(res), &sessionBody)
+func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
+	userDto, err := s.SessionService.GetUserByEmailSession(sessionId)
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
-	decryptResult, err := utils.Decrypt(s.App.Config.AppConfig.SecretKey, sessionBody.Payload)
-	if err != nil {
-		return dto.UserDTO{}, api_errors.ErrInvalidToken
-	}
-
-	var emailSessionBody dto.EmailSession
-	err = json.Unmarshal([]byte(decryptResult), &emailSessionBody)
-	if err != nil {
-		return dto.UserDTO{}, api_errors.ErrInvalidToken
-	}
-
-	userDto := emailSessionBody.UserDTO
-
-	userRepository := s.UserRepository
-
-	user, err := userRepository.GetById(userDto.ID)
+	user, err := s.UserRepository.GetById(userDto.ID)
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
@@ -151,7 +87,7 @@ func (s *AuthService) CheckEmailSession(sessionId string) (dto.UserDTO, error) {
 }
 
 func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
-	userDto, err := s.CheckEmailSession(sessionId)
+	userDto, err := s.CheckEmailToken(sessionId)
 	if err != nil {
 		return "", err
 	}
@@ -177,7 +113,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 		}
 	}()
 
-	session, err := s.setAuthSession(userDto)
+	session, err := s.setAuthCookie(userDto)
 	if err != nil {
 		return "", err
 	}
@@ -235,7 +171,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 			Payload:   string(encrypt),
 		}
 
-		sessionId, err := s.setSession(session)
+		sessionId, err := s.SessionService.SetSession(session)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
 			return
@@ -281,7 +217,7 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 		return "", api_errors.ErrInvalidCredentials
 	}
 
-	session, err := s.setAuthSession(user.ToDTO())
+	session, err := s.setAuthCookie(user.ToDTO())
 	if err != nil {
 		return "", err
 	}

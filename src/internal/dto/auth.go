@@ -16,11 +16,3 @@ type RegisterResponse struct {
 	Message string `json:"message" binding:"required"`
 	Status  bool   `json:"status" binding:"required"`
 }
-
-type AuthSession struct {
-	UserDTO UserDTO `json:"user_dto" binding:"required"`
-}
-
-type EmailSession struct {
-	UserDTO UserDTO `json:"user_dto" binding:"required"`
-}

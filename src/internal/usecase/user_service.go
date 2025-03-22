@@ -19,6 +19,7 @@ type UserService struct {
 	App             *settings.App
 	UserRepository  *repositories.UserRepository
 	RedisRepository *repositories.BaseRedisRepository
+	SessionService  *SessionService
 }
 
 func NewUserService(app *settings.App) *UserService {
@@ -34,6 +35,7 @@ func NewUserService(app *settings.App) *UserService {
 			Client: app.RedisClient,
 			Ctx:    settings.Context.Ctx,
 		},
+		SessionService: NewSessionService(app),
 	}
 }
 
@@ -86,8 +88,7 @@ func (s *UserService) GetUserProfile(username string) (*dto.UserProfile, error) 
 }
 
 func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessionId string) error {
-	authService := NewAuthService(s.App)
-	user, err := authService.GetUserBySession(s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
+	user, err := s.SessionService.GetUserByAuthSession(sessionId)
 	if err != nil {
 		return err
 	}
@@ -141,8 +142,8 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 	}
 
 	resetPasswordDto := dto.ResetPasswordSession{
-		User: userDto,
-		Code: secretCode,
+		UserDTO: userDto,
+		Code:    secretCode,
 	}
 	toJson, _ := json.Marshal(&resetPasswordDto)
 	encrypt, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(toJson))
