@@ -17,18 +17,13 @@ import (
 )
 
 type AuthService struct {
-	RedisBaseRepository *repositories.BaseRedisRepository
-	UserRepository      *repositories.UserRepository
-	SessionService      *SessionService
-	App                 *settings.App
+	UserRepository *repositories.UserRepository
+	SessionService *SessionService
+	App            *settings.App
 }
 
 func NewAuthService(app *settings.App) *AuthService {
 	return &AuthService{
-		RedisBaseRepository: &repositories.BaseRedisRepository{
-			Client: app.RedisClient,
-			Ctx:    settings.Context.Ctx,
-		},
 		UserRepository: &repositories.UserRepository{
 			BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
 				Model: domain.User{},
@@ -75,7 +70,7 @@ func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
 		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
-	user, err := s.UserRepository.GetById(userDto.ID)
+	user, err := s.UserRepository.GetById(userDto.ID) // TODO: оптимизировать что бы типа без запроса к базе
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
@@ -87,7 +82,7 @@ func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
 }
 
 func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
-	userDto, err := s.CheckEmailToken(sessionId)
+	userDto, err := s.CheckEmailToken(sessionId) // TODO: оптимизировать что бы типа без запроса к базе лишнего
 	if err != nil {
 		return "", err
 	}
@@ -107,7 +102,7 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 	}()
 
 	go func() {
-		_, err = s.RedisBaseRepository.Delete(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
+		err = s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error delete email confirm session: %v", err))
 		}
@@ -227,7 +222,7 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 
 func (s *AuthService) Logout(sessionId string) {
 	go func() {
-		_, err := s.RedisBaseRepository.Delete(s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
+		err := s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
 		}

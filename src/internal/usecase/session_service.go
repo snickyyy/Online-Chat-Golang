@@ -58,7 +58,16 @@ func (s *SessionService) SetSession(session dto.SessionDTO) (string, error) {
 	return session.SessionID, nil
 }
 
-func (s *SessionService) decryptAndParsePayload(session dto.SessionDTO, parseTo any) error {
+func (s *SessionService) DeleteSession(prefix string, session string) error {
+	_, err := s.RedisBaseRepository.Delete(prefix, session)
+	if err != nil {
+		return api_errors.ErrInvalidSession
+	}
+
+	return nil
+}
+
+func (s *SessionService) DecryptAndParsePayload(session dto.SessionDTO, parseTo any) error {
 	decryptResult, err := utils.Decrypt(s.App.Config.AppConfig.SecretKey, session.Payload)
 	if err != nil {
 		return api_errors.ErrInvalidSession
@@ -78,7 +87,7 @@ func (s *SessionService) GetUserByAuthSession(session string) (dto.UserDTO, erro
 		return dto.UserDTO{}, api_errors.ErrInvalidSession
 	}
 	var authSessionBody dto.AuthSession
-	err = s.decryptAndParsePayload(sessionBody, &authSessionBody)
+	err = s.DecryptAndParsePayload(sessionBody, &authSessionBody)
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidSession
 	}
@@ -93,7 +102,7 @@ func (s *SessionService) GetUserByEmailSession(session string) (dto.UserDTO, err
 	}
 
 	var emailSessionBody dto.EmailSession
-	err = s.decryptAndParsePayload(sessionBody, &emailSessionBody)
+	err = s.DecryptAndParsePayload(sessionBody, &emailSessionBody)
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidSession
 	}

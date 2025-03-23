@@ -40,3 +40,9 @@ type ResetPasswordResponse struct {
 	Message string `json:"message"`
 	Code    int    `json:"code"`
 }
+
+type ConfirmResetPasswordRequest struct {
+	NewPassword        string `json:"new_password" binding:"required"`
+	ConfirmNewPassword string `json:"confirm_new_password" binding:"required"`
+	Code               int    `json:"code"`
+}
