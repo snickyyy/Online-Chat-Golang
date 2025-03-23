@@ -16,10 +16,9 @@ import (
 )
 
 type UserService struct {
-	App             *settings.App
-	UserRepository  *repositories.UserRepository
-	RedisRepository *repositories.BaseRedisRepository
-	SessionService  *SessionService
+	App            *settings.App
+	UserRepository *repositories.UserRepository
+	SessionService *SessionService
 }
 
 func NewUserService(app *settings.App) *UserService {
@@ -30,10 +29,6 @@ func NewUserService(app *settings.App) *UserService {
 				Model: domain.User{},
 				Db:    app.DB,
 			},
-		},
-		RedisRepository: &repositories.BaseRedisRepository{
-			Client: app.RedisClient,
-			Ctx:    settings.Context.Ctx,
 		},
 		SessionService: NewSessionService(app),
 	}
@@ -157,7 +152,7 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 		Prefix:    s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword,
 		Payload:   encrypt,
 	}
-	_, err = s.RedisRepository.SetDTO(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, sessionBody)
+	_, err = s.SessionService.SetSession(sessionBody)
 	if err != nil {
 		s.App.Logger.Error(fmt.Sprintf("Error while set session to redis: %s", err.Error()))
 		return -1, err
