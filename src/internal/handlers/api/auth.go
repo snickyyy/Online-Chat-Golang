@@ -72,7 +72,7 @@ func ConfirmAccount(c *gin.Context) {
 		return
 	}
 	c.SetCookie("sessionID", sess, int(app.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
-	c.JSON(http.StatusOK, "success")
+	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
 }
 
 // @Summary Login
@@ -108,7 +108,7 @@ func Login(c *gin.Context) {
 		return
 	}
 	c.SetCookie("sessionID", sess, int(app.Config.AuthConfig.AuthSessionTTL), "/", "", true, true)
-	c.JSON(http.StatusOK, "success")
+	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
 }
 
 // @Summary Logout
@@ -131,5 +131,5 @@ func Logout(c *gin.Context) {
 	services.NewAuthService(app).Logout(cookie)
 
 	c.SetCookie("sessionID", "", -1, "/", "", true, true)
-	c.JSON(200, "success")
+	c.JSON(200, dto.MessageResponse{Message: "success"})
 }
