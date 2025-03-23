@@ -52,7 +52,7 @@ func Register(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param token path string true "Token to confirm account"
-// @Success 200 {object} string "success"
+// @Success 200 {object} dto.MessageResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/confirm-account [get]
@@ -81,7 +81,7 @@ func ConfirmAccount(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param user body dto.LoginRequest true "Data"
-// @Success 200 {object} string "success"
+// @Success 200 {object} dto.MessageResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/login [post]
@@ -116,7 +116,7 @@ func Login(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} string "success"
+// @Success 200 {object} dto.MessageResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/auth/logout [delete]

@@ -85,3 +85,40 @@ func (suite *AppTestSuite) TestChangeProfile() {
 
 	defer resProfile.Body.Close()
 }
+
+func (suite *AppTestSuite) TestResetPassword() {
+	// TEST RESET PASSWORD
+	url := "http://127.0.0.1:8000/accounts/profile/reset-password"
+
+	userService := services.NewUserService(settings.AppVar)
+
+	err := userService.CreateSuperUser("TestResetPassword", "TestResetPassword@test.com", "test123")
+	suite.NoError(err)
+
+	changeBody := dto.ResetPasswordRequest{
+		UsernameOrEmail: "TestResetPassword",
+	}
+	body, _ := json.Marshal(changeBody)
+
+	request, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+	suite.NoError(err)
+	resetPassResult, err := suite.client.Do(request)
+	suite.NoError(err)
+
+	suite.Equal(http.StatusOK, resetPassResult.StatusCode)
+
+	encode, _ := io.ReadAll(resetPassResult.Body)
+	var resetPassResponse dto.ResetPasswordResponse // SUCCESSFUL DATA
+	json.Unmarshal(encode, &resetPassResponse)
+
+	// TEST RESET PASSWORD WITH INVALID USERNAME
+	changeBody = dto.ResetPasswordRequest{
+		UsernameOrEmail: "unknownResetPassword",
+	}
+	body, _ = json.Marshal(changeBody)
+	request, err = http.NewRequest("PUT", url, bytes.NewBuffer(body))
+	suite.NoError(err)
+	badResetPassResult, err := suite.client.Do(request)
+	suite.NoError(err)
+	suite.Equal(http.StatusNotFound, badResetPassResult.StatusCode)
+}

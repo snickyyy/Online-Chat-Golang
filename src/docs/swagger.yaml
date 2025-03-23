@@ -8,6 +8,18 @@ definitions:
       new_username:
         type: string
     type: object
+  dto.ConfirmResetPasswordRequest:
+    properties:
+      code:
+        type: integer
+      confirm_new_password:
+        type: string
+      new_password:
+        type: string
+    required:
+    - confirm_new_password
+    - new_password
+    type: object
   dto.ErrorResponse:
     properties:
       error:
@@ -24,6 +36,11 @@ definitions:
     required:
     - password
     - username_or_email
+    type: object
+  dto.MessageResponse:
+    properties:
+      message:
+        type: string
     type: object
   dto.RegisterRequest:
     properties:
@@ -98,9 +115,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: success
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/dto.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -128,9 +145,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: success
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/dto.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -151,9 +168,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: success
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/dto.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -282,6 +299,41 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Reset password
+      tags:
+      - profile
+  /accounts/profile/reset-password/confirm/{token}:
+    put:
+      consumes:
+      - application/json
+      description: Confirm reset user password
+      parameters:
+      - description: Token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ConfirmResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: confirm reset password
       tags:
       - profile
 swagger: "2.0"

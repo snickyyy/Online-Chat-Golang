@@ -188,3 +188,41 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 	}()
 	return secretCode, nil
 }
+
+func (s *UserService) ConfirmResetPassword(token string, request dto.ConfirmResetPasswordRequest) error {
+	if request.NewPassword != request.ConfirmNewPassword {
+		return api_errors.ErrPasswordsDontMatch
+	}
+
+	session, err := s.SessionService.GetSession(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, token)
+	if err != nil {
+		return api_errors.ErrInvalidToken
+	}
+
+	var sessionBody dto.ResetPasswordSession
+	err = s.SessionService.DecryptAndParsePayload(session, &sessionBody)
+	if err != nil {
+		return api_errors.ErrInvalidToken
+	}
+
+	if sessionBody.Code != request.Code {
+		return api_errors.ErrInvalidCode
+	}
+
+	passToHash, err := utils.HashPassword(request.NewPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.UserRepository.UpdateById(sessionBody.UserDTO.ID, map[string]any{"password": passToHash})
+	if err != nil {
+		return api_errors.ErrInvalidToken
+	}
+
+	err = s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, token)
+	if err != nil {
+		return api_errors.ErrInvalidToken
+	}
+
+	return nil
+}
