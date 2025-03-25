@@ -74,6 +74,7 @@ func RunServer() {
 			profile.PATCH("/edit", handler_api.ChangeUserProfile)
 			profile.PUT("/reset-password", handler_api.ResetPassword)
 			profile.PUT("/reset-password/confirm/:token", handler_api.ConfirmResetPassword)
+			profile.PUT("/change-password", handler_api.ChangePassword)
 		}
 	}
 

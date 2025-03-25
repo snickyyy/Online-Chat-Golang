@@ -186,6 +186,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/accounts/profile/change-password": {
+            "put": {
+                "description": "Change password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Change password",
+                "parameters": [
+                    {
+                        "description": "Data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/accounts/profile/edit": {
             "patch": {
                 "description": "Edit user profile",
@@ -377,13 +423,34 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "confirm_new_password",
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "confirm_new_password": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ChangeUserProfileRequest": {
             "type": "object",
             "properties": {
                 "new_description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 254
                 },
                 "new_image": {
+                    "description": "TODO: сделать типа что бы изображение загружалось а не путь к нему",
                     "type": "string"
                 },
                 "new_username": {
@@ -394,6 +461,7 @@ const docTemplate = `{
         "dto.ConfirmResetPasswordRequest": {
             "type": "object",
             "required": [
+                "code",
                 "confirm_new_password",
                 "new_password"
             ],
@@ -462,9 +530,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
-                    "type": "string",
-                    "maxLength": 28,
-                    "minLength": 4
+                    "type": "string"
                 }
             }
         },

@@ -1,9 +1,25 @@
 definitions:
+  dto.ChangePasswordRequest:
+    properties:
+      confirm_new_password:
+        type: string
+      new_password:
+        type: string
+      old_password:
+        type: string
+    required:
+    - confirm_new_password
+    - new_password
+    - old_password
+    type: object
   dto.ChangeUserProfileRequest:
     properties:
       new_description:
+        maxLength: 254
         type: string
       new_image:
+        description: 'TODO: сделать типа что бы изображение загружалось а не путь
+          к нему'
         type: string
       new_username:
         type: string
@@ -17,6 +33,7 @@ definitions:
       new_password:
         type: string
     required:
+    - code
     - confirm_new_password
     - new_password
     type: object
@@ -51,8 +68,6 @@ definitions:
       password:
         type: string
       username:
-        maxLength: 28
-        minLength: 4
         type: string
     required:
     - confirm_password
@@ -239,6 +254,36 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Profile
+      tags:
+      - profile
+  /accounts/profile/change-password:
+    put:
+      consumes:
+      - application/json
+      description: Change password
+      parameters:
+      - description: Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Change password
       tags:
       - profile
   /accounts/profile/edit:

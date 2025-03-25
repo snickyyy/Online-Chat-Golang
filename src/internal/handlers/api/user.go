@@ -124,3 +124,36 @@ func ConfirmResetPassword(c *gin.Context) {
 	c.SetCookie("sessionID", "", -1, "/", "", true, true)
 	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
 }
+
+// @Summary Change password
+// @Description Change password
+// @Tags profile
+// @Accept json
+// @Produce json
+// @Param user body dto.ChangePasswordRequest true "Data"
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /accounts/profile/change-password [put]
+func ChangePassword(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+	sessId, err := c.Cookie("sessionID")
+	if err != nil {
+		c.Error(api_errors.ErrUnauthorized)
+		return
+	}
+
+	var requestData dto.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&requestData); err != nil {
+		c.Error(api_errors.ErrInvalidData)
+		return
+	}
+
+	service := services.NewUserService(app)
+	err = service.ChangePassword(sessId, requestData)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
+}

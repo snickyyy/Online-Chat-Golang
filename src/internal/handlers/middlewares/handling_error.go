@@ -87,6 +87,21 @@ func parseError(err error) (int, gin.H) {
 			"error": "User not found",
 		}
 	}
+	if errors.Is(err, api_errors.ErrInvalidPassword) {
+		return http.StatusNotFound, gin.H{
+			"error": "Invalid password",
+		}
+	}
+	if errors.Is(err, api_errors.ErrUnauthorized) {
+		return http.StatusNotFound, gin.H{
+			"error": "Unauthorized",
+		}
+	}
+	if errors.Is(err, api_errors.ErrSamePassword) {
+		return http.StatusNotFound, gin.H{
+			"error": "Passwords must be different",
+		}
+	}
 
 	return http.StatusInternalServerError, gin.H{
 		"error": "Internal server error",

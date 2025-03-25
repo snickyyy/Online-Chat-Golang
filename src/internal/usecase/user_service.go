@@ -218,6 +218,46 @@ func (s *UserService) ConfirmResetPassword(token string, request dto.ConfirmRese
 	if err != nil {
 		return api_errors.ErrInvalidToken
 	}
+	return nil
+}
 
+func (s *UserService) ChangePassword(sessionId string, request dto.ChangePasswordRequest) error {
+	userDto, err := s.SessionService.GetUserByAuthSession(sessionId)
+	if err != nil {
+		return err
+	}
+
+	user, err := s.UserRepository.GetById(userDto.ID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			return api_errors.ErrInvalidSession
+		}
+	}
+
+	if !user.IsActive || user.Role == enums.ANONYMOUS {
+		return api_errors.ErrUnauthorized
+	} else if !utils.CheckPasswordHash(user.Password, request.OldPassword) {
+		return api_errors.ErrInvalidPassword
+	}
+
+	if request.NewPassword == request.OldPassword {
+		return api_errors.ErrSamePassword
+	}
+
+	if request.NewPassword != request.ConfirmNewPassword {
+		return api_errors.ErrPasswordsDontMatch
+	}
+
+	passToHash, err := utils.HashPassword(request.NewPassword)
+	if err != nil {
+		return err
+	}
+
+	err = s.UserRepository.UpdateById(userDto.ID, map[string]any{"password": passToHash})
+	if err != nil {
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			return api_errors.ErrInvalidSession
+		}
+	}
 	return nil
 }
