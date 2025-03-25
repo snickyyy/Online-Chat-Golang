@@ -55,7 +55,7 @@ func ChangeUserProfile(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&requestData); err != nil {
-		c.Error(api_errors.ErrInvalidBody)
+		c.Error(api_errors.ErrInvalidData)
 		return
 	}
 
@@ -82,7 +82,7 @@ func ResetPassword(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	var requestData dto.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&requestData); err != nil {
-		c.Error(api_errors.ErrInvalidBody)
+		c.Error(api_errors.ErrInvalidData)
 		return
 	}
 
@@ -111,7 +111,7 @@ func ConfirmResetPassword(c *gin.Context) {
 	token := c.Param("token")
 	var requestData dto.ConfirmResetPasswordRequest
 	if err := c.ShouldBindJSON(&requestData); err != nil {
-		c.Error(api_errors.ErrInvalidBody)
+		c.Error(api_errors.ErrInvalidData)
 		return
 	}
 
@@ -121,5 +121,6 @@ func ConfirmResetPassword(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	c.SetCookie("sessionID", "", -1, "/", "", true, true)
 	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
 }

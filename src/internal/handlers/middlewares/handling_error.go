@@ -62,6 +62,21 @@ func parseError(err error) (int, gin.H) {
 			"error": "Invalid body",
 		}
 	}
+	if errors.Is(err, api_errors.ErrInvalidData) {
+		return http.StatusBadRequest, gin.H{
+			"error": "Invalid data in body",
+		}
+	}
+	if errors.Is(err, api_errors.ErrPasswordLight) {
+		return http.StatusBadRequest, gin.H{
+			"error": "the password must have at least 1 lower case, 1 upper case, a number and 1 special character, and be longer than 8 characters",
+		}
+	}
+	if errors.Is(err, api_errors.ErrInvalidCode) {
+		return http.StatusBadRequest, gin.H{
+			"error": "Invalid code",
+		}
+	}
 	if errors.Is(err, api_errors.ErrNotLoggedIn) {
 		return http.StatusUnauthorized, gin.H{
 			"error": "User is not logged in",

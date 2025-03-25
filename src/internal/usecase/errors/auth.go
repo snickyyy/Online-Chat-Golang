@@ -8,3 +8,4 @@ var ErrUserAlreadyExists = errors.New("account with username or email already ex
 var ErrInvalidCredentials = errors.New("invalid credentials")
 var ErrAlreadyLoggedIn = errors.New("already logged in")
 var ErrNotLoggedIn = errors.New("not logged in")
+var ErrPasswordLight = errors.New("the password is too light")

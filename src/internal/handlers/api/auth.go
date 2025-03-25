@@ -32,7 +32,7 @@ func Register(c *gin.Context) {
 	var registerData dto.RegisterRequest
 
 	if err := c.ShouldBindJSON(&registerData); err != nil {
-		c.Error(api_errors.ErrInvalidBody)
+		c.Error(api_errors.ErrInvalidData)
 		return
 	}
 
@@ -96,7 +96,7 @@ func Login(c *gin.Context) {
 	var loginData dto.LoginRequest
 
 	if err := c.ShouldBindJSON(&loginData); err != nil {
-		c.Error(api_errors.ErrInvalidBody)
+		c.Error(api_errors.ErrInvalidData)
 		return
 	}
 

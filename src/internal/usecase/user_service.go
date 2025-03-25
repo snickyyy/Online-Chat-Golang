@@ -11,6 +11,7 @@ import (
 	"libs/src/internal/repositories"
 	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/internal/usecase/utils"
+	"libs/src/internal/validators"
 	"libs/src/settings"
 	"time"
 )
@@ -187,6 +188,10 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 func (s *UserService) ConfirmResetPassword(token string, request dto.ConfirmResetPasswordRequest) error {
 	if request.NewPassword != request.ConfirmNewPassword {
 		return api_errors.ErrPasswordsDontMatch
+	}
+
+	if !validators.ValidatePassword(request.NewPassword) {
+		return api_errors.ErrPasswordLight
 	}
 
 	session, err := s.SessionService.GetSession(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, token)

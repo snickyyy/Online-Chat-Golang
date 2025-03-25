@@ -10,6 +10,7 @@ import (
 	"libs/src/internal/repositories"
 	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/internal/usecase/utils"
+	"libs/src/internal/validators"
 	"libs/src/settings"
 	"time"
 
@@ -119,6 +120,10 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	if data.Password != data.ConfirmPassword {
 		return api_errors.ErrPasswordsDontMatch
+	}
+
+	if !validators.ValidatePassword(data.Password) {
+		return api_errors.ErrPasswordLight
 	}
 
 	hashedPassword, err := utils.HashPassword(data.Password)
