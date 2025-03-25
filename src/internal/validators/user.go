@@ -1,10 +1,13 @@
 package validators
 
 import (
+	"github.com/go-playground/validator/v10"
+	"regexp"
 	"unicode"
 )
 
-func ValidatePassword(password string) bool {
+func ValidatePassword(field validator.FieldLevel) bool {
+	password := field.Field().String()
 	if len(password) < 8 {
 		return false
 	}
@@ -26,4 +29,12 @@ func ValidatePassword(password string) bool {
 		}
 	}
 	return hasUpperCase && hasLowerCase && hasDigit && hasSpecial
+}
+
+func ValidateUsername(field validator.FieldLevel) bool {
+	if len(field.Field().String()) < 1 || len(field.Field().String()) > 35 {
+		return false
+	}
+	regex := regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+	return regex.MatchString(field.Field().String())
 }

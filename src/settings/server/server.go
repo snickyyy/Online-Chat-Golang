@@ -4,6 +4,7 @@ import (
 	_ "libs/src/docs"
 	handler_api "libs/src/internal/handlers/api"
 	handler_middlewares "libs/src/internal/handlers/middlewares"
+	"libs/src/internal/validators"
 
 	files "github.com/swaggo/files"
 	swagger "github.com/swaggo/gin-swagger"
@@ -49,6 +50,8 @@ func newServer(handler http.Handler) *http.Server {
 // @BasePath  /api/v1
 func RunServer() {
 	router := gin.Default()
+
+	validators.InitValidators()
 
 	router.Use(middlewares...)
 
