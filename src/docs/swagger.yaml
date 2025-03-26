@@ -1,4 +1,47 @@
 definitions:
+  dto.ChangePasswordRequest:
+    properties:
+      confirm_new_password:
+        type: string
+      new_password:
+        type: string
+      old_password:
+        type: string
+    required:
+    - confirm_new_password
+    - new_password
+    - old_password
+    type: object
+  dto.ChangeUserProfileRequest:
+    properties:
+      new_description:
+        maxLength: 254
+        type: string
+      new_image:
+        $ref: '#/definitions/multipart.FileHeader'
+      new_username:
+        type: string
+    type: object
+  dto.ChangeUserProfileResponse:
+    properties:
+      changed_fields:
+        $ref: '#/definitions/dto.ChangeUserProfileRequest'
+      message:
+        type: string
+    type: object
+  dto.ConfirmResetPasswordRequest:
+    properties:
+      code:
+        type: integer
+      confirm_new_password:
+        type: string
+      new_password:
+        type: string
+    required:
+    - code
+    - confirm_new_password
+    - new_password
+    type: object
   dto.ErrorResponse:
     properties:
       error:
@@ -16,6 +59,11 @@ definitions:
     - password
     - username_or_email
     type: object
+  dto.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
   dto.RegisterRequest:
     properties:
       confirm_password:
@@ -25,8 +73,6 @@ definitions:
       password:
         type: string
       username:
-        maxLength: 28
-        minLength: 4
         type: string
     required:
     - confirm_password
@@ -44,18 +90,47 @@ definitions:
     - message
     - status
     type: object
+  dto.ResetPasswordRequest:
+    properties:
+      username_or_email:
+        type: string
+    required:
+    - username_or_email
+    type: object
+  dto.ResetPasswordResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
   dto.UserProfile:
     properties:
       created_at:
         type: string
       description:
         type: string
-      email:
-        type: string
       image:
+        type: string
+      role:
         type: string
       username:
         type: string
+    type: object
+  multipart.FileHeader:
+    properties:
+      filename:
+        type: string
+      header:
+        $ref: '#/definitions/textproto.MIMEHeader'
+      size:
+        type: integer
+    type: object
+  textproto.MIMEHeader:
+    additionalProperties:
+      items:
+        type: string
+      type: array
     type: object
 info:
   contact: {}
@@ -66,19 +141,18 @@ paths:
       - application/json
       description: Confirm users email
       parameters:
-      - description: Data
-        in: body
-        name: user
+      - description: Token to confirm account
+        in: path
+        name: token
         required: true
-        schema:
-          $ref: '#/definitions/dto.RegisterRequest'
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: success
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/dto.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -106,9 +180,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: success
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/dto.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -121,7 +195,7 @@ paths:
       tags:
       - Auth
   /accounts/auth/logout:
-    get:
+    delete:
       consumes:
       - application/json
       description: Logout the session
@@ -129,9 +203,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: success
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/dto.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -200,6 +274,137 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Profile
+      tags:
+      - profile
+  /accounts/profile/change-password:
+    put:
+      consumes:
+      - application/json
+      description: Change password
+      parameters:
+      - description: Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Change password
+      tags:
+      - profile
+  /accounts/profile/edit:
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Edit user profile
+      parameters:
+      - description: Update username
+        in: formData
+        name: new_username
+        type: string
+      - description: Update description
+        in: formData
+        name: new_description
+        type: string
+      - description: Update image
+        in: formData
+        name: new_image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChangeUserProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Edit profile
+      tags:
+      - profile
+  /accounts/profile/reset-password:
+    put:
+      consumes:
+      - application/json
+      description: Reset user password
+      parameters:
+      - description: Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ResetPasswordResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Reset password
+      tags:
+      - profile
+  /accounts/profile/reset-password/confirm/{token}:
+    put:
+      consumes:
+      - application/json
+      description: Confirm reset user password
+      parameters:
+      - description: Token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ConfirmResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: confirm reset password
       tags:
       - profile
 swagger: "2.0"

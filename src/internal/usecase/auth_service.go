@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"libs/src/internal/domain/enums"
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
@@ -13,94 +14,49 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	RedisBaseRepository *repositories.BaseRedisRepository
-	UserRepository 		*repositories.UserRepository
-	App                 *settings.App
+	UserRepository *repositories.UserRepository
+	SessionService *SessionService
+	App            *settings.App
 }
 
 func NewAuthService(app *settings.App) *AuthService {
 	return &AuthService{
-		RedisBaseRepository: &repositories.BaseRedisRepository{
-			Client: settings.AppVar.RedisSess,
-			Ctx:    settings.Context.Ctx,
-		},
 		UserRepository: &repositories.UserRepository{
 			BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
 				Model: domain.User{},
 				Db:    app.DB,
 			},
 		},
-		App: app,
+		SessionService: NewSessionService(app),
+		App:            app,
 	}
 }
 
-func (s *AuthService) GetUserBySession(session string) (dto.UserDTO, error) {
-	res, err := s.RedisBaseRepository.GetByKey(session)
-	if err != nil {
-		return dto.UserDTO{}, err
-	}
-	decryptResult, err := utils.Decrypt(s.App.Config.AppConfig.SecretKey, res)
-	if err != nil {
-		return dto.UserDTO{}, err
-	}
+func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
+	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.AuthSessionTTL) * time.Second)
 
-	var user dto.AuthSession
-
-	err = json.Unmarshal([]byte(decryptResult), &user)
-	if err != nil {
-		return dto.UserDTO{}, err
-	}
-
-	return user.UserDTO, nil
-}
-
-func (s *AuthService) setSession(payload string, ttl time.Duration) (string, error) {
-	encrypted, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(payload))
-	if err != nil {
-		return "", err
-	}
-
-	newId := uuid.New().String()
-	_, err = s.RedisBaseRepository.Create(
-		newId,
-		encrypted,
-		ttl,
+	encoding, _ := json.Marshal(
+		dto.AuthSession{
+			UserDTO: userDto,
+		},
 	)
+
+	encrypt, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(encoding))
 	if err != nil {
 		return "", err
 	}
 
-	return newId, nil
-}
-
-func (s *AuthService) setAuthSession(user domain.User) (string, error) {
-	sess_ttl := time.Now().Add(time.Duration(settings.AppVar.Config.AuthConfig.AuthSessionTTL) * time.Second)
-	userDto := dto.UserDTO{
-		ID:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		IsActive:  user.IsActive,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt,
-	}
-	payload := dto.AuthSession{
-		UserDTO:   userDto,
-		TTL:       sess_ttl,
-		CreatedAt: time.Now(),
+	session := dto.SessionDTO{
+		SessionID: uuid.New().String(),
+		Expire:    sess_ttl,
+		Prefix:    s.App.Config.RedisConfig.Prefixes.SessionPrefix,
+		Payload:   string(encrypt),
 	}
 
-	toJson, err := json.Marshal(payload)
-	if err != nil {
-		return "", err
-	}
-
-	sessionId, err := s.setSession(string(toJson), time.Duration(settings.AppVar.Config.AuthConfig.AuthSessionTTL)*time.Second)
+	sessionId, err := s.SessionService.SetSession(session)
 	if err != nil {
 		return "", err
 	}
@@ -108,67 +64,50 @@ func (s *AuthService) setAuthSession(user domain.User) (string, error) {
 	return sessionId, nil
 }
 
-func (s *AuthService) CheckEmailSession(sessionId string) (int64, error) {
-	userDto, err := s.GetUserBySession(sessionId)
+func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
+	userDto, err := s.SessionService.GetUserByEmailSession(sessionId)
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return 0, api_errors.ErrInvalidToken
-		}
-		return 0, err
+		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
-	userRepository := s.UserRepository
-
-	user, err := userRepository.GetById(userDto.ID)
 	if err != nil {
-		return 0, api_errors.ErrInvalidToken
+		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
-	if user.IsActive {
-		return 0, api_errors.ErrInvalidToken
+	if userDto.Role != enums.ANONYMOUS || userDto.IsActive {
+		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
-
-	if user.Email != userDto.Email {
-		return 0, api_errors.ErrInvalidToken
-	}
-
-	return userDto.ID, nil
+	return userDto, nil
 }
 
 func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
-	userId, err := s.CheckEmailSession(sessionId)
+	userDto, err := s.CheckEmailToken(sessionId)
 	if err != nil {
 		return "", err
 	}
 
 	userRepository := s.UserRepository
 
-	user, err := userRepository.GetById(userId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", api_errors.ErrInvalidToken
-		}
-		return "", err
+	changeFields := map[string]any{
+		"IsActive": true,
+		"Role":     enums.USER,
 	}
 
-	user.IsActive = true
-	user.Role = domain.USER
-
 	go func() {
-		err = s.App.DB.Save(&user).Error
+		err = userRepository.UpdateById(userDto.ID, changeFields)
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error save user: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error save user: %v", err))
 		}
 	}()
 
 	go func() {
-		_, err = s.RedisBaseRepository.Delete(sessionId)
+		err = s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error delete email confirm session: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error delete email confirm session: %v", err))
 		}
 	}()
 
-	session, err := s.setAuthSession(user)
+	session, err := s.setAuthCookie(userDto)
 	if err != nil {
 		return "", err
 	}
@@ -191,65 +130,63 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		Email:    data.Email,
 		Password: hashedPassword,
 		IsActive: false,
-		Role:     domain.ANONYMOUS,
+		Role:     enums.ANONYMOUS,
 	}
 
-	err = s.App.DB.Create(&user).Error
+	_, err = s.UserRepository.Create(&user)
 	if err != nil {
-		var pqErr *pgconn.PgError
-		if errors.As(err, &pqErr) {
-			if pqErr.Code == "23505" {
-				return api_errors.ErrUserAlreadyExists
-			}
-			return err
+		if errors.Is(err, repositories.ErrDuplicate) {
+			return api_errors.ErrUserAlreadyExists
 		}
 	}
 
-	sess_ttl := time.Now().Add(time.Duration(settings.AppVar.Config.AuthConfig.EmailConfirmTTL) * time.Second)
-	userDto := dto.UserDTO{
-		ID:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		IsActive:  user.IsActive,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt,
-	}
+	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL) * time.Second)
+	userDto := user.ToDTO()
 	payload := dto.EmailSession{
-		AuthSession: dto.AuthSession{
-			UserDTO:   userDto,
-			TTL:       sess_ttl,
-			CreatedAt: time.Now(),
-		},
+		UserDTO: userDto,
 	}
 	go func() {
 		toJson, err := json.Marshal(payload)
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
 			return
 		}
 
-		sessionId, err := s.setSession(string(toJson), time.Duration(settings.AppVar.Config.AuthConfig.EmailConfirmTTL)*time.Second)
+		encrypt, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(toJson))
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
 			return
 		}
 
-		url := fmt.Sprintf(
+		session := dto.SessionDTO{
+			SessionID: uuid.New().String(),
+			Expire:    sess_ttl,
+			Prefix:    s.App.Config.RedisConfig.Prefixes.ConfirmEmail,
+			Payload:   string(encrypt),
+		}
+
+		sessionId, err := s.SessionService.SetSession(session)
+		if err != nil {
+			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
+			return
+		}
+
+		msg := fmt.Sprintf(
 			"Thank you for choosing our service, to confirm your registration, follow the url below\nhttp://%s:%d/accounts/auth/confirm-account/%s",
-			settings.AppVar.Config.AppConfig.DomainName,
-			settings.AppVar.Config.AppConfig.Port,
+			s.App.Config.AppConfig.DomainName,
+			s.App.Config.AppConfig.Port,
 			sessionId,
 		)
 
-		err = utils.SendMail(settings.AppVar.Mail,
-			settings.AppVar.Config.Mail.From,
+		err = utils.SendMail(s.App.Mail,
+			s.App.Config.Mail.From,
 			user.Email,
 			"Online-Chat-Golang || Confirm registration",
-			url,
+			msg,
 		)
 
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
 		}
 	}()
 
@@ -258,15 +195,11 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 
 func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 	userRepository := s.UserRepository
-	
+
 	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			settings.AppVar.Logger.Warn(fmt.Sprintf("User not found: %s", data.UsernameOrEmail))
-			return "", err
-		}
-		settings.AppVar.Logger.Error(fmt.Sprintf("Error getting user in login: %v", err))
-		return "", err
+		s.App.Logger.Error(fmt.Sprintf("Error getting user in login: %v", err))
+		return "", api_errors.ErrInvalidCredentials
 	}
 
 	if len(users) != 1 {
@@ -274,11 +207,11 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 	}
 
 	user := users[0]
-	if !utils.CheckPasswordHash(user.Password, data.Password) || !user.IsActive || user.Role == domain.ANONYMOUS {
+	if !utils.CheckPasswordHash(user.Password, data.Password) || !user.IsActive || user.Role == enums.ANONYMOUS {
 		return "", api_errors.ErrInvalidCredentials
 	}
 
-	session, err := s.setAuthSession(user)
+	session, err := s.setAuthCookie(user.ToDTO())
 	if err != nil {
 		return "", err
 	}
@@ -288,9 +221,9 @@ func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
 
 func (s *AuthService) Logout(sessionId string) {
 	go func() {
-		_, err := s.RedisBaseRepository.Delete(sessionId)
+		err := s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
 		if err != nil {
-			settings.AppVar.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
+			s.App.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
 		}
 	}()
 }

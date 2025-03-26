@@ -4,6 +4,7 @@ import (
 	_ "libs/src/docs"
 	handler_api "libs/src/internal/handlers/api"
 	handler_middlewares "libs/src/internal/handlers/middlewares"
+	"libs/src/internal/validators"
 
 	files "github.com/swaggo/files"
 	swagger "github.com/swaggo/gin-swagger"
@@ -15,7 +16,9 @@ import (
 )
 
 var middlewares = []gin.HandlerFunc{
+	handler_middlewares.DependenciesMiddleware,
 	handler_middlewares.AuthMiddleware,
+	handler_middlewares.ErrorHandler,
 }
 
 func newServer(handler http.Handler) *http.Server {
@@ -48,6 +51,8 @@ func newServer(handler http.Handler) *http.Server {
 func RunServer() {
 	router := gin.Default()
 
+	validators.InitValidators()
+
 	router.Use(middlewares...)
 
 	router.GET("/docs/*any", swagger.WrapHandler(files.Handler))
@@ -61,12 +66,16 @@ func RunServer() {
 			auth.POST("/register", handler_api.Register)
 			auth.GET("/confirm-account/:token", handler_api.ConfirmAccount)
 			auth.POST("/login", handler_api.Login)
-			auth.GET("/logout", handler_api.Logout)
+			auth.DELETE("/logout", handler_api.Logout)
 		}
 		profile := accounts.Group("/profile")
 		{
-            profile.GET("/:username", handler_api.UserProfile)
-        }
+			profile.GET("/:username", handler_api.UserProfile)
+			profile.PATCH("/edit", handler_api.ChangeUserProfile)
+			profile.PUT("/reset-password", handler_api.ResetPassword)
+			profile.PUT("/reset-password/confirm/:token", handler_api.ConfirmResetPassword)
+			profile.PUT("/change-password", handler_api.ChangePassword)
+		}
 	}
 
 	server := newServer(router)

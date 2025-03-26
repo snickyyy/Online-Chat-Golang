@@ -11,22 +11,22 @@ import (
 var AppVar *App
 
 type App struct {
-	DB 			*gorm.DB
-	Logger 		*zap.Logger
-	Config 		*BaseConfig
-	MongoDB 	*mongo.Database
-	RedisSess	*redis.Client
-	Mail		*gomail.Dialer
+	DB          *gorm.DB
+	Logger      *zap.Logger
+	Config      *BaseConfig
+	MongoDB     *mongo.Database
+	RedisClient *redis.Client
+	Mail        *gomail.Dialer
 }
 
-func NewApp(db *gorm.DB, logger *zap.Logger, config *BaseConfig, mongodb *mongo.Database, redisSess *redis.Client, mail *gomail.Dialer) *App {
+func NewApp(db *gorm.DB, logger *zap.Logger, config *BaseConfig, mongodb *mongo.Database, redis *redis.Client, mail *gomail.Dialer) *App {
 	AppVar = &App{
-        DB:     	db,
-        Logger: 	logger,
-        Config: 	config,
-		MongoDB: 	mongodb,
-		RedisSess:	redisSess,
-		Mail:       mail,			
-    }
-    return AppVar
+		DB:          db,
+		Logger:      logger,
+		Config:      config,
+		MongoDB:     mongodb,
+		RedisClient: redis,
+		Mail:        mail,
+	}
+	return AppVar
 }

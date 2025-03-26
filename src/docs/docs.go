@@ -30,20 +30,18 @@ const docTemplate = `{
                 "summary": "User confirm registration",
                 "parameters": [
                     {
-                        "description": "Data",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RegisterRequest"
-                        }
+                        "type": "string",
+                        "description": "Token to confirm account",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "success",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/dto.MessageResponse"
                         }
                     },
                     "400": {
@@ -87,9 +85,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "success",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/dto.MessageResponse"
                         }
                     },
                     "400": {
@@ -108,7 +106,7 @@ const docTemplate = `{
             }
         },
         "/accounts/auth/logout": {
-            "get": {
+            "delete": {
                 "description": "Logout the session",
                 "consumes": [
                     "application/json"
@@ -122,9 +120,9 @@ const docTemplate = `{
                 "summary": "Logout",
                 "responses": {
                     "200": {
-                        "description": "success",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/dto.MessageResponse"
                         }
                     },
                     "400": {
@@ -188,6 +186,206 @@ const docTemplate = `{
                 }
             }
         },
+        "/accounts/profile/change-password": {
+            "put": {
+                "description": "Change password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Change password",
+                "parameters": [
+                    {
+                        "description": "Data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/profile/edit": {
+            "patch": {
+                "description": "Edit user profile",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Edit profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Update username",
+                        "name": "new_username",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Update description",
+                        "name": "new_description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Update image",
+                        "name": "new_image",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangeUserProfileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/profile/reset-password": {
+            "put": {
+                "description": "Reset user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Reset password",
+                "parameters": [
+                    {
+                        "description": "Data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ResetPasswordResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/profile/reset-password/confirm/{token}": {
+            "put": {
+                "description": "Confirm reset user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "confirm reset password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ConfirmResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/accounts/profile/{username}": {
             "get": {
                 "description": "View user profile",
@@ -234,6 +432,70 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "confirm_new_password",
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "confirm_new_password": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ChangeUserProfileRequest": {
+            "type": "object",
+            "properties": {
+                "new_description": {
+                    "type": "string",
+                    "maxLength": 254
+                },
+                "new_image": {
+                    "$ref": "#/definitions/multipart.FileHeader"
+                },
+                "new_username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ChangeUserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "changed_fields": {
+                    "$ref": "#/definitions/dto.ChangeUserProfileRequest"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ConfirmResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "confirm_new_password",
+                "new_password"
+            ],
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "confirm_new_password": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ErrorResponse": {
             "type": "object",
             "required": [
@@ -260,6 +522,14 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.RegisterRequest": {
             "type": "object",
             "required": [
@@ -279,9 +549,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
-                    "type": "string",
-                    "maxLength": 28,
-                    "minLength": 4
+                    "type": "string"
                 }
             }
         },
@@ -300,6 +568,28 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "username_or_email"
+            ],
+            "properties": {
+                "username_or_email": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ResetPasswordResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserProfile": {
             "type": "object",
             "properties": {
@@ -309,13 +599,36 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "email": {
-                    "type": "string"
-                },
                 "image": {
                     "type": "string"
                 },
+                "role": {
+                    "type": "string"
+                },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "multipart.FileHeader": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string"
+                },
+                "header": {
+                    "$ref": "#/definitions/textproto.MIMEHeader"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "textproto.MIMEHeader": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
                     "type": "string"
                 }
             }

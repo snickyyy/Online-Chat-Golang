@@ -2,7 +2,7 @@ package handler_middlewares
 
 import (
 	"fmt"
-	domain "libs/src/internal/domain/models"
+	"libs/src/internal/domain/enums"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
 	"libs/src/settings"
@@ -11,11 +11,13 @@ import (
 )
 
 func AuthMiddleware(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+
 	var user dto.UserDTO
 
 	unknown := dto.UserDTO{
 		ID:       0,
-		Role:     domain.ANONYMOUS,
+		Role:     enums.ANONYMOUS,
 		IsActive: false,
 	}
 
@@ -28,18 +30,18 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
-	service := services.NewAuthService(settings.AppVar)
+	service := services.NewSessionService(app)
 
-	user, err = service.GetUserBySession(sid)
+	user, err = service.GetUserByAuthSession(sid)
 	if err != nil {
-		settings.AppVar.Logger.Error(fmt.Sprintf("Error getting session: %s", sid))
+		app.Logger.Error(fmt.Sprintf("Error getting session: %s || error: %s", app.Config.RedisConfig.Prefixes.SessionPrefix+sid, err))
 		user = unknown
 		c.Set("user.state.isActive", false)
 		c.Next()
 		return
 	}
 
-	if !user.IsActive || user.Role == domain.ANONYMOUS {
+	if !user.IsActive || user.Role == enums.ANONYMOUS {
 		user = unknown
 		c.Set("user.state.isActive", false)
 		c.Next()

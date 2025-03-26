@@ -18,6 +18,7 @@ type AppConfig struct {
 	Debug      bool   `mapstructure:"debug"`
 	Mode       string `mapstructure:"mode"`
 	DomainName string `mapstructure:"domain_name"`
+	UploadDir  string `mapstructure:"upload_dir"`
 }
 
 type Mail struct {
@@ -33,15 +34,19 @@ type Ctx struct {
 	Cancel context.CancelFunc
 }
 
-type RedisDbs struct {
-	SessionDb int `mapstructure:"session"`
+type RedisPrefixes struct {
+	SessionPrefix        string `mapstructure:"session"`
+	ConfirmEmail         string `mapstructure:"confirm_email"`
+	Message              string `mapstructure:"message"`
+	ResetPassword        string `mapstructure:"reset_password"`
+	ConfirmResetPassword string `mapstructure:"confirm_reset_password"`
 }
 
 type RedisConfig struct {
-	Host     string   `mapstructure:"host"`
-	Port     int      `mapstructure:"port"`
-	Password string   `mapstructure:"password"`
-	DB       RedisDbs `mapstructure:"db"`
+	Host     string        `mapstructure:"host"`
+	Port     int           `mapstructure:"port"`
+	Password string        `mapstructure:"password"`
+	Prefixes RedisPrefixes `mapstructure:"prefixes"`
 }
 
 type PostgresConfig struct {
@@ -58,8 +63,10 @@ type MongoConfig struct {
 }
 
 type AuthConfig struct {
-	AuthSessionTTL  int64 `mapstructure:"session_auth_ttl"`
-	EmailConfirmTTL int64 `mapstructure:"confirm_email_ttl"`
+	AuthSessionTTL       int64 `mapstructure:"session_auth_ttl"`
+	EmailConfirmTTL      int64 `mapstructure:"confirm_email_ttl"`
+	ResetPasswordTTL     int64 `mapstructure:"reset_password_ttl"`
+	TimeToChangePassword int64 `mapstructure:"time_to_change_password"`
 }
 
 type BaseConfig struct {
@@ -112,6 +119,10 @@ func GetBaseConfig() (*BaseConfig, error) {
 	if err := viper.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("error unmarshal config %v", err)
 	}
+
+	// UPLOAD_DIR
+	cfg.AppConfig.UploadDir = filepath.Join(basePath, "assets")
+
 	return cfg, nil
 }
 
