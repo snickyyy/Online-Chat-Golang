@@ -18,8 +18,8 @@ func (suite *AppTestSuite) TestRegister() {
 	dataSuccess, _ := json.Marshal(dto.RegisterRequest{
 		Username:        "test",
 		Email:           "test@example.com",
-		Password:        "test",
-		ConfirmPassword: "test",
+		Password:        "Test@123.",
+		ConfirmPassword: "Test@123.",
 	})
 
 	res, err := suite.client.Post(url, contType, bytes.NewBuffer(dataSuccess))
@@ -36,8 +36,8 @@ func (suite *AppTestSuite) TestRegister() {
 	dataUnique, _ := json.Marshal(dto.RegisterRequest{
 		Username:        "test",
 		Email:           "test@example.com",
-		Password:        "test",
-		ConfirmPassword: "test",
+		Password:        "Test@123.",
+		ConfirmPassword: "Test@123.",
 	})
 	res, err = suite.client.Post(url, contType, bytes.NewBuffer(dataUnique))
 	suite.NoError(err)

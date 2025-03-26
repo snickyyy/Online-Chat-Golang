@@ -72,8 +72,9 @@ func (suite *AppTestSuite) TestChangeProfile() {
 	request, err = http.NewRequest("PATCH", url, bytes.NewBuffer(body))
 	suite.NoError(err)
 	request.AddCookie(&http.Cookie{Name: "sessionID", Value: sess})
-	_, err = suite.client.Do(request)
+	resChangeProfile, err := suite.client.Do(request)
 	suite.NoError(err)
+	suite.Equal(http.StatusOK, resChangeProfile.StatusCode)
 
 	resProfile, err = suite.client.Get(urlGetProfile + "TestProfileEditNewUsername")
 	suite.NoError(err)

@@ -22,9 +22,9 @@ type UserProfile struct {
 }
 
 type ChangeUserProfileRequest struct {
-	NewUsername    *string `json:"new_username" binding:"username"`
-	NewDescription *string `json:"new_description" binding:"max=254"`
-	NewImage       *string `json:"new_image"` // TODO: сделать типа что бы изображение загружалось а не путь к нему
+	NewUsername    *string `json:"new_username" binding:"omitempty,username"`
+	NewDescription *string `json:"new_description" binding:"omitempty,max=254"`
+	NewImage       *string `json:"new_image" binding:"omitempty"` // TODO: сделать типа что бы изображение загружалось а не путь к нему
 }
 
 type ChangeUserProfileResponse struct {

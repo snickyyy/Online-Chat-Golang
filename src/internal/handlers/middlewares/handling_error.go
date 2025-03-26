@@ -4,13 +4,16 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	api_errors "libs/src/internal/usecase/errors"
+	"libs/src/settings"
 	"net/http"
 )
 
 func ErrorHandler(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
 	c.Next()
 	err := c.Errors.Last()
 	if err != nil {
+		app.Logger.Error(err.Error())
 		c.JSON(parseError(err))
 		c.Abort()
 	}
