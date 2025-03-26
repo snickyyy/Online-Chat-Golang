@@ -13,5 +13,8 @@ func InitValidators() {
 		if err := v.RegisterValidation("password", ValidatePassword); err != nil {
 			panic(err)
 		}
+		if err := v.RegisterValidation("image", ValidatorImage); err != nil {
+			panic(err)
+		}
 	}
 }

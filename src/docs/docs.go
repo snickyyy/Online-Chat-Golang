@@ -236,7 +236,7 @@ const docTemplate = `{
             "patch": {
                 "description": "Edit user profile",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -247,20 +247,29 @@ const docTemplate = `{
                 "summary": "Edit profile",
                 "parameters": [
                     {
-                        "description": "Data",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.ChangeUserProfileRequest"
-                        }
+                        "type": "string",
+                        "description": "Update username",
+                        "name": "new_username",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Update description",
+                        "name": "new_description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Update image",
+                        "name": "new_image",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.UserProfile"
+                            "$ref": "#/definitions/dto.ChangeUserProfileResponse"
                         }
                     },
                     "400": {
@@ -450,10 +459,20 @@ const docTemplate = `{
                     "maxLength": 254
                 },
                 "new_image": {
-                    "description": "TODO: сделать типа что бы изображение загружалось а не путь к нему",
-                    "type": "string"
+                    "$ref": "#/definitions/multipart.FileHeader"
                 },
                 "new_username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ChangeUserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "changed_fields": {
+                    "$ref": "#/definitions/dto.ChangeUserProfileRequest"
+                },
+                "message": {
                     "type": "string"
                 }
             }
@@ -587,6 +606,29 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "multipart.FileHeader": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string"
+                },
+                "header": {
+                    "$ref": "#/definitions/textproto.MIMEHeader"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "textproto.MIMEHeader": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
                     "type": "string"
                 }
             }

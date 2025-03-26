@@ -1,6 +1,9 @@
 package dto
 
-import "time"
+import (
+	"mime/multipart"
+	"time"
+)
 
 type UserDTO struct {
 	ID          int64     `json:"id"`
@@ -22,9 +25,9 @@ type UserProfile struct {
 }
 
 type ChangeUserProfileRequest struct {
-	NewUsername    *string `json:"new_username" binding:"omitempty,username"`
-	NewDescription *string `json:"new_description" binding:"omitempty,max=254"`
-	NewImage       *string `json:"new_image" binding:"omitempty"` // TODO: сделать типа что бы изображение загружалось а не путь к нему
+	NewUsername    *string               `form:"new_username" binding:"omitempty,username"`
+	NewDescription *string               `form:"new_description" binding:"omitempty,max=254"`
+	NewImage       *multipart.FileHeader `form:"new_image" binding:"omitempty,image"`
 }
 
 type ChangeUserProfileResponse struct {

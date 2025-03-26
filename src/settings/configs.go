@@ -18,6 +18,7 @@ type AppConfig struct {
 	Debug      bool   `mapstructure:"debug"`
 	Mode       string `mapstructure:"mode"`
 	DomainName string `mapstructure:"domain_name"`
+	UploadDir  string `mapstructure:"upload_dir"`
 }
 
 type Mail struct {
@@ -118,6 +119,10 @@ func GetBaseConfig() (*BaseConfig, error) {
 	if err := viper.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("error unmarshal config %v", err)
 	}
+
+	// UPLOAD_DIR
+	cfg.AppConfig.UploadDir = filepath.Join(basePath, "assets")
+
 	return cfg, nil
 }
 

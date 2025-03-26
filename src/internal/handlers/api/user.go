@@ -38,10 +38,12 @@ func UserProfile(c *gin.Context) {
 // @Summary Edit profile
 // @Description Edit user profile
 // @Tags profile
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
-// @Param user body dto.ChangeUserProfileRequest true "Data"
-// @Success 200 {object} dto.UserProfile
+// @Param new_username formData string false "Update username"
+// @Param new_description formData string false "Update description"
+// @Param new_image formData file false "Update image"
+// @Success 200 {object} dto.ChangeUserProfileResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /accounts/profile/edit [patch]
@@ -54,7 +56,7 @@ func ChangeUserProfile(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(&requestData); err != nil {
+	if err := c.ShouldBind(&requestData); err != nil {
 		c.Error(api_errors.ErrInvalidData)
 		return
 	}

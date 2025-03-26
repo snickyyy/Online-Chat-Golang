@@ -12,6 +12,7 @@ import (
 	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/internal/usecase/utils"
 	"libs/src/settings"
+	"path/filepath"
 	"time"
 )
 
@@ -95,7 +96,20 @@ func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessi
 	filterData := map[string]*string{
 		"username":    data.NewUsername,
 		"description": data.NewDescription,
-		"image":       data.NewImage,
+	}
+
+	if data.NewImage != nil {
+		if user.Image != "" {
+			utils.DeleteIfExist(filepath.Join(s.App.Config.AppConfig.UploadDir, user.Image))
+		}
+
+		fileName := uuid.New().String() + filepath.Ext(data.NewImage.Filename)
+		filePath := filepath.Join(s.App.Config.AppConfig.UploadDir, fileName)
+		err = utils.UploadFile(data.NewImage, filePath)
+		if err != nil {
+			return err
+		}
+		filterData["image"] = &fileName
 	}
 
 	updateData := make(map[string]any, len(filterData))

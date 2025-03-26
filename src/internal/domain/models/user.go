@@ -38,5 +38,6 @@ func (u *User) ToDTO() dto.UserDTO {
 		Description: u.Description,
 		IsActive:    u.IsActive,
 		Role:        u.Role,
+		Image:       u.Image,
 	}
 }

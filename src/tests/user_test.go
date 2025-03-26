@@ -3,10 +3,12 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
 	"libs/src/settings"
+	"mime/multipart"
 	"net/http"
 )
 
@@ -57,24 +59,27 @@ func (suite *AppTestSuite) TestChangeProfile() {
 	sess, err := authService.Login(dto.LoginRequest{UsernameOrEmail: "TestProfileEdit", Password: "test123"})
 	suite.NoError(err)
 
-	changeBody := dto.ChangeUserProfileRequest{
-		NewUsername: new(string),
-	}
-	*changeBody.NewUsername = "TestProfileEditNewUsername"
-	body, _ := json.Marshal(changeBody)
-
-	request, err := http.NewRequest("PATCH", url, bytes.NewBuffer(body))
+	request, err := http.NewRequest("PATCH", url, &bytes.Buffer{})
 	suite.NoError(err)
 	resProfile, err := suite.client.Do(request)
 	suite.NoError(err)
 	suite.Equal(http.StatusUnauthorized, resProfile.StatusCode)
 
-	request, err = http.NewRequest("PATCH", url, bytes.NewBuffer(body))
+	var changeBody bytes.Buffer
+	writer := multipart.NewWriter(&changeBody)
+	writer.WriteField("new_username", "TestProfileEditNewUsername")
+	err = writer.Close()
+	suite.NoError(err)
+	request, err = http.NewRequest("PATCH", url, &changeBody)
+	suite.NoError(err)
+	request.Header.Set("Content-Type", writer.FormDataContentType())
 	suite.NoError(err)
 	request.AddCookie(&http.Cookie{Name: "sessionID", Value: sess})
 	resChangeProfile, err := suite.client.Do(request)
 	suite.NoError(err)
 	suite.Equal(http.StatusOK, resChangeProfile.StatusCode)
+	bla, _ := io.ReadAll(resChangeProfile.Body)
+	fmt.Println(string(bla))
 
 	resProfile, err = suite.client.Get(urlGetProfile + "TestProfileEditNewUsername")
 	suite.NoError(err)

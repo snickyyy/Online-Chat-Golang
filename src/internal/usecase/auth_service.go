@@ -70,19 +70,18 @@ func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
 		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
-	user, err := s.UserRepository.GetById(userDto.ID) // TODO: оптимизировать что бы типа без запроса к базе
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
 
-	if user.Role != enums.ANONYMOUS || user.IsActive || user.Email != userDto.Email {
+	if userDto.Role != enums.ANONYMOUS || userDto.IsActive {
 		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
-	return user.ToDTO(), nil
+	return userDto, nil
 }
 
 func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
-	userDto, err := s.CheckEmailToken(sessionId) // TODO: оптимизировать что бы типа без запроса к базе лишнего
+	userDto, err := s.CheckEmailToken(sessionId)
 	if err != nil {
 		return "", err
 	}

@@ -2,6 +2,8 @@ package validators
 
 import (
 	"github.com/go-playground/validator/v10"
+	"mime/multipart"
+	"path/filepath"
 	"regexp"
 	"unicode"
 )
@@ -29,6 +31,26 @@ func ValidatePassword(field validator.FieldLevel) bool {
 		}
 	}
 	return hasUpperCase && hasLowerCase && hasDigit && hasSpecial
+}
+
+func ValidatorImage(fl validator.FieldLevel) bool {
+	file, ok := fl.Field().Interface().(multipart.FileHeader)
+	if !ok {
+		return false
+	}
+
+	ext := filepath.Ext(file.Filename)
+	allowedExtensions := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
+	if !allowedExtensions[ext] {
+		return false
+	}
+
+	const maxSize = 8 << 20
+	if file.Size > maxSize {
+		return false
+	}
+
+	return true
 }
 
 func ValidateUsername(field validator.FieldLevel) bool {
