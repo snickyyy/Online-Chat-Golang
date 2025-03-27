@@ -5,7 +5,7 @@ import (
 )
 
 type PostgresModelsTypes interface {
-	domain.User | domain.Chat
+	domain.User | domain.Chat | domain.ChatMember
 }
 
 type MongoObjectTypes interface {

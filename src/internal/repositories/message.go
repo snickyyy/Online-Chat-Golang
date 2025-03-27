@@ -8,10 +8,6 @@ import (
 	"libs/src/settings"
 )
 
-type ChatRepository struct {
-	BasePostgresRepository[domain.Chat]
-}
-
 type MessageRepository struct {
 	BaseMongoRepository[domain.Message]
 }
