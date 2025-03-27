@@ -9,7 +9,7 @@ import (
 )
 
 type ChatRepository struct {
-	BaseMongoRepository[domain.Chat]
+	BasePostgresRepository[domain.Chat]
 }
 
 type MessageRepository struct {
