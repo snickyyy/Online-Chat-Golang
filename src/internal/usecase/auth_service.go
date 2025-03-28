@@ -107,6 +107,8 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 		}
 	}()
 
+	userDto.Role = enums.USER
+	userDto.IsActive = true
 	session, err := s.setAuthCookie(userDto)
 	if err != nil {
 		return "", err

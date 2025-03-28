@@ -91,18 +91,24 @@ func parseError(err error) (int, gin.H) {
 		}
 	}
 	if errors.Is(err, api_errors.ErrInvalidPassword) {
-		return http.StatusNotFound, gin.H{
+		return http.StatusBadRequest, gin.H{
 			"error": "Invalid password",
 		}
 	}
 	if errors.Is(err, api_errors.ErrUnauthorized) {
-		return http.StatusNotFound, gin.H{
+		return http.StatusUnauthorized, gin.H{
 			"error": "Unauthorized",
 		}
 	}
 	if errors.Is(err, api_errors.ErrSamePassword) {
-		return http.StatusNotFound, gin.H{
+		return http.StatusBadRequest, gin.H{
 			"error": "Passwords must be different",
+		}
+	}
+
+	if errors.Is(err, api_errors.ErrChatAlreadyExists) {
+		return http.StatusConflict, gin.H{
+			"error": "chat already exists",
 		}
 	}
 

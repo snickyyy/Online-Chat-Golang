@@ -1,7 +1,12 @@
 package services
 
 import (
+	"errors"
+	"libs/src/internal/domain/enums"
+	domain "libs/src/internal/domain/models"
+	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
+	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 )
 
@@ -19,6 +24,23 @@ func NewChatService(app *settings.App) *ChatService {
 	}
 }
 
-//func (s *ChatService) CreateChat() ([]domain.Chat, error) {
-//	return s.ChatRepository.GetChatsByUserID(userID)
-//}
+func (s *ChatService) CreateChat(request dto.CreateChatRequest, user dto.UserDTO) (dto.ChatDTO, error) {
+	if user.Role == enums.ANONYMOUS || !user.IsActive {
+		return dto.ChatDTO{}, api_errors.ErrUnauthorized
+	}
+
+	newChat := domain.Chat{
+		Title:       request.Title,
+		Description: request.Description,
+		OwnerID:     user.ID,
+	}
+
+	err := s.ChatRepository.Create(&newChat)
+	if err != nil {
+		if errors.Is(err, repositories.ErrDuplicate) {
+			return dto.ChatDTO{}, api_errors.ErrChatAlreadyExists
+		}
+		return dto.ChatDTO{}, err
+	}
+	return newChat.ToDTO(), nil
+}

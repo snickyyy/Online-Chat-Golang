@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"libs/src/internal/domain/enums"
 	domain "libs/src/internal/domain/models"
 	"libs/src/settings"
 )
@@ -29,4 +30,26 @@ type ChatMemberRepository struct {
 
 type ChatRepository struct {
 	BasePostgresRepository[domain.Chat]
+}
+
+func (r *ChatRepository) Create(chat *domain.Chat) error {
+	tx := r.Db.Begin()
+	defer tx.Commit()
+
+	if err := tx.Create(chat).Error; err != nil {
+		tx.Rollback()
+		return parsePgError(err)
+	}
+
+	owner := domain.ChatMember{
+		ChatID:     chat.ID,
+		UserID:     chat.OwnerID,
+		MemberRole: enums.OWNER,
+	}
+
+	if err := tx.Create(&owner).Error; err != nil {
+		tx.Rollback()
+		return parsePgError(err)
+	}
+	return nil
 }

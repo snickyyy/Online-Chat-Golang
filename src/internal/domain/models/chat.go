@@ -16,7 +16,7 @@ type Chat struct {
 func (c *Chat) ToDTO() dto.ChatDTO {
 	return dto.ChatDTO{
 		ID:          c.ID,
-		Name:        c.Title,
+		Title:       c.Title,
 		OwnerID:     c.OwnerID,
 		Description: c.Description,
 	}
