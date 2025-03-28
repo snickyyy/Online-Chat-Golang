@@ -51,7 +51,7 @@ func ChangeUserProfile(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	sessId, err := c.Cookie("sessionID")
 	var requestData dto.ChangeUserProfileRequest
-	if err != nil { // TODO: заменить везде это недоразумение на c.MustGet("user").(dto.UserDTO) и проверять isActive
+	if err != nil {
 		c.Error(api_errors.ErrNeedLoginForChangeProfile)
 		return
 	}
