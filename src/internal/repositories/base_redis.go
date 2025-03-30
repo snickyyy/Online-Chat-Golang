@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"libs/src/internal/dto"
+	"libs/src/settings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -12,6 +13,13 @@ import (
 type BaseRedisRepository struct {
 	Client *redis.Client
 	Ctx    context.Context
+}
+
+func NewBaseRedisRepository(app *settings.App) *BaseRedisRepository {
+	return &BaseRedisRepository{
+		Client: app.RedisClient,
+		Ctx:    settings.Context.Ctx,
+	}
 }
 
 func (repo *BaseRedisRepository) SetDTO(prefix string, obj dto.SessionDTO) (string, error) {

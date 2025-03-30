@@ -24,13 +24,8 @@ type UserService struct {
 
 func NewUserService(app *settings.App) *UserService {
 	return &UserService{
-		App: app,
-		UserRepository: &repositories.UserRepository{
-			BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
-				Model: domain.User{},
-				Db:    app.DB,
-			},
-		},
+		App:            app,
+		UserRepository: repositories.NewUserRepository(app),
 		SessionService: NewSessionService(app),
 	}
 }
