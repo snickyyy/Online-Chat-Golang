@@ -105,10 +105,24 @@ func parseError(err error) (int, gin.H) {
 			"error": "Passwords must be different",
 		}
 	}
-
 	if errors.Is(err, api_errors.ErrChatAlreadyExists) {
 		return http.StatusConflict, gin.H{
-			"error": "chat already exists",
+			"error": "Chat already exists",
+		}
+	}
+	if errors.Is(err, api_errors.ErrChatNotFound) {
+		return http.StatusNotFound, gin.H{
+			"error": "Chat not found",
+		}
+	}
+	if errors.Is(err, api_errors.ErrNotEnoughPermissionsForInviting) {
+		return http.StatusForbidden, gin.H{
+			"error": "not enough permissions for inviting",
+		}
+	}
+	if errors.Is(err, api_errors.ErrUserAlreadyInChat) {
+		return http.StatusBadRequest, gin.H{
+			"error": "user already in chat or chat not exists",
 		}
 	}
 

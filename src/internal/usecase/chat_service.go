@@ -11,6 +11,7 @@ import (
 )
 
 type ChatService struct {
+	App                  *settings.App
 	UserRepository       *repositories.UserRepository
 	ChatRepository       *repositories.ChatRepository
 	ChatMemberRepository *repositories.ChatMemberRepository
@@ -18,6 +19,7 @@ type ChatService struct {
 
 func NewChatService(app *settings.App) *ChatService {
 	return &ChatService{
+		App:                  app,
 		UserRepository:       repositories.NewUserRepository(app),
 		ChatRepository:       repositories.NewChatRepository(app),
 		ChatMemberRepository: repositories.NewChatMemberRepository(app),
@@ -43,4 +45,45 @@ func (s *ChatService) CreateChat(request dto.CreateChatRequest, user dto.UserDTO
 		return dto.ChatDTO{}, err
 	}
 	return newChat.ToDTO(), nil
+}
+
+func (s *ChatService) InviteToChat(inviter *dto.UserDTO, inviteeUsername string, chatId int64) error {
+	inviterInfo, err := s.ChatRepository.GetMemberInfo(inviter.ID, chatId)
+	if err != nil {
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			return api_errors.ErrInviterNotInChat
+		}
+		return err
+	}
+	if inviterInfo.MemberRole < enums.CHAT_ADMIN {
+		return api_errors.ErrNotEnoughPermissionsForInviting
+	}
+
+	invitee, err := s.UserRepository.GetByUsername(inviteeUsername)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrUserNotFound
+		}
+		return err
+	}
+	if invitee.Role == enums.ANONYMOUS || !invitee.IsActive {
+		return api_errors.ErrUserNotFound
+	}
+
+	memberCount, err := s.ChatMemberRepository.Count("chat_id = ? AND user_id = ?", chatId, invitee.ID)
+	if err != nil {
+		return err
+	}
+	if memberCount > 0 {
+		return api_errors.ErrUserAlreadyInChat
+	}
+
+	newMember := domain.ChatMember{
+		ChatID:     chatId,
+		UserID:     invitee.ID,
+		MemberRole: enums.MEMBER,
+	}
+	_, err = s.ChatMemberRepository.Create(&newMember)
+
+	return err
 }

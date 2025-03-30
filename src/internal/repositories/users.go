@@ -17,3 +17,12 @@ func NewUserRepository(app *settings.App) *UserRepository {
 		},
 	}
 }
+
+func (r *UserRepository) GetByUsername(username string) (domain.User, error) {
+	var user domain.User
+	err := r.Db.Where("username = ?", username).First(&user).Error
+	if err != nil {
+		return domain.User{}, parsePgError(err)
+	}
+	return user, nil
+}

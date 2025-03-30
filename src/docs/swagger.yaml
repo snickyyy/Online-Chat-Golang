@@ -451,4 +451,38 @@ paths:
       summary: Create chat
       tags:
       - Chat
+  /messenger/chat/invite:
+    post:
+      consumes:
+      - application/json
+      description: inviting a user to an existing chat
+      parameters:
+      - description: Invitee username
+        in: query
+        name: invitee
+        required: true
+        type: string
+      - description: chat id to invite to
+        in: query
+        name: chat_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Invite to chat
+      tags:
+      - Chat
 swagger: "2.0"

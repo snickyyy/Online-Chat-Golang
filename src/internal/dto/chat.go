@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 type ChatDTO struct {
 	ID          int64  `json:"id"`
 	Title       string `json:"title"`
@@ -17,4 +19,23 @@ type ChatMemberDTO struct {
 type CreateChatRequest struct {
 	Title       string `json:"title" binding:"required,min=1,max=38"`
 	Description string `json:"description" binding:"required,min=1,max=254"`
+}
+
+type ChatPreview struct {
+	Title       string `json:"title"`
+	Owner       string `json:"owner"`
+	Description string `json:"description"`
+}
+
+type FilterChatsResponse struct {
+	Chats []ChatPreview `json:"chats"`
+}
+
+type MemberInfo struct {
+	ChatID     int64     `json:"chat_id" gorm:"column:chat_id"`
+	ChatTitle  string    `json:"chat_title" gorm:"column:chat_title"`
+	MemberID   int64     `json:"member_id" gorm:"column:member_id"`
+	MemberRole byte      `json:"member_role" gorm:"column:member_role"`
+	DateJoined time.Time `json:"date_joined" gorm:"column:date_joined"`
+	UpdateAt   time.Time `json:"updated_at" gorm:"column:updated_at"`
 }

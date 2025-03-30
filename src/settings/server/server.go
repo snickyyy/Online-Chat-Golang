@@ -82,6 +82,7 @@ func RunServer() {
 		chat := messenger.Group("/chat")
 		{
 			chat.POST("/create", handler_api.CreateChat)
+			chat.POST("/invite", handler_api.InviteToChat)
 		}
 	}
 
