@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	domain_interface "libs/src/internal/domain/interfaces"
+	models "libs/src/internal/domain/models"
 
 	"context"
 	"libs/src/settings"
@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type BaseMongoRepository[T domain_interface.MongoObjectTypes] struct {
+type BaseMongoRepository[T models.Message] struct {
 	Db             *mongo.Database
 	Schema         T
 	CollectionName string

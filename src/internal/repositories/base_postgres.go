@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	domain "libs/src/internal/domain/interfaces"
+	models "libs/src/internal/domain/models"
 	"maps"
 	"slices"
 
@@ -11,7 +11,18 @@ import (
 	"gorm.io/gorm"
 )
 
-type BasePostgresRepository[T domain.PostgresModelsTypes] struct {
+type IBasePostgresRepository[T models.User | models.Chat | models.ChatMember] interface {
+	Create(obj *T) (interface{}, error)
+	GetById(id int64) (T, error)
+	GetAll() ([]T, error)
+	Filter(query string, args ...interface{}) ([]T, error)
+	DeleteById(id int64) error
+	UpdateById(id int64, updateFields map[string]interface{}) error
+	Count(filter string, args ...interface{}) (int64, error)
+	ExecuteQuery(query string, args ...interface{}) error
+}
+
+type BasePostgresRepository[T models.User | models.Chat | models.ChatMember] struct {
 	Model T
 	Db    *gorm.DB
 }
