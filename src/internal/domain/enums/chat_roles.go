@@ -11,3 +11,9 @@ var ChatRolesToLabels map[int]string = map[int]string{
 	CHAT_ADMIN: "admin",
 	OWNER:      "owner",
 }
+
+var ChatLabelsToRoles map[string]int = map[string]int{
+	"member": MEMBER,
+	"admin":  CHAT_ADMIN,
+	"owner":  OWNER,
+}

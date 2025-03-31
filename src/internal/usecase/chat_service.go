@@ -8,6 +8,7 @@ import (
 	"libs/src/internal/repositories"
 	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
+	"strings"
 )
 
 type ChatService struct {
@@ -86,4 +87,59 @@ func (s *ChatService) InviteToChat(inviter *dto.UserDTO, inviteeUsername string,
 	_, err = s.ChatMemberRepository.Create(&newMember)
 
 	return err
+}
+
+func (s *ChatService) ChangeMemberRole(caller dto.UserDTO, chatId int64, targetUsername string, newRole string) error {
+	role, ex := enums.ChatLabelsToRoles[strings.ToLower(newRole)]
+	if !ex {
+		return api_errors.ErrInvalidData
+	}
+	if !(role < enums.OWNER) {
+		return api_errors.ErrNotEnoughPermissionsForChangeRole
+	}
+
+	callerInfo, err := s.ChatRepository.GetMemberInfo(caller.ID, chatId)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrUserNotInChat
+		}
+		return err
+	}
+
+	if callerInfo.MemberRole != enums.OWNER {
+		return api_errors.ErrNotEnoughPermissionsForChangeRole
+	}
+
+	target, err := s.UserRepository.GetByUsername(targetUsername)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrUserNotFound
+		}
+		return err
+	}
+
+	if target.Role == enums.ANONYMOUS || !target.IsActive {
+		return api_errors.ErrUserNotFound
+	}
+
+	targetInfo, err := s.ChatRepository.GetMemberInfo(target.ID, chatId)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrUserNotInChat
+		}
+		return err
+	}
+
+	if targetInfo.MemberRole == byte(role) {
+		return nil
+	}
+
+	err = s.ChatMemberRepository.SetNewRole(chatId, targetInfo.MemberID, byte(role))
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrUserNotFound
+		}
+		return err
+	}
+	return nil
 }

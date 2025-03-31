@@ -125,6 +125,16 @@ func parseError(err error) (int, gin.H) {
 			"error": "user already in chat or chat not exists",
 		}
 	}
+	if errors.Is(err, api_errors.ErrUserNotInChat) {
+		return http.StatusNotFound, gin.H{
+			"error": "User not in chat",
+		}
+	}
+	if errors.Is(err, api_errors.ErrNotEnoughPermissionsForChangeRole) {
+		return http.StatusNotFound, gin.H{
+			"error": "doesn't have enough permissions to change role",
+		}
+	}
 
 	return http.StatusInternalServerError, gin.H{
 		"error": "Internal server error",
