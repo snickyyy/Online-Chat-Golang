@@ -27,6 +27,24 @@ func NewChatMemberService(app *settings.App) *ChatMemberService {
 	}
 }
 
+func (s *ChatMemberService) createMember(userId int64, chatId int64) error {
+	memberCount, err := s.ChatMemberRepository.Count("chat_id = ? AND user_id = ?", chatId, userId)
+	if err != nil {
+		return err
+	}
+	if memberCount > 0 {
+		return api_errors.ErrUserAlreadyInChat
+	}
+
+	member := domain.ChatMember{
+		UserID:     userId,
+		ChatID:     chatId,
+		MemberRole: enums.MEMBER,
+	}
+	_, err = s.ChatMemberRepository.Create(&member)
+	return err
+}
+
 func (s *ChatMemberService) InviteToChat(inviter *dto.UserDTO, inviteeUsername string, chatId int64) error {
 	inviterInfo, err := s.ChatRepository.GetMemberInfo(inviter.ID, chatId)
 	if err != nil {
@@ -50,20 +68,7 @@ func (s *ChatMemberService) InviteToChat(inviter *dto.UserDTO, inviteeUsername s
 		return api_errors.ErrUserNotFound
 	}
 
-	memberCount, err := s.ChatMemberRepository.Count("chat_id = ? AND user_id = ?", chatId, invitee.ID)
-	if err != nil {
-		return err
-	}
-	if memberCount > 0 {
-		return api_errors.ErrUserAlreadyInChat
-	}
-
-	newMember := domain.ChatMember{
-		ChatID:     chatId,
-		UserID:     invitee.ID,
-		MemberRole: enums.MEMBER,
-	}
-	_, err = s.ChatMemberRepository.Create(&newMember)
+	err = s.createMember(invitee.ID, chatId)
 
 	return err
 }
