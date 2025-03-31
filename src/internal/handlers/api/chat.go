@@ -69,7 +69,7 @@ func InviteToChat(c *gin.Context) {
 		return
 	}
 
-	service := services.NewChatService(app)
+	service := services.NewChatMemberService(app)
 
 	chatIDInt, err := strconv.Atoi(chatID)
 	if err != nil {
