@@ -24,12 +24,7 @@ type AuthService struct {
 
 func NewAuthService(app *settings.App) *AuthService {
 	return &AuthService{
-		UserRepository: &repositories.UserRepository{
-			BasePostgresRepository: repositories.BasePostgresRepository[domain.User]{
-				Model: domain.User{},
-				Db:    app.DB,
-			},
-		},
+		UserRepository: repositories.NewUserRepository(app),
 		SessionService: NewSessionService(app),
 		App:            app,
 	}
@@ -107,6 +102,8 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 		}
 	}()
 
+	userDto.Role = enums.USER
+	userDto.IsActive = true
 	session, err := s.setAuthCookie(userDto)
 	if err != nil {
 		return "", err

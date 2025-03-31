@@ -18,11 +18,8 @@ type SessionService struct {
 func NewSessionService(app *settings.App) *SessionService {
 
 	return &SessionService{
-		App: app,
-		RedisBaseRepository: &repositories.BaseRedisRepository{
-			Client: app.RedisClient,
-			Ctx:    settings.Context.Ctx,
-		},
+		App:                 app,
+		RedisBaseRepository: repositories.NewBaseRedisRepository(app),
 	}
 }
 

@@ -2,6 +2,7 @@ package handler_api
 
 import (
 	_ "libs/src/docs"
+	"libs/src/internal/domain/enums"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
 	api_errors "libs/src/internal/usecase/errors"
@@ -23,8 +24,8 @@ import (
 // @Router /accounts/auth/register [post]
 func Register(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
-	_, err := c.Cookie("sessionID")
-	if err == nil {
+	user := c.MustGet("user").(dto.UserDTO)
+	if user.Role != enums.ANONYMOUS || user.IsActive {
 		c.Error(api_errors.ErrAlreadyLoggedIn)
 		return
 	}
@@ -38,7 +39,7 @@ func Register(c *gin.Context) {
 
 	service := services.NewAuthService(app)
 
-	err = service.RegisterUser(registerData)
+	err := service.RegisterUser(registerData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -58,8 +59,8 @@ func Register(c *gin.Context) {
 // @Router /accounts/auth/confirm-account [get]
 func ConfirmAccount(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
-	_, err := c.Cookie("sessionID")
-	if err == nil {
+	user := c.MustGet("user").(dto.UserDTO)
+	if user.Role != enums.ANONYMOUS || user.IsActive {
 		c.Error(api_errors.ErrAlreadyLoggedIn)
 		return
 	}
@@ -87,8 +88,8 @@ func ConfirmAccount(c *gin.Context) {
 // @Router /accounts/auth/login [post]
 func Login(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
-	_, err := c.Cookie("sessionID")
-	if err == nil {
+	user := c.MustGet("user").(dto.UserDTO)
+	if user.Role != enums.ANONYMOUS || user.IsActive {
 		c.Error(api_errors.ErrAlreadyLoggedIn)
 		return
 	}

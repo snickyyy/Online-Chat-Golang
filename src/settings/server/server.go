@@ -77,6 +77,14 @@ func RunServer() {
 			profile.PUT("/change-password", handler_api.ChangePassword)
 		}
 	}
+	messenger := router.Group("/messenger")
+	{
+		chat := messenger.Group("/chat")
+		{
+			chat.POST("/create", handler_api.CreateChat)
+			chat.POST("/invite", handler_api.InviteToChat)
+		}
+	}
 
 	server := newServer(router)
 	if err := server.ListenAndServe(); err != nil {

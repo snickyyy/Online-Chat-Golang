@@ -10,10 +10,12 @@ import (
 
 var Models = []interface{}{
 	&domain.User{},
+	&domain.Chat{},
+	&domain.ChatMember{},
 }
 
-func GetDb(baseConfig *BaseConfig) (*gorm.DB, error){
-	
+func GetDb(baseConfig *BaseConfig) (*gorm.DB, error) {
+
 	dbConfig := baseConfig.PostgresConfig
 	if dbConfig.Host == "" {
 		return nil, fmt.Errorf("db host is not set")

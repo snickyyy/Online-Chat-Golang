@@ -1,6 +1,7 @@
 package main
 
 import (
+	"libs/src/internal/repositories"
 	"libs/src/settings"
 	"libs/src/settings/server"
 )
@@ -17,6 +18,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	repositories.CreateIndexes(settings.AppVar)
 
 	server.RunServer()
 

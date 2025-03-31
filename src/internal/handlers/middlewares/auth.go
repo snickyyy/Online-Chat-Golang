@@ -23,8 +23,7 @@ func AuthMiddleware(c *gin.Context) {
 
 	sid, err := c.Cookie("sessionID")
 	if err != nil {
-		user = unknown
-		c.Set("user", user)
+		c.Set("user", unknown)
 		c.Set("user.state.isActive", false)
 		c.Next()
 		return
@@ -35,14 +34,14 @@ func AuthMiddleware(c *gin.Context) {
 	user, err = service.GetUserByAuthSession(sid)
 	if err != nil {
 		app.Logger.Error(fmt.Sprintf("Error getting session: %s || error: %s", app.Config.RedisConfig.Prefixes.SessionPrefix+sid, err))
-		user = unknown
+		c.Set("user", unknown)
 		c.Set("user.state.isActive", false)
 		c.Next()
 		return
 	}
 
 	if !user.IsActive || user.Role == enums.ANONYMOUS {
-		user = unknown
+		c.Set("user", unknown)
 		c.Set("user.state.isActive", false)
 		c.Next()
 		return

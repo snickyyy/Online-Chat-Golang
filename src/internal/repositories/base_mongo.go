@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type BaseMongoRepository[T domain_interface.BaseMongoInterface] struct {
+type BaseMongoRepository[T domain_interface.MongoObjectTypes] struct {
 	Db             *mongo.Database
 	Schema         T
 	CollectionName string

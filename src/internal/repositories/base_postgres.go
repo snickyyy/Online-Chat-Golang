@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type BasePostgresRepository[T domain.BaseModelsInterface] struct {
+type BasePostgresRepository[T domain.PostgresModelsTypes] struct {
 	Model T
 	Db    *gorm.DB
 }

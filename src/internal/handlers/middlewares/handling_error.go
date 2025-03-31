@@ -91,18 +91,48 @@ func parseError(err error) (int, gin.H) {
 		}
 	}
 	if errors.Is(err, api_errors.ErrInvalidPassword) {
-		return http.StatusNotFound, gin.H{
+		return http.StatusBadRequest, gin.H{
 			"error": "Invalid password",
 		}
 	}
 	if errors.Is(err, api_errors.ErrUnauthorized) {
-		return http.StatusNotFound, gin.H{
+		return http.StatusUnauthorized, gin.H{
 			"error": "Unauthorized",
 		}
 	}
 	if errors.Is(err, api_errors.ErrSamePassword) {
-		return http.StatusNotFound, gin.H{
+		return http.StatusBadRequest, gin.H{
 			"error": "Passwords must be different",
+		}
+	}
+	if errors.Is(err, api_errors.ErrChatAlreadyExists) {
+		return http.StatusConflict, gin.H{
+			"error": "Chat already exists",
+		}
+	}
+	if errors.Is(err, api_errors.ErrChatNotFound) {
+		return http.StatusNotFound, gin.H{
+			"error": "Chat not found",
+		}
+	}
+	if errors.Is(err, api_errors.ErrNotEnoughPermissionsForInviting) {
+		return http.StatusForbidden, gin.H{
+			"error": "not enough permissions for inviting",
+		}
+	}
+	if errors.Is(err, api_errors.ErrUserAlreadyInChat) {
+		return http.StatusBadRequest, gin.H{
+			"error": "user already in chat or chat not exists",
+		}
+	}
+	if errors.Is(err, api_errors.ErrUserNotInChat) {
+		return http.StatusNotFound, gin.H{
+			"error": "User not in chat",
+		}
+	}
+	if errors.Is(err, api_errors.ErrNotEnoughPermissionsForChangeRole) {
+		return http.StatusNotFound, gin.H{
+			"error": "doesn't have enough permissions to change role",
 		}
 	}
 
