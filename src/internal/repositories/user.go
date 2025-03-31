@@ -5,6 +5,10 @@ import (
 	"libs/src/settings"
 )
 
+type IUserRepository interface {
+	GetByUsername(username string) (domain.User, error)
+}
+
 type UserRepository struct {
 	BasePostgresRepository[domain.User]
 }
