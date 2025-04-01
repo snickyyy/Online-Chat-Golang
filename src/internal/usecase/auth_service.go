@@ -17,9 +17,9 @@ import (
 )
 
 type AuthService struct {
-	UserRepository *repositories.UserRepository
-	SessionService *SessionService
 	App            *settings.App
+	UserRepository repositories.IUserRepository
+	SessionService ISessionService
 }
 
 func NewAuthService(app *settings.App) *AuthService {

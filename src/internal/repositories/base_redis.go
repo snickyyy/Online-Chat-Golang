@@ -10,6 +10,16 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+//go:generate mockery --name=IBaseRedisRepository --dir=. --output=../mocks --with-expecter
+type IBaseRedisRepository interface {
+	SetDTO(prefix string, obj dto.SessionDTO) (string, error)
+	GetByKey(prefix string, key string) (string, error)
+	Create(prefix string, key string, value any, expiration time.Duration) (string, error)
+	Delete(prefix string, key string) (int64, error)
+	CountAll() (int64, error)
+	IsExist(prefix string, key string) (bool, error)
+}
+
 type BaseRedisRepository struct {
 	Client *redis.Client
 	Ctx    context.Context

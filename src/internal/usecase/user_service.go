@@ -18,8 +18,8 @@ import (
 
 type UserService struct {
 	App            *settings.App
-	UserRepository *repositories.UserRepository
-	SessionService *SessionService
+	UserRepository repositories.IUserRepository
+	SessionService ISessionService
 }
 
 func NewUserService(app *settings.App) *UserService {

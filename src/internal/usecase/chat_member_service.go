@@ -13,9 +13,9 @@ import (
 
 type ChatMemberService struct {
 	App                  *settings.App
-	ChatMemberRepository *repositories.ChatMemberRepository
-	UserRepository       *repositories.UserRepository
-	ChatRepository       *repositories.ChatRepository
+	ChatMemberRepository repositories.IChatMemberRepository
+	UserRepository       repositories.IUserRepository
+	ChatRepository       repositories.IChatRepository
 }
 
 func NewChatMemberService(app *settings.App) *ChatMemberService {
