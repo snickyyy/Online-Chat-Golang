@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+//go:generate mockery --name=ISessionService --dir=. --output=../mocks --with-expecter
 type ISessionService interface {
 	GetSession(prefix string, session string) (dto.SessionDTO, error)
 	SetSession(session dto.SessionDTO) (string, error)
