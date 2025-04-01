@@ -6,6 +6,7 @@ import (
 	"libs/src/settings"
 )
 
+//go:generate mockery --name=IChatRepository --dir=. --output=../mocks --with-expecter
 type IChatRepository interface {
 	IBasePostgresRepository[domain.Chat]
 }
