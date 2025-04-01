@@ -5,8 +5,10 @@ import (
 	"libs/src/settings"
 )
 
+//go:generate mockery --name=IUserRepository --dir=. --output=../mocks --with-expecter
 type IUserRepository interface {
 	GetByUsername(username string) (domain.User, error)
+	IBasePostgresRepository[domain.User]
 }
 
 type UserRepository struct {

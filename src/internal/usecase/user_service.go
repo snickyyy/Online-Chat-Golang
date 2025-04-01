@@ -36,7 +36,7 @@ func (s *UserService) CreateSuperUser(username string, email string, password st
 		return err
 	}
 
-	_, err = s.UserRepository.Create(
+	err = s.UserRepository.Create(
 		&domain.User{
 			Username: username,
 			Email:    email,

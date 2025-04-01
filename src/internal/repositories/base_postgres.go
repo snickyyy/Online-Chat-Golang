@@ -5,14 +5,11 @@ import (
 	"maps"
 	"slices"
 
-	"errors"
-	"reflect"
-
 	"gorm.io/gorm"
 )
 
 type IBasePostgresRepository[T models.User | models.Chat | models.ChatMember] interface {
-	Create(obj *T) (interface{}, error)
+	Create(obj *T) error
 	GetById(id int64) (T, error)
 	GetAll() ([]T, error)
 	Filter(query string, args ...interface{}) ([]T, error)
@@ -27,21 +24,13 @@ type BasePostgresRepository[T models.User | models.Chat | models.ChatMember] str
 	Db    *gorm.DB
 }
 
-func (r *BasePostgresRepository[T]) Create(obj *T) (interface{}, error) {
+func (r *BasePostgresRepository[T]) Create(obj *T) error {
 	result := r.Db.Create(obj)
 	if result.Error != nil {
-		return 0, parsePgError(result.Error)
+		return parsePgError(result.Error)
 	}
 
-	v := reflect.ValueOf(obj).Elem()
-
-	field := v.FieldByName("ID")
-
-	if !field.IsValid() {
-		return 0, errors.New("not fount field ID")
-	}
-
-	return field.Interface(), nil
+	return nil
 }
 
 func (r *BasePostgresRepository[T]) GetById(id int64) (T, error) {

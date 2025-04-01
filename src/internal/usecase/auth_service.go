@@ -130,7 +130,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		Role:     enums.ANONYMOUS,
 	}
 
-	_, err = s.UserRepository.Create(&user)
+	err = s.UserRepository.Create(&user)
 	if err != nil {
 		if errors.Is(err, repositories.ErrDuplicate) {
 			return api_errors.ErrUserAlreadyExists
