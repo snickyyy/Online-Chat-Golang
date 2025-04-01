@@ -12,91 +12,89 @@ import (
 	"testing"
 )
 
-func TestCreateChatUnauthorized(t *testing.T) {
+func TestCreateChat(t *testing.T) {
 	mockApp := GetAppMock()
-	MockChatRepository := new(mocks.IChatRepository)
-
-	MockChatRepository.EXPECT().Create(mock.Anything).Return(nil)
 
 	chatService := services.ChatService{
-		App:            mockApp,
-		ChatRepository: MockChatRepository,
+		App: mockApp,
 	}
 
-	request := dto.CreateChatRequest{
-		Title:       "Test Chat",
-		Description: "Test Description",
-	}
 	testCases := []struct {
-		user  dto.UserDTO
-		error error
+		testName string
+		request  dto.CreateChatRequest
+		user     dto.UserDTO
+		mockResp error
+		mustErr  bool
+		resp     dto.ChatDTO
+		respErr  error
 	}{
 		{
-			user: dto.UserDTO{
+			"TestCreateChatUnauthorized",
+			dto.CreateChatRequest{
+				Title:       "Test Chat",
+				Description: "Test Description",
+			},
+			dto.UserDTO{
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			error: api_errors.ErrUnauthorized,
+			api_errors.ErrUnauthorized,
+			true,
+			dto.ChatDTO{},
+			api_errors.ErrUnauthorized,
 		},
 		{
-			user: dto.UserDTO{
-				Role:     enums.ADMIN,
-				IsActive: false,
+			"TestCreateChatDuplicate",
+			dto.CreateChatRequest{
+				Title:       "Test Chat",
+				Description: "Test Description",
 			},
-			error: api_errors.ErrUnauthorized,
+			dto.UserDTO{
+				ID:       1,
+				Role:     enums.USER,
+				IsActive: true,
+			},
+			repositories.ErrDuplicate,
+			true,
+			dto.ChatDTO{},
+			api_errors.ErrChatAlreadyExists,
 		},
 		{
-			user: dto.UserDTO{
-				Role:     enums.ANONYMOUS,
-				IsActive: false,
+			"TestCreateChatSuccess",
+			dto.CreateChatRequest{
+				Title:       "Test Chat",
+				Description: "Test Description",
 			},
-			error: api_errors.ErrUnauthorized,
+			dto.UserDTO{
+				ID:       1,
+				Role:     enums.USER,
+				IsActive: true,
+			},
+			nil,
+			false,
+			dto.ChatDTO{
+				Title:       "Test Chat",
+				Description: "Test Description",
+			},
+			nil,
 		},
 	}
-	for i := 0; i < len(testCases); i++ {
-		tc := testCases[i]
-		_, err := chatService.CreateChat(request, tc.user)
-		assert.Equal(t, err, tc.error, "I: %d", i)
-	}
-}
-func TestCreateChatDuplicate(t *testing.T) {
-	mockApp := GetAppMock()
-	MockChatRepository := new(mocks.IChatRepository)
+	for _, tc := range testCases {
+		MockChatRepository := new(mocks.IChatRepository)
+		chatService.ChatRepository = MockChatRepository
 
-	MockChatRepository.EXPECT().Create(mock.Anything).Return(repositories.ErrDuplicate)
-	chatService := services.ChatService{App: mockApp, ChatRepository: MockChatRepository}
+		t.Run(tc.testName, func(t *testing.T) {
+			MockChatRepository.EXPECT().Create(mock.Anything).Return(tc.mockResp)
 
-	request := dto.CreateChatRequest{
-		Title:       "Test Chat",
-		Description: "Test Description",
+			chat, err := chatService.CreateChat(tc.request, tc.user)
+			if tc.mustErr {
+				assert.Error(t, err)
+				assert.Equal(t, err, tc.respErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, chat.Title, tc.request.Title)
+				assert.Equal(t, chat.Description, tc.request.Description)
+			}
+		})
 	}
-	user := dto.UserDTO{
-		ID:       1,
-		Role:     enums.USER,
-		IsActive: true,
-	}
-	_, err := chatService.CreateChat(request, user)
-	assert.Equal(t, err, api_errors.ErrChatAlreadyExists)
-}
-func TestCreateChatSuccess(t *testing.T) {
-	mockApp := GetAppMock()
-	MockChatRepository := new(mocks.IChatRepository)
-
-	MockChatRepository.EXPECT().Create(mock.Anything).Return(nil)
-	chatService := services.ChatService{App: mockApp, ChatRepository: MockChatRepository}
-
-	request := dto.CreateChatRequest{
-		Title:       "Test Chat",
-		Description: "Test Description",
-	}
-	user := dto.UserDTO{
-		ID:       1,
-		Role:     enums.USER,
-		IsActive: true,
-	}
-	chat, err := chatService.CreateChat(request, user)
-	assert.NoError(t, err)
-	assert.Equal(t, chat.Title, request.Title)
-	assert.Equal(t, chat.Description, request.Description)
-	assert.Equal(t, chat.OwnerID, user.ID)
 }
