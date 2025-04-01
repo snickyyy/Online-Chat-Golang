@@ -1,10 +1,10 @@
-package tests
+package integration
 
 import (
-	"libs/src/settings"
 	"fmt"
-	"gorm.io/gorm"
 	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"libs/src/settings"
 )
 
 func SetupTestDatabase(dbConfig settings.PostgresConfig, testDbConfig settings.PostgresConfig) *gorm.DB {
@@ -29,11 +29,10 @@ func SetupTestDatabase(dbConfig settings.PostgresConfig, testDbConfig settings.P
 		"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s",
 		testDbConfig.Host, testDbConfig.User, testDbConfig.Password, testDbConfig.Database, testDbConfig.Port, testDbConfig.Sslmode,
 	)
-    testDB, err := gorm.Open(postgres.Open(testDsn), &gorm.Config{SkipDefaultTransaction: true})
-    if err != nil {
-        panic(err)
-    }
-
+	testDB, err := gorm.Open(postgres.Open(testDsn), &gorm.Config{SkipDefaultTransaction: true})
+	if err != nil {
+		panic(err)
+	}
 
 	return testDB
 }

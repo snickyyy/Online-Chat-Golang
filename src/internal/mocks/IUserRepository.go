@@ -89,33 +89,21 @@ func (_c *IUserRepository_Count_Call) RunAndReturn(run func(string, ...interface
 }
 
 // Create provides a mock function with given fields: obj
-func (_m *IUserRepository) Create(obj *domain.User) (interface{}, error) {
+func (_m *IUserRepository) Create(obj *domain.User) error {
 	ret := _m.Called(obj)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
 	}
 
-	var r0 interface{}
-	var r1 error
-	if rf, ok := ret.Get(0).(func(*domain.User) (interface{}, error)); ok {
-		return rf(obj)
-	}
-	if rf, ok := ret.Get(0).(func(*domain.User) interface{}); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*domain.User) error); ok {
 		r0 = rf(obj)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(interface{})
-		}
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(*domain.User) error); ok {
-		r1 = rf(obj)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // IUserRepository_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
@@ -136,12 +124,12 @@ func (_c *IUserRepository_Create_Call) Run(run func(obj *domain.User)) *IUserRep
 	return _c
 }
 
-func (_c *IUserRepository_Create_Call) Return(_a0 interface{}, _a1 error) *IUserRepository_Create_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *IUserRepository_Create_Call) Return(_a0 error) *IUserRepository_Create_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *IUserRepository_Create_Call) RunAndReturn(run func(*domain.User) (interface{}, error)) *IUserRepository_Create_Call {
+func (_c *IUserRepository_Create_Call) RunAndReturn(run func(*domain.User) error) *IUserRepository_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
