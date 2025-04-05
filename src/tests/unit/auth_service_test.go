@@ -1,13 +1,17 @@
 package unit
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"libs/src/internal/domain/enums"
+	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/mocks"
+	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
 	api_errors "libs/src/internal/usecase/errors"
+	"libs/src/internal/usecase/utils"
 	"testing"
 )
 
@@ -175,6 +179,225 @@ func TestConfirmAccount(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.ExpectedResp, res)
+			}
+		})
+	}
+}
+func TestRegisterUser(t *testing.T) {
+	mockApp := GetAppMock()
+	service := services.AuthService{
+		App: mockApp,
+	}
+
+	testCases := []struct {
+		testName        string
+		data            dto.RegisterRequest
+		UserRepoResp    error
+		SessionServResp string
+		SessionServErr  error
+		respError       error
+		mustErr         bool
+	}{
+		{
+			testName: "RegisterUserPasswordsDontMatch",
+			data: dto.RegisterRequest{
+				Username:        "test",
+				Email:           "test@ocg.com",
+				Password:        "test",
+				ConfirmPassword: "test123",
+			},
+			UserRepoResp:    nil,
+			SessionServResp: "",
+			SessionServErr:  nil,
+			respError:       api_errors.ErrPasswordsDontMatch,
+			mustErr:         true,
+		},
+		{
+			testName: "RegisterUserEmailAlreadyExists",
+			data: dto.RegisterRequest{
+				Username:        "test",
+				Email:           "test@ocg.com",
+				Password:        "test",
+				ConfirmPassword: "test",
+			},
+			UserRepoResp:    repositories.ErrDuplicate,
+			SessionServResp: "",
+			SessionServErr:  nil,
+			respError:       api_errors.ErrUserAlreadyExists,
+			mustErr:         true,
+		},
+		{
+			testName: "RegisterUserSuccess",
+			data: dto.RegisterRequest{
+				Username:        "test",
+				Email:           "test@ocg.com",
+				Password:        "test",
+				ConfirmPassword: "test",
+			},
+			UserRepoResp:    nil,
+			SessionServResp: "test",
+			SessionServErr:  nil,
+			respError:       nil,
+			mustErr:         false,
+		},
+	}
+
+	for _, tc := range testCases {
+		mockUserRepository := new(mocks.IUserRepository)
+		mockSessionService := new(mocks.ISessionService)
+		service.UserRepository = mockUserRepository
+		service.SessionService = mockSessionService
+
+		t.Run(tc.testName, func(t *testing.T) {
+			mockUserRepository.EXPECT().Create(mock.Anything).Return(tc.UserRepoResp)
+			mockSessionService.EXPECT().SetSession(mock.Anything).Return(tc.SessionServResp, tc.SessionServErr)
+
+			err := service.RegisterUser(tc.data)
+
+			if tc.mustErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.respError, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestLogin(t *testing.T) {
+	mockApp := GetAppMock()
+	service := services.AuthService{
+		App: mockApp,
+	}
+
+	testCases := []struct {
+		testName      string
+		data          dto.LoginRequest
+		userRepoResp  []domain.User
+		userRepoErr   error
+		sessServResp  string
+		sessServErr   error
+		expectedResp  string
+		expectedError error
+		mustErr       bool
+	}{
+		{
+			testName: "LoginUserNotFound",
+			data: dto.LoginRequest{
+				UsernameOrEmail: "test",
+				Password:        "test",
+			},
+			userRepoResp:  []domain.User{},
+			expectedError: api_errors.ErrInvalidCredentials,
+			mustErr:       true,
+		},
+		{
+			testName: "LoginUserDbError",
+			data: dto.LoginRequest{
+				UsernameOrEmail: "test",
+				Password:        "test",
+			},
+			userRepoResp:  []domain.User{},
+			userRepoErr:   errors.New("internal db error"),
+			expectedError: api_errors.ErrInvalidCredentials,
+			mustErr:       true,
+		},
+		{
+			testName: "LoginUserInvalidPassword",
+			data: dto.LoginRequest{
+				UsernameOrEmail: "test",
+				Password:        "invalidPassword",
+			},
+			userRepoResp: []domain.User{
+				{
+					Username: "test",
+					Password: func() string {
+						hash, err := utils.HashPassword("test123")
+						if err != nil {
+							panic(err)
+						}
+						return hash
+					}(),
+					IsActive: true,
+					Role:     enums.USER,
+				},
+			},
+			expectedError: api_errors.ErrInvalidCredentials,
+			mustErr:       true,
+		},
+		{
+			testName: "LoginUserNotActive",
+			data: dto.LoginRequest{
+				UsernameOrEmail: "test",
+				Password: func() string {
+					hash, err := utils.HashPassword("test")
+					if err != nil {
+						panic(err)
+					}
+					return hash
+				}(),
+			},
+			userRepoResp: []domain.User{
+				{
+					Username: "test",
+					Password: func() string {
+						hash, err := utils.HashPassword("test")
+						if err != nil {
+							panic(err)
+						}
+						return hash
+					}(),
+					IsActive: false,
+					Role:     enums.ANONYMOUS,
+				},
+			},
+			expectedError: api_errors.ErrInvalidCredentials,
+			mustErr:       true,
+		},
+		{
+			testName: "LoginUserSuccess",
+			data: dto.LoginRequest{
+				UsernameOrEmail: "test",
+				Password:        "test",
+			},
+			userRepoResp: []domain.User{
+				{
+					Username: "test",
+					Email:    "test@ocg.com",
+					Password: func() string {
+						hash, err := utils.HashPassword("test")
+						if err != nil {
+							panic(err)
+						}
+						return hash
+					}(),
+					IsActive: true,
+					Role:     enums.USER,
+				},
+			},
+			sessServResp: "test",
+			expectedResp: "test",
+			mustErr:      false,
+		},
+	}
+
+	for _, tc := range testCases {
+		mockUserRepository := new(mocks.IUserRepository)
+		mockSessionService := new(mocks.ISessionService)
+		service.UserRepository = mockUserRepository
+		service.SessionService = mockSessionService
+
+		t.Run(tc.testName, func(t *testing.T) {
+			mockUserRepository.EXPECT().Filter(mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
+			mockSessionService.EXPECT().SetSession(mock.Anything).Return(tc.sessServResp, tc.sessServErr)
+
+			res, err := service.Login(tc.data)
+			if tc.mustErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedError, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedResp, res)
 			}
 		})
 	}

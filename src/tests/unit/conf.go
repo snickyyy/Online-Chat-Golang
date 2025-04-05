@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"gopkg.in/gomail.v2"
 	"libs/src/settings"
 	"libs/src/tests/integration"
 )
@@ -14,5 +15,6 @@ func GetAppMock() *settings.App {
 	return &settings.App{
 		Config: cfg,
 		Logger: logger,
+		Mail:   &gomail.Dialer{},
 	}
 }

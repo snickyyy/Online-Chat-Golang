@@ -153,7 +153,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 			SessionID: uuid.New().String(),
 			Expire:    sess_ttl,
 			Prefix:    s.App.Config.RedisConfig.Prefixes.ConfirmEmail,
-			Payload:   string(encrypt),
+			Payload:   encrypt,
 		}
 
 		sessionId, err := s.SessionService.SetSession(session)
