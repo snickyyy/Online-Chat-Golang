@@ -48,7 +48,7 @@ func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
 		SessionID: uuid.New().String(),
 		Expire:    sess_ttl,
 		Prefix:    s.App.Config.RedisConfig.Prefixes.SessionPrefix,
-		Payload:   string(encrypt),
+		Payload:   encrypt,
 	}
 
 	sessionId, err := s.SessionService.SetSession(session)
@@ -61,10 +61,6 @@ func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
 
 func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
 	userDto, err := s.SessionService.GetUserByEmailSession(sessionId)
-	if err != nil {
-		return dto.UserDTO{}, api_errors.ErrInvalidToken
-	}
-
 	if err != nil {
 		return dto.UserDTO{}, api_errors.ErrInvalidToken
 	}
@@ -88,12 +84,10 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 		"Role":     enums.USER,
 	}
 
-	go func() {
-		err = userRepository.UpdateById(userDto.ID, changeFields)
-		if err != nil {
-			s.App.Logger.Error(fmt.Sprintf("Error save user: %v", err))
-		}
-	}()
+	err = userRepository.UpdateById(userDto.ID, changeFields)
+	if err != nil {
+		return "", err
+	}
 
 	go func() {
 		err = s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
