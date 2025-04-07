@@ -27,7 +27,7 @@ func NewChatMemberService(app *settings.App) *ChatMemberService {
 	}
 }
 
-func (s *ChatMemberService) createMember(userId int64, chatId int64) error {
+func (s *ChatMemberService) CreateMember(userId int64, chatId int64) error {
 	memberCount, err := s.ChatMemberRepository.Count("chat_id = ? AND user_id = ?", chatId, userId)
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ func (s *ChatMemberService) InviteToChat(inviter *dto.UserDTO, inviteeUsername s
 		return api_errors.ErrUserNotFound
 	}
 
-	err = s.createMember(invitee.ID, chatId)
+	err = s.CreateMember(invitee.ID, chatId)
 
 	return err
 }
