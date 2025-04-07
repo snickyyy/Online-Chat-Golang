@@ -200,3 +200,211 @@ func TestInviteToChat(t *testing.T) {
 		})
 	}
 }
+func TestChangeMemberRole(t *testing.T) {
+	mockApp := GetAppMock()
+	service := services.ChatMemberService{
+		App: mockApp,
+	}
+
+	testCases := []struct {
+		testName string
+
+		targetName string
+		callerId   int64
+		chatId     int64
+		memberId   int64
+		newRole    string
+
+		GetMemberInfoCallerResp dto.MemberInfo
+		GetMemberInfoCallerErr  error
+
+		GetByUsernameResp domain.User
+		GetByUsernameErr  error
+
+		GetMemberInfoTargetResp dto.MemberInfo
+		GetMemberInfoTargetErr  error
+
+		SetNewRoleResp error
+
+		expectedResp error
+		mustErr      bool
+	}{
+		{
+			testName:     "An attempt to appoint the owner",
+			callerId:     1,
+			targetName:   "userTest",
+			chatId:       1,
+			memberId:     2,
+			newRole:      "owner",
+			expectedResp: api_errors.ErrNotEnoughPermissionsForChangeRole,
+			mustErr:      true,
+		},
+		{
+			testName:     "Role is not exists",
+			callerId:     1,
+			targetName:   "userTest",
+			chatId:       1,
+			memberId:     2,
+			newRole:      "not_exists",
+			expectedResp: api_errors.ErrInvalidData,
+			mustErr:      true,
+		},
+		{
+			testName:               "Caller not found",
+			callerId:               1,
+			targetName:             "userTest",
+			chatId:                 1,
+			memberId:               2,
+			newRole:                "admin",
+			GetMemberInfoCallerErr: repositories.ErrRecordNotFound,
+			expectedResp:           api_errors.ErrUserNotInChat,
+			mustErr:                true,
+		},
+		{
+			testName:   "Caller has no permissions for changing role",
+			callerId:   1,
+			targetName: "userTest",
+			chatId:     1,
+			memberId:   2,
+			newRole:    "admin",
+			GetMemberInfoCallerResp: dto.MemberInfo{
+				MemberRole: enums.MEMBER,
+			},
+			expectedResp: api_errors.ErrNotEnoughPermissionsForChangeRole,
+			mustErr:      true,
+		},
+		{
+			testName:   "Target not found",
+			callerId:   1,
+			targetName: "userTest",
+			chatId:     1,
+			memberId:   2,
+			newRole:    "admin",
+			GetMemberInfoCallerResp: dto.MemberInfo{
+				MemberRole: enums.OWNER,
+			},
+			GetByUsernameErr: repositories.ErrRecordNotFound,
+			expectedResp:     api_errors.ErrUserNotFound,
+			mustErr:          true,
+		},
+		{
+			testName:   "Target is anonymous",
+			callerId:   1,
+			targetName: "userTest",
+			chatId:     1,
+			memberId:   2,
+			newRole:    "admin",
+			GetMemberInfoCallerResp: dto.MemberInfo{
+				MemberRole: enums.OWNER,
+			},
+			GetByUsernameResp: domain.User{
+				Username: "userTest",
+				IsActive: true,
+				Role:     enums.ANONYMOUS,
+			},
+			expectedResp: api_errors.ErrUserNotFound,
+			mustErr:      true,
+		},
+		{
+			testName:   "Target is not active",
+			callerId:   1,
+			targetName: "userTest",
+			chatId:     1,
+			memberId:   2,
+			newRole:    "admin",
+			GetMemberInfoCallerResp: dto.MemberInfo{
+				MemberRole: enums.OWNER,
+			},
+			GetByUsernameResp: domain.User{
+				Username: "userTest",
+				IsActive: false,
+				Role:     enums.USER,
+			},
+			expectedResp: api_errors.ErrUserNotFound,
+			mustErr:      true,
+		},
+		{
+			testName:   "Target not in chat",
+			callerId:   1,
+			targetName: "userTest",
+			chatId:     1,
+			memberId:   2,
+			newRole:    "admin",
+			GetMemberInfoCallerResp: dto.MemberInfo{
+				MemberRole: enums.OWNER,
+			},
+			GetByUsernameResp: domain.User{
+				Username: "userTest",
+				IsActive: true,
+				Role:     enums.USER,
+			},
+			GetMemberInfoTargetErr: repositories.ErrRecordNotFound,
+			expectedResp:           api_errors.ErrUserNotInChat,
+			mustErr:                true,
+		},
+		{
+			testName:   "Target already has this role",
+			callerId:   1,
+			chatId:     1,
+			targetName: "userTest",
+			memberId:   2,
+			newRole:    "admin",
+			GetMemberInfoCallerResp: dto.MemberInfo{
+				MemberRole: enums.OWNER,
+			},
+			GetByUsernameResp: domain.User{
+				Username: "userTest",
+				IsActive: true,
+				Role:     enums.USER,
+			},
+			GetMemberInfoTargetResp: dto.MemberInfo{
+				MemberRole: enums.ADMIN,
+			},
+			mustErr: false,
+		},
+		{
+			testName:   "Success",
+			callerId:   1,
+			chatId:     1,
+			memberId:   2,
+			targetName: "userTest",
+			newRole:    "admin",
+			GetMemberInfoCallerResp: dto.MemberInfo{
+				MemberRole: enums.OWNER,
+			},
+			GetByUsernameResp: domain.User{
+				Username: "userTest",
+				IsActive: true,
+				Role:     enums.USER,
+			},
+			GetMemberInfoTargetResp: dto.MemberInfo{
+				MemberRole: enums.MEMBER,
+			},
+			mustErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		mockChatMemberRepo := new(mocks.IChatMemberRepository)
+		mockUserRepo := new(mocks.IUserRepository)
+		service.ChatMemberRepository = mockChatMemberRepo
+		service.UserRepository = mockUserRepo
+
+		t.Run(tc.testName, func(t *testing.T) {
+			mockChatMemberRepo.EXPECT().GetMemberInfo(tc.callerId, tc.chatId).Return(tc.GetMemberInfoCallerResp, tc.GetMemberInfoCallerErr)
+			mockUserRepo.EXPECT().GetByUsername(mock.Anything).Return(tc.GetByUsernameResp, tc.GetByUsernameErr)
+			mockChatMemberRepo.EXPECT().GetMemberInfo(mock.Anything, mock.Anything).Return(tc.GetMemberInfoTargetResp, tc.GetMemberInfoTargetErr)
+
+			mockChatMemberRepo.EXPECT().SetNewRole(mock.Anything, mock.Anything, mock.Anything).Return(tc.SetNewRoleResp)
+
+			err := service.ChangeMemberRole(dto.UserDTO{ID: tc.callerId}, tc.chatId, tc.targetName, tc.newRole)
+
+			if tc.mustErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedResp, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
