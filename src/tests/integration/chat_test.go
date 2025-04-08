@@ -1,4 +1,4 @@
-package tests
+package integration
 
 import (
 	"bytes"
@@ -84,7 +84,7 @@ func (suite *AppTestSuite) TestInviteToChat() {
 	invitee, err := userRepo.GetByUsername("TestInvitee")
 	suite.NoError(err)
 
-	inviteeInfo, err := chatService.ChatRepository.GetMemberInfo(invitee.ID, chatID)
+	inviteeInfo, err := chatService.ChatMemberRepository.GetMemberInfo(invitee.ID, chatID)
 	suite.NoError(err)
 	suite.Equal(inviteeInfo.MemberRole, dto.ChatMemberDTO{MemberRole: 0}.MemberRole)
 }

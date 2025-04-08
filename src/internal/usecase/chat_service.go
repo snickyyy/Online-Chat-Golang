@@ -12,9 +12,9 @@ import (
 
 type ChatService struct {
 	App                  *settings.App
-	UserRepository       *repositories.UserRepository
-	ChatRepository       *repositories.ChatRepository
-	ChatMemberRepository *repositories.ChatMemberRepository
+	UserRepository       repositories.IUserRepository
+	ChatRepository       repositories.IChatRepository
+	ChatMemberRepository repositories.IChatMemberRepository
 }
 
 func NewChatService(app *settings.App) *ChatService {

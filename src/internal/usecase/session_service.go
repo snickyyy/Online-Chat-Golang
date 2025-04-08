@@ -10,9 +10,19 @@ import (
 	"time"
 )
 
+//go:generate mockery --name=ISessionService --dir=. --output=../mocks --with-expecter
+type ISessionService interface {
+	GetSession(prefix string, session string) (dto.SessionDTO, error)
+	SetSession(session dto.SessionDTO) (string, error)
+	DeleteSession(prefix string, session string) error
+	DecryptAndParsePayload(session dto.SessionDTO, parseTo any) error
+	GetUserByAuthSession(session string) (dto.UserDTO, error)
+	GetUserByEmailSession(session string) (dto.UserDTO, error)
+}
+
 type SessionService struct {
 	App                 *settings.App
-	RedisBaseRepository *repositories.BaseRedisRepository
+	RedisBaseRepository repositories.IBaseRedisRepository
 }
 
 func NewSessionService(app *settings.App) *SessionService {

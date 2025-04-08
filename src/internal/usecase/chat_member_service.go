@@ -13,9 +13,9 @@ import (
 
 type ChatMemberService struct {
 	App                  *settings.App
-	ChatMemberRepository *repositories.ChatMemberRepository
-	UserRepository       *repositories.UserRepository
-	ChatRepository       *repositories.ChatRepository
+	ChatMemberRepository repositories.IChatMemberRepository
+	UserRepository       repositories.IUserRepository
+	ChatRepository       repositories.IChatRepository
 }
 
 func NewChatMemberService(app *settings.App) *ChatMemberService {
@@ -27,7 +27,7 @@ func NewChatMemberService(app *settings.App) *ChatMemberService {
 	}
 }
 
-func (s *ChatMemberService) createMember(userId int64, chatId int64) error {
+func (s *ChatMemberService) CreateMember(userId int64, chatId int64) error {
 	memberCount, err := s.ChatMemberRepository.Count("chat_id = ? AND user_id = ?", chatId, userId)
 	if err != nil {
 		return err
@@ -41,12 +41,12 @@ func (s *ChatMemberService) createMember(userId int64, chatId int64) error {
 		ChatID:     chatId,
 		MemberRole: enums.MEMBER,
 	}
-	_, err = s.ChatMemberRepository.Create(&member)
+	err = s.ChatMemberRepository.Create(&member)
 	return err
 }
 
 func (s *ChatMemberService) InviteToChat(inviter *dto.UserDTO, inviteeUsername string, chatId int64) error {
-	inviterInfo, err := s.ChatRepository.GetMemberInfo(inviter.ID, chatId)
+	inviterInfo, err := s.ChatMemberRepository.GetMemberInfo(inviter.ID, chatId)
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {
 			return api_errors.ErrInviterNotInChat
@@ -68,7 +68,7 @@ func (s *ChatMemberService) InviteToChat(inviter *dto.UserDTO, inviteeUsername s
 		return api_errors.ErrUserNotFound
 	}
 
-	err = s.createMember(invitee.ID, chatId)
+	err = s.CreateMember(invitee.ID, chatId)
 
 	return err
 }
@@ -82,7 +82,7 @@ func (s *ChatMemberService) ChangeMemberRole(caller dto.UserDTO, chatId int64, t
 		return api_errors.ErrNotEnoughPermissionsForChangeRole
 	}
 
-	callerInfo, err := s.ChatRepository.GetMemberInfo(caller.ID, chatId)
+	callerInfo, err := s.ChatMemberRepository.GetMemberInfo(caller.ID, chatId)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
 			return api_errors.ErrUserNotInChat
@@ -106,7 +106,7 @@ func (s *ChatMemberService) ChangeMemberRole(caller dto.UserDTO, chatId int64, t
 		return api_errors.ErrUserNotFound
 	}
 
-	targetInfo, err := s.ChatRepository.GetMemberInfo(target.ID, chatId)
+	targetInfo, err := s.ChatMemberRepository.GetMemberInfo(target.ID, chatId)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
 			return api_errors.ErrUserNotInChat

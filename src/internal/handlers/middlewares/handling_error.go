@@ -135,6 +135,11 @@ func parseError(err error) (int, gin.H) {
 			"error": "doesn't have enough permissions to change role",
 		}
 	}
+	if errors.Is(err, api_errors.ErrInviterNotInChat) {
+		return http.StatusBadRequest, gin.H{
+			"error": "Inviter not in chat",
+		}
+	}
 
 	return http.StatusInternalServerError, gin.H{
 		"error": "Internal server error",

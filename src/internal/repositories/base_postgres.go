@@ -1,36 +1,36 @@
 package repositories
 
 import (
-	domain "libs/src/internal/domain/interfaces"
+	models "libs/src/internal/domain/models"
 	"maps"
 	"slices"
-
-	"errors"
-	"reflect"
 
 	"gorm.io/gorm"
 )
 
-type BasePostgresRepository[T domain.PostgresModelsTypes] struct {
+type IBasePostgresRepository[T models.User | models.Chat | models.ChatMember] interface {
+	Create(obj *T) error
+	GetById(id int64) (T, error)
+	GetAll() ([]T, error)
+	Filter(query string, args ...interface{}) ([]T, error)
+	DeleteById(id int64) error
+	UpdateById(id int64, updateFields map[string]interface{}) error
+	Count(filter string, args ...interface{}) (int64, error)
+	ExecuteQuery(query string, args ...interface{}) error
+}
+
+type BasePostgresRepository[T models.User | models.Chat | models.ChatMember] struct {
 	Model T
 	Db    *gorm.DB
 }
 
-func (r *BasePostgresRepository[T]) Create(obj *T) (interface{}, error) {
+func (r *BasePostgresRepository[T]) Create(obj *T) error {
 	result := r.Db.Create(obj)
 	if result.Error != nil {
-		return 0, parsePgError(result.Error)
+		return parsePgError(result.Error)
 	}
 
-	v := reflect.ValueOf(obj).Elem()
-
-	field := v.FieldByName("ID")
-
-	if !field.IsValid() {
-		return 0, errors.New("not fount field ID")
-	}
-
-	return field.Interface(), nil
+	return nil
 }
 
 func (r *BasePostgresRepository[T]) GetById(id int64) (T, error) {

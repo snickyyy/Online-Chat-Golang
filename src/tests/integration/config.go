@@ -1,4 +1,4 @@
-package tests
+package integration
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 func GetTestConfig() *settings.BaseConfig {
 	basePath, _ := os.Getwd()
-	if err := godotenv.Load(filepath.Join(filepath.Dir(filepath.Dir(basePath)), ".env")); err != nil {
+	if err := godotenv.Load(filepath.Join(filepath.Dir(filepath.Dir(filepath.Dir(basePath))), ".env")); err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
