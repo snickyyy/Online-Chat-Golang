@@ -93,7 +93,7 @@ func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessi
 		"description": data.NewDescription,
 	}
 
-	if data.NewImage != nil {
+	if data.NewImage != nil { // TODO: вынести сохранение изображения в отдельную функцию
 		if user.Image != "" {
 			utils.DeleteIfExist(filepath.Join(s.App.Config.AppConfig.UploadDir, user.Image))
 		}
@@ -120,6 +120,7 @@ func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessi
 		if errors.Is(err, repositories.ErrDuplicate) {
 			return api_errors.ErrUserAlreadyExists
 		}
+		return err
 	}
 	return nil
 }
@@ -167,7 +168,7 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 		return -1, err
 	}
 
-	go func() {
+	go func() { // TODO: вынести все операции с емейлом в EmailService
 		msg := fmt.Sprintf(
 			"For To confirm password reset, follow the link\nhttp://%s:%d/accounts/profile/reset-password/%s",
 			s.App.Config.AppConfig.DomainName,
@@ -231,7 +232,7 @@ func (s *UserService) ConfirmResetPassword(token string, request dto.ConfirmRese
 }
 
 func (s *UserService) ChangePassword(sessionId string, request dto.ChangePasswordRequest) error {
-	userDto, err := s.SessionService.GetUserByAuthSession(sessionId)
+	userDto, err := s.SessionService.GetUserByAuthSession(sessionId) //TODO: сделать проверку аутентификации еще с дтошки этой и не трогать базу
 	if err != nil {
 		return err
 	}
@@ -241,6 +242,7 @@ func (s *UserService) ChangePassword(sessionId string, request dto.ChangePasswor
 		if errors.Is(err, repositories.ErrRecordNotFound) {
 			return api_errors.ErrInvalidSession
 		}
+		return err
 	}
 
 	if !user.IsActive || user.Role == enums.ANONYMOUS {
