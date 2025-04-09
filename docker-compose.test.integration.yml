@@ -3,7 +3,7 @@ version: "1.0"
 services:
   backend:
     restart: "no"
-    command: ./commands/run_integration_tests.sh
+    command: sh -c "chmod +x ./commands/run_integration_tests.sh && ./commands/run_integration_tests.sh"
     env_file:
       - .env.test
 
