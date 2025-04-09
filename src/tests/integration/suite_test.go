@@ -1,11 +1,11 @@
 package integration
 
 import (
+	"fmt"
+	"github.com/redis/go-redis/v9"
 	"libs/src/settings"
 	"libs/src/settings/server"
 	"net/http"
-	"os"
-	"strconv"
 	"testing"
 	"time"
 
@@ -22,17 +22,7 @@ func (suite *AppTestSuite) SetupSuite() {
 	settings.InitContext()
 	baseCfg := GetTestConfig()
 
-	pgPort, _ := strconv.Atoi(os.Getenv("DB_PORT"))
-
-	postgresBaseDb := settings.PostgresConfig{
-		Host:     os.Getenv("DB_HOST"),
-		User:     os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
-		Database: os.Getenv("DB_DATABASE"),
-		Port:     pgPort,
-		Sslmode:  os.Getenv("DB_SSL_MODE"),
-	}
-	db := SetupTestDatabase(postgresBaseDb, baseCfg.PostgresConfig)
+	db, err := settings.GetDb(baseCfg)
 
 	logger, err := settings.GetLogger(baseCfg)
 	if err != nil {
@@ -44,7 +34,13 @@ func (suite *AppTestSuite) SetupSuite() {
 		suite.FailNow("Failed to initialize MongoDB client", err)
 	}
 
-	redis := settings.NewRedisClient(baseCfg)
+	redisDB := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", baseCfg.RedisConfig.Host, baseCfg.RedisConfig.Port),
+		Password: baseCfg.RedisConfig.Password,
+		DB:       1,
+		Protocol: 2,
+	})
+
 	mail := gomail.Dialer{}
 
 	app := settings.NewApp(
@@ -52,7 +48,7 @@ func (suite *AppTestSuite) SetupSuite() {
 		logger,
 		baseCfg,
 		mongo,
-		redis,
+		redisDB,
 		&mail,
 	)
 	settings.AppVar = app
@@ -65,25 +61,6 @@ func (suite *AppTestSuite) SetupSuite() {
 	time.Sleep(500 * time.Millisecond)
 
 	suite.client = &http.Client{}
-}
-
-func (suite *AppTestSuite) TearDownSuite() {
-	pgPort, _ := strconv.Atoi(os.Getenv("DB_PORT"))
-
-	postgresBaseDb := settings.PostgresConfig{
-		Host:     os.Getenv("DB_HOST"),
-		User:     os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
-		Database: os.Getenv("DB_DATABASE"),
-		Port:     pgPort,
-		Sslmode:  os.Getenv("DB_SSL_MODE"),
-	}
-	DropTestDatabase(postgresBaseDb)
-
-	settings.AppVar.MongoDB.Drop(settings.Context.Ctx)
-
-	settings.AppVar.RedisClient.FlushAll(settings.Context.Ctx)
-	settings.AppVar.RedisClient.Close()
 }
 
 func TestAppTestSuite(t *testing.T) {

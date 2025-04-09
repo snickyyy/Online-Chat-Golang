@@ -11,37 +11,37 @@ import (
 
 func GetTestConfig() *settings.BaseConfig {
 	basePath, _ := os.Getwd()
-	if err := godotenv.Load(filepath.Join(filepath.Dir(filepath.Dir(filepath.Dir(basePath))), ".env")); err != nil {
+	if err := godotenv.Load(filepath.Join(filepath.Dir(filepath.Dir(filepath.Dir(basePath))), ".env.test")); err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
 
 	return &settings.BaseConfig{
 		AppConfig: settings.AppConfig{
-			SecretKey:  "testtesttesttesttesttesttesttest",
+			SecretKey:  os.Getenv("APP_SECRET_KEY"),
 			Host:       "localhost",
-			Port:       8080,
+			Port:       8000,
 			Debug:      true,
 			Mode:       "dev",
 			DomainName: "127.0.0.1",
 		},
 		PostgresConfig: settings.PostgresConfig{
-			Host:     "localhost",
-			User:     "admin",
-			Password: "admin",
-			Database: "test_db",
+			Host:     os.Getenv("DB_HOST"),
+			User:     os.Getenv("DB_USER"),
+			Password: os.Getenv("DB_PASSWORD"),
+			Database: os.Getenv("DB_DATABASE"),
 			Port:     5432,
-			Sslmode:  "disable",
+			Sslmode:  os.Getenv("DB_SSL_MODE"),
 		},
 		AuthConfig: settings.AuthConfig{
 			AuthSessionTTL:  86400,
 			EmailConfirmTTL: 3600,
 		},
 		MongoConfig: settings.MongoConfig{
-			Uri: "mongodb://localhost:27017",
+			Uri: os.Getenv("MONGO_URI"),
 		},
 		RedisConfig: settings.RedisConfig{
-			Host: "localhost",
+			Host: "redis",
 			Port: 6379,
 			Prefixes: settings.RedisPrefixes{
 				SessionPrefix:        "session:",

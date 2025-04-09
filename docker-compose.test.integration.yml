@@ -1,0 +1,25 @@
+version: "1.0"
+
+services:
+  backend:
+    restart: no
+    command: ./commands/run_integration_tests.sh
+    env_file:
+      - .env.test
+
+  postgres:
+    volumes: []
+    environment:
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_DB=testDB
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+
+  mongo:
+    volumes: []
+    env_file:
+      - .env.test
+
+  redis:
+    volumes: []
