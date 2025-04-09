@@ -78,6 +78,7 @@ jobs:
           echo "DB_DATABASE=testDB" >> .env.test
           echo "DB_HOST=postgres" >> .env.test
           echo "DB_PORT=5432" >> .env.test
+          echo "MONGO_URI=mongodb://mongo:27017" >> .env.test
           
           echo "APP_MODE=testtesttesttesttesttesttesttest" > .env
           echo "DB_USER=test" >> .env
@@ -85,6 +86,7 @@ jobs:
           echo "DB_DATABASE=testDB" >> .env
           echo "DB_HOST=postgres" >> .env
           echo "DB_PORT=5432" >> .env
+          echo "MONGO_URI=mongodb://mongo:27017" >> .env
 
       - name: Install Docker Compose
         run: |
