@@ -9,6 +9,7 @@ services:
     ports:
       - "8000:8000"
     command:
+      - chmod +x ./commands/start_dev.sh
       - ./commands/start_dev.sh
     volumes:
       - ./:/OCG
