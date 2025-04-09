@@ -71,12 +71,12 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "APP_MODE=testtesttesttesttesttesttesttest" > .env
-          echo "DB_USER=test" >> .env
-          echo "DB_PASSWORD=test" >> .env
-          echo "DB_DATABASE=testDB" >> .env
-          echo "DB_HOST=postgres" >> .env
-          echo "DB_PORT=5432" >> .env
+          echo "APP_MODE=testtesttesttesttesttesttesttest" > .env.test
+          echo "DB_USER=test" >> .env.test
+          echo "DB_PASSWORD=test" >> .env.test
+          echo "DB_DATABASE=testDB" >> .env.test
+          echo "DB_HOST=postgres" >> .env.test
+          echo "DB_PORT=5432" >> .env.test
 
       - name: Install Docker Compose
         run: |

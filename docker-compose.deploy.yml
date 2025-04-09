@@ -9,7 +9,7 @@ services:
     ports:
       - "8000:8000"
     command:
-      - ./commands/start_${APP_MODE}.sh
+      - ./commands/start_dev.sh
     volumes:
       - ./:/OCG
     env_file:
