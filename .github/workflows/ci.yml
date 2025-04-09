@@ -29,15 +29,21 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    env:
+      APP_MODE: "dev"
+      APP_PORT: "8000"
+      APP_SECRET_KEY: ${{ secrets.APP_SECRET_KEY }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
+      MONGO_URI: ${{ secrets.MONGO_URI }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Docker using Docker's official script
-        run: |
-          curl -fsSL https://get.docker.com -o get-docker.sh
-          sudo sh get-docker.sh
-        continue-on-error: false
       - name: Install Docker Compose
         run: |
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -59,15 +65,20 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      APP_MODE: "dev"
+      APP_PORT: "8000"
+      APP_SECRET_KEY: testtesttesttesttesttesttesttest
+      DB_USER: test
+      DB_PASSWORD: test
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: testDB
+      MONGO_URI: mongodb://mongo:27017
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Docker using Docker's official script
-        run: |
-          curl -fsSL https://get.docker.com -o get-docker.sh
-          sudo sh get-docker.sh
-        continue-on-error: false
       - name: Install Docker Compose
         run: |
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
