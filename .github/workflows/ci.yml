@@ -29,20 +29,26 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    env:
-      APP_MODE: "dev"
-      APP_PORT: "8000"
-      APP_SECRET_KEY: ${{ secrets.APP_SECRET_KEY }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_HOST: ${{ secrets.DB_HOST }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_DATABASE: ${{ secrets.DB_DATABASE }}
-      MONGO_URI: ${{ secrets.MONGO_URI }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Set environment variables
+        env:
+          APP_MODE: ${{ secrets.APP_MODE }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+        run: |
+          echo "APP_MODE=$APP_MODE" >> $GITHUB_ENV
+          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
+          echo "DB_PASSWORD=$DB_PASSWORD" >> $GITHUB_ENV
+          echo "DB_DATABASE=$DB_DATABASE" >> $GITHUB_ENV
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
 
       - name: Install Docker Compose
         run: |
@@ -65,19 +71,18 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    env:
-      APP_MODE: "dev"
-      APP_PORT: "8000"
-      APP_SECRET_KEY: testtesttesttesttesttesttesttest
-      DB_USER: test
-      DB_PASSWORD: test
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: testDB
-      MONGO_URI: mongodb://mongo:27017
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Create .env file
+        run: |
+          echo "APP_MODE=testtesttesttesttesttesttesttest" > .env
+          echo "DB_USER=test" >> .env
+          echo "DB_PASSWORD=test" >> .env
+          echo "DB_DATABASE=testDB" >> .env
+          echo "DB_HOST=postgres" >> .env
+          echo "DB_PORT=5432" >> .env
 
       - name: Install Docker Compose
         run: |
