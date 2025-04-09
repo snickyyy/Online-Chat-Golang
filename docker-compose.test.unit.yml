@@ -5,7 +5,6 @@ services:
     build: ./
     container_name: backend
     working_dir: /OCG
-    command:
-      - ./commands/run_unit_tests.sh
+    command: sh -c "chmod +x ./commands/run_unit_tests.sh && ./commands/run_unit_tests.sh"
     volumes:
       - ./:/OCG
