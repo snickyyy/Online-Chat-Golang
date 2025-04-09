@@ -2,7 +2,7 @@ version: "1.0"
 
 services:
   backend:
-    restart: no
+    restart: "no"
     command: ./commands/run_integration_tests.sh
     env_file:
       - .env.test
