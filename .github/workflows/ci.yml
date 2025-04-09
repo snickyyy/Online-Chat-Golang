@@ -72,7 +72,8 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "APP_MODE=testtesttesttesttesttesttesttest" > .env.test
+          echo "APP_MODE=dev" > .env.test
+          echo "APP_SECRET_KEY=testtesttesttesttesttesttesttest" > .env.test
           echo "DB_USER=test" >> .env.test
           echo "DB_PASSWORD=test" >> .env.test
           echo "DB_DATABASE=testDB" >> .env.test
@@ -80,7 +81,8 @@ jobs:
           echo "DB_PORT=5432" >> .env.test
           echo "MONGO_URI=mongodb://mongo:27017" >> .env.test
           
-          echo "APP_MODE=testtesttesttesttesttesttesttest" > .env
+          echo "APP_MODE=dev" > .env
+          echo "APP_SECRET_KEY=testtesttesttesttesttesttesttest" > .env
           echo "DB_USER=test" >> .env
           echo "DB_PASSWORD=test" >> .env
           echo "DB_DATABASE=testDB" >> .env
