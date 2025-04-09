@@ -33,14 +33,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker
+      - name: Install Docker using Docker's official script
         run: |
-          sudo apt-get update
-          sudo apt-get remove -y containerd
-          sudo apt-get autoremove -y
-          sudo apt-get install -y docker.io
-          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          curl -fsSL https://get.docker.com -o get-docker.sh
+          sudo sh get-docker.sh
+        continue-on-error: false
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+        continue-on-error: false
 
       - name: Check Docker Compose version
         run: docker-compose --version
@@ -60,14 +63,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker
+      - name: Install Docker using Docker's official script
         run: |
-          sudo apt-get update
-          sudo apt-get remove -y containerd
-          sudo apt-get autoremove -y
-          sudo apt-get install -y docker.io
-          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          curl -fsSL https://get.docker.com -o get-docker.sh
+          sudo sh get-docker.sh
+        continue-on-error: false
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+        continue-on-error: false
 
       - name: Check Docker Compose version
         run: docker-compose --version
