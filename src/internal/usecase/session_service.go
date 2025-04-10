@@ -56,7 +56,7 @@ func (s *SessionService) SetSession(session dto.SessionDTO) (string, error) {
 		session.Prefix,
 		session.SessionID,
 		string(encoding),
-		session.Expire.Sub(time.Now()),
+		time.Until(session.Expire),
 	)
 	if err != nil {
 		return "", err

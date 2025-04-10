@@ -156,7 +156,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 			Payload:   encrypt,
 		}
 
-		sessionId, err := s.SessionService.SetSession(session)
+		sessionId, err := s.SessionService.SetSession(session) //TODO: убрать из горутины и обработать ошибку потому что если будет ошибка то юзернейм займеться который хотел юзер
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
 			return

@@ -39,7 +39,7 @@ func (repo *BaseRedisRepository) SetDTO(prefix string, obj dto.SessionDTO) (stri
 		repo.Ctx,
 		obj.SessionID,
 		toJson,
-		obj.Expire.Sub(time.Now())).Result()
+		time.Until(obj.Expire)).Result()
 	if err != nil {
 		return "", err
 	}

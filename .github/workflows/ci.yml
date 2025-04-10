@@ -1,0 +1,107 @@
+name: CI for OCG
+
+on:
+    push:
+        branches:
+        - main
+    pull_request:
+        branches:
+          - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.23.5'
+
+      - name: Install golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+          export PATH=$PATH:$(go env GOPATH)/bin
+
+      - name: Run linters
+        run: golangci-lint run --disable=errcheck --disable=govet ./...
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set environment variables
+        run: |
+          echo "APP_MODE=${{ secrets.APP_MODE }}" > .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+        continue-on-error: false
+
+      - name: Check Docker Compose version
+        run: docker-compose --version
+
+      - name: Run build
+        run: make start
+
+      - name: Wait a bit
+        run: sleep 10
+
+      - name: Shutdown
+        run: make stop
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create .env file
+        run: |
+          echo "APP_MODE=dev" > .env.test
+          echo "APP_SECRET_KEY=testtesttesttesttesttesttesttest" > .env.test
+          echo "DB_USER=test" >> .env.test
+          echo "DB_PASSWORD=test" >> .env.test
+          echo "DB_DATABASE=testDB" >> .env.test
+          echo "DB_HOST=postgres" >> .env.test
+          echo "DB_PORT=5432" >> .env.test
+          echo "MONGO_URI=mongodb://mongo:27017" >> .env.test
+          
+          echo "APP_MODE=dev" > .env
+          echo "APP_SECRET_KEY=testtesttesttesttesttesttesttest" > .env
+          echo "DB_USER=test" >> .env
+          echo "DB_PASSWORD=test" >> .env
+          echo "DB_DATABASE=testDB" >> .env
+          echo "DB_HOST=postgres" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "MONGO_URI=mongodb://mongo:27017" >> .env
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+        continue-on-error: false
+
+      - name: Check Docker Compose version
+        run: docker-compose --version
+
+      - name: Run integration tests
+        run: make test-integration
+
+      - name: Run unit tests
+        run: make test-unit

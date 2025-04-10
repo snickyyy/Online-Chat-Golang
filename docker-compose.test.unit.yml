@@ -1,0 +1,10 @@
+version: "1.0"
+
+services:
+  backend:
+    build: ./
+    container_name: backend
+    working_dir: /OCG
+    command: sh -c "chmod +x ./commands/run_unit_tests.sh && ./commands/run_unit_tests.sh"
+    volumes:
+      - ./:/OCG
