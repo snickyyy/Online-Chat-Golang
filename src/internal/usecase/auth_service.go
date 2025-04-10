@@ -124,6 +124,24 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		Role:     enums.ANONYMOUS,
 	}
 
+	payloadJson, _ := json.Marshal(dto.EmailSession{UserDTO: user.ToDTO()})
+	encrypt, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(payloadJson))
+	if err != nil {
+		return err
+	}
+
+	session := dto.SessionDTO{
+		SessionID: uuid.New().String(),
+		Expire:    time.Now().Add(time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL) * time.Second),
+		Prefix:    s.App.Config.RedisConfig.Prefixes.ConfirmEmail,
+		Payload:   encrypt,
+	}
+
+	sessionId, err := s.SessionService.SetSession(session)
+	if err != nil {
+		return err
+	}
+
 	err = s.UserRepository.Create(&user)
 	if err != nil {
 		if errors.Is(err, repositories.ErrDuplicate) {
@@ -131,37 +149,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		}
 	}
 
-	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL) * time.Second)
-	userDto := user.ToDTO()
-	payload := dto.EmailSession{
-		UserDTO: userDto,
-	}
 	go func() {
-		toJson, err := json.Marshal(payload)
-		if err != nil {
-			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
-			return
-		}
-
-		encrypt, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(toJson))
-		if err != nil {
-			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
-			return
-		}
-
-		session := dto.SessionDTO{
-			SessionID: uuid.New().String(),
-			Expire:    sess_ttl,
-			Prefix:    s.App.Config.RedisConfig.Prefixes.ConfirmEmail,
-			Payload:   encrypt,
-		}
-
-		sessionId, err := s.SessionService.SetSession(session) //TODO: убрать из горутины и обработать ошибку потому что если будет ошибка то юзернейм займеться который хотел юзер
-		if err != nil {
-			s.App.Logger.Error(fmt.Sprintf("Error creating session: %v", err))
-			return
-		}
-
 		msg := fmt.Sprintf(
 			"Thank you for choosing our service, to confirm your registration, follow the url below\nhttp://%s:%d/accounts/auth/confirm-account/%s",
 			s.App.Config.AppConfig.DomainName,
@@ -169,12 +157,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 			sessionId,
 		)
 
-		err = utils.SendMail(s.App.Mail,
-			s.App.Config.Mail.From,
-			user.Email,
-			"Online-Chat-Golang || Confirm registration",
-			msg,
-		)
+		err = utils.SendMail(s.App.Mail, s.App.Config.Mail.From, user.Email, "Online-Chat-Golang || Confirm registration", msg)
 
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
