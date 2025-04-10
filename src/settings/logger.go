@@ -1,19 +1,18 @@
 package settings
 
 import (
-	"go.uber.org/zap"
 	"fmt"
+	"go.uber.org/zap"
 )
-
 
 func GetLogger(config *BaseConfig) (*zap.Logger, error) {
 
 	mode := config.AppConfig.Mode
 
 	var cfg zap.Config
-	if mode == "" {
+	if mode == "" { //nolint:staticcheck
 		return nil, fmt.Errorf("mode is not set")
-	}else if mode == "prod" {
+	} else if mode == "prod" {
 		cfg = zap.NewProductionConfig()
 	} else {
 		cfg = zap.NewDevelopmentConfig()

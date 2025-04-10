@@ -22,7 +22,7 @@ func (suite *AppTestSuite) TestCreateChat() {
 	sess, err := authService.Login(dto.LoginRequest{UsernameOrEmail: "TestCreateChat", Password: "test123"})
 	suite.NoError(err)
 
-	dataCreateChat, err := json.Marshal(dto.CreateChatRequest{
+	dataCreateChat, _ := json.Marshal(dto.CreateChatRequest{
 		Title:       "TestCreateChat",
 		Description: "TestCreateChat",
 	})
@@ -58,7 +58,7 @@ func (suite *AppTestSuite) TestInviteToChat() {
 	suite.NoError(err)
 
 	// Create a chat
-	dataCreateChat, err := json.Marshal(dto.CreateChatRequest{Title: "TestChat", Description: "TestChat"})
+	dataCreateChat, _ := json.Marshal(dto.CreateChatRequest{Title: "TestChat", Description: "TestChat"})
 
 	request, _ := http.NewRequest("POST", chatCreateUrl, bytes.NewBuffer(dataCreateChat))
 	request.AddCookie(&http.Cookie{Name: "sessionID", Value: sess})

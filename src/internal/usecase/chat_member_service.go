@@ -78,7 +78,7 @@ func (s *ChatMemberService) ChangeMemberRole(caller dto.UserDTO, chatId int64, t
 	if !ex {
 		return api_errors.ErrInvalidData
 	}
-	if !(role < enums.OWNER) {
+	if role >= enums.OWNER {
 		return api_errors.ErrNotEnoughPermissionsForChangeRole
 	}
 

@@ -46,11 +46,7 @@ func ValidatorImage(fl validator.FieldLevel) bool {
 	}
 
 	const maxSize = 8 << 20
-	if file.Size > maxSize {
-		return false
-	}
-
-	return true
+	return file.Size < maxSize
 }
 
 func ValidateUsername(field validator.FieldLevel) bool {

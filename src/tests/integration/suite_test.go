@@ -23,6 +23,9 @@ func (suite *AppTestSuite) SetupSuite() {
 	baseCfg := GetTestConfig()
 
 	db, err := settings.GetDb(baseCfg)
+	if err != nil {
+		suite.FailNow("Failed to initialize db", err)
+	}
 
 	logger, err := settings.GetLogger(baseCfg)
 	if err != nil {
