@@ -12,6 +12,7 @@ import (
 	api_errors "libs/src/internal/usecase/errors"
 	"libs/src/internal/usecase/utils"
 	"libs/src/settings"
+	"mime/multipart"
 	"path/filepath"
 	"time"
 )
@@ -28,6 +29,17 @@ func NewUserService(app *settings.App) *UserService {
 		UserRepository: repositories.NewUserRepository(app),
 		SessionService: NewSessionService(app),
 	}
+}
+
+func (s *UserService) saveUserAvatar(oldImage string, newImage *multipart.FileHeader) (string, error) {
+	if oldImage != "" {
+		utils.DeleteIfExist(filepath.Join(s.App.Config.AppConfig.UploadDir, oldImage))
+	}
+
+	fileName := uuid.New().String() + filepath.Ext(newImage.Filename)
+	filePath := filepath.Join(s.App.Config.AppConfig.UploadDir, fileName)
+	err := utils.UploadFile(newImage, filePath)
+	return fileName, err
 }
 
 func (s *UserService) CreateSuperUser(username string, email string, password string) error {
@@ -93,14 +105,8 @@ func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessi
 		"description": data.NewDescription,
 	}
 
-	if data.NewImage != nil { // TODO: вынести сохранение изображения в отдельную функцию
-		if user.Image != "" {
-			utils.DeleteIfExist(filepath.Join(s.App.Config.AppConfig.UploadDir, user.Image))
-		}
-
-		fileName := uuid.New().String() + filepath.Ext(data.NewImage.Filename)
-		filePath := filepath.Join(s.App.Config.AppConfig.UploadDir, fileName)
-		err = utils.UploadFile(data.NewImage, filePath)
+	if data.NewImage != nil {
+		fileName, err := s.saveUserAvatar(user.Image, data.NewImage)
 		if err != nil {
 			return err
 		}
@@ -232,7 +238,7 @@ func (s *UserService) ConfirmResetPassword(token string, request dto.ConfirmRese
 }
 
 func (s *UserService) ChangePassword(sessionId string, request dto.ChangePasswordRequest) error {
-	userDto, err := s.SessionService.GetUserByAuthSession(sessionId) //TODO: сделать проверку аутентификации еще с дтошки этой и не трогать базу
+	userDto, err := s.SessionService.GetUserByAuthSession(sessionId)
 	if err != nil {
 		return err
 	}
