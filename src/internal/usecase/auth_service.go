@@ -123,6 +123,14 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		IsActive: false,
 		Role:     enums.ANONYMOUS,
 	}
+	err = s.UserRepository.Create(&user)
+
+	if err != nil {
+		if errors.Is(err, repositories.ErrDuplicate) {
+			return api_errors.ErrUserAlreadyExists
+		}
+		return err
+	}
 
 	payloadJson, _ := json.Marshal(dto.EmailSession{UserDTO: user.ToDTO()})
 	encrypt, err := utils.Encrypt(s.App.Config.AppConfig.SecretKey, string(payloadJson))
@@ -135,14 +143,6 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		Expire:    time.Now().Add(time.Duration(s.App.Config.AuthConfig.EmailConfirmTTL) * time.Second),
 		Prefix:    s.App.Config.RedisConfig.Prefixes.ConfirmEmail,
 		Payload:   encrypt,
-	}
-
-	err = s.UserRepository.Create(&user)
-	if err != nil {
-		if errors.Is(err, repositories.ErrDuplicate) {
-			return api_errors.ErrUserAlreadyExists
-		}
-		return err
 	}
 
 	sessionId, err := s.SessionService.SetSession(session)
