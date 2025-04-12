@@ -137,16 +137,17 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 		Payload:   encrypt,
 	}
 
-	sessionId, err := s.SessionService.SetSession(session)
-	if err != nil {
-		return err
-	}
-
 	err = s.UserRepository.Create(&user)
 	if err != nil {
 		if errors.Is(err, repositories.ErrDuplicate) {
 			return api_errors.ErrUserAlreadyExists
 		}
+		return err
+	}
+
+	sessionId, err := s.SessionService.SetSession(session)
+	if err != nil {
+		return err
 	}
 
 	go func() {
