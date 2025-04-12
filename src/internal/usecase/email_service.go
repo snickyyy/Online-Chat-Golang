@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/gomail.v2"
 	"libs/src/settings"
+	"time"
 )
 
 type IEmailService interface {
@@ -28,11 +29,18 @@ func (s *EmailService) sendEmail(from string, to string, subject string, body st
 	message.SetHeader("Subject", subject)
 	message.SetBody("text/plain", body)
 
-	if err := s.App.Mail.DialAndSend(message); err != nil {
-		return err
+	var err error
+	for i := 0; i <= 3; i++ {
+		err = s.App.Mail.DialAndSend(message)
+		if err == nil {
+			break
+		}
+		settings.AppVar.Logger.Error(fmt.Sprintf("Error sending email: %v || try: %d", err, i))
+		time.Sleep(time.Second * time.Duration(i))
 	}
+
 	settings.AppVar.Logger.Info(fmt.Sprintf("Email sent to %s", to))
-	return nil
+	return err
 }
 
 func (s *EmailService) SendRegisterEmail(to string, token string) error {
@@ -47,7 +55,7 @@ func (s *EmailService) SendRegisterEmail(to string, token string) error {
 }
 
 func (s *EmailService) SendResetPasswordEmail(to string, token string) error {
-	subject := "Reset your password"
+	subject := "Online-Chat-Golang || Reset-password"
 	body := fmt.Sprintf(
 		"For To confirm password reset, follow the link\nhttp://%s:%d/accounts/profile/reset-password/%s",
 		s.App.Config.AppConfig.DomainName,
