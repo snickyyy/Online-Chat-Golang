@@ -21,6 +21,7 @@ type UserService struct {
 	App            *settings.App
 	UserRepository repositories.IUserRepository
 	SessionService ISessionService
+	EmailService   IEmailService
 }
 
 func NewUserService(app *settings.App) *UserService {
@@ -28,6 +29,7 @@ func NewUserService(app *settings.App) *UserService {
 		App:            app,
 		UserRepository: repositories.NewUserRepository(app),
 		SessionService: NewSessionService(app),
+		EmailService:   NewEmailService(app),
 	}
 }
 
@@ -174,28 +176,8 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 		return -1, err
 	}
 
-	go func() { // TODO: вынести все операции с емейлом в EmailService
-		msg := fmt.Sprintf(
-			"For To confirm password reset, follow the link\nhttp://%s:%d/accounts/profile/reset-password/%s",
-			s.App.Config.AppConfig.DomainName,
-			s.App.Config.AppConfig.Port,
-			sessionBody.SessionID,
-		)
-
-		for i := 1; i <= 3; i++ {
-			err = utils.SendMail(s.App.Mail,
-				s.App.Config.Mail.From,
-				user.Email,
-				"Online-Chat-Golang || Reset-password",
-				msg,
-			)
-
-			if err == nil {
-				break
-			}
-			s.App.Logger.Error(fmt.Sprintf("Error registering user: %v || try: %d", err, i))
-			time.Sleep(time.Duration(i) * time.Second)
-		}
+	go func() {
+		s.EmailService.SendResetPasswordEmail(user.Email, sessionBody.SessionID)
 	}()
 	return secretCode, nil
 }

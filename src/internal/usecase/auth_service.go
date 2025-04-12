@@ -20,12 +20,14 @@ type AuthService struct {
 	App            *settings.App
 	UserRepository repositories.IUserRepository
 	SessionService ISessionService
+	EmailService   IEmailService
 }
 
 func NewAuthService(app *settings.App) *AuthService {
 	return &AuthService{
 		UserRepository: repositories.NewUserRepository(app),
 		SessionService: NewSessionService(app),
+		EmailService:   NewEmailService(app),
 		App:            app,
 	}
 }
@@ -151,18 +153,7 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	}
 
 	go func() {
-		msg := fmt.Sprintf(
-			"Thank you for choosing our service, to confirm your registration, follow the url below\nhttp://%s:%d/accounts/auth/confirm-account/%s",
-			s.App.Config.AppConfig.DomainName,
-			s.App.Config.AppConfig.Port,
-			sessionId,
-		)
-
-		err = utils.SendMail(s.App.Mail, s.App.Config.Mail.From, user.Email, "Online-Chat-Golang || Confirm registration", msg)
-
-		if err != nil {
-			s.App.Logger.Error(fmt.Sprintf("Error registering user: %v", err))
-		}
+		s.EmailService.SendRegisterEmail(user.Email, sessionId)
 	}()
 
 	return nil
