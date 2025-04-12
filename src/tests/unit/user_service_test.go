@@ -288,12 +288,15 @@ func TestResetPassword(t *testing.T) {
 	for _, tc := range testCases {
 		mockSessionService := new(mocks.ISessionService)
 		mockUserRepository := new(mocks.IUserRepository)
+		mockEmailService := new(mocks.IEmailService)
 		service.SessionService = mockSessionService
 		service.UserRepository = mockUserRepository
+		service.EmailService = mockEmailService
 
 		t.Run(tc.testName, func(t *testing.T) {
 			mockUserRepository.EXPECT().Filter(mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
 			mockSessionService.EXPECT().SetSession(mock.Anything).Return(tc.sessionServResp, tc.sessionServErr)
+			mockEmailService.EXPECT().SendResetPasswordEmail(mock.Anything, mock.Anything).Maybe().Return(nil)
 
 			code, err := service.ResetPassword(tc.request)
 

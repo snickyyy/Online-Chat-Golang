@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+//go:generate mockery --name=IEmailService --dir=. --output=../mocks --with-expecter
 type IEmailService interface {
 	SendRegisterEmail(to string, token string) error
 	SendResetPasswordEmail(to string, token string) error
