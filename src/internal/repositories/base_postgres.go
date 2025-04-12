@@ -77,6 +77,9 @@ func (repo *BasePostgresRepository[T]) UpdateById(id int64, updateFields map[str
 	if result.Error != nil {
 		return parsePgError(result.Error)
 	}
+	if result.RowsAffected == 0 {
+		return ErrRecordNotFound
+	}
 	return nil
 }
 

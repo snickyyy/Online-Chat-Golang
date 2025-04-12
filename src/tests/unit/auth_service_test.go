@@ -245,12 +245,15 @@ func TestRegisterUser(t *testing.T) {
 	for _, tc := range testCases {
 		mockUserRepository := new(mocks.IUserRepository)
 		mockSessionService := new(mocks.ISessionService)
+		mockEmailService := new(mocks.IEmailService)
 		service.UserRepository = mockUserRepository
 		service.SessionService = mockSessionService
+		service.EmailService = mockEmailService
 
 		t.Run(tc.testName, func(t *testing.T) {
 			mockUserRepository.EXPECT().Create(mock.Anything).Return(tc.UserRepoResp)
 			mockSessionService.EXPECT().SetSession(mock.Anything).Return(tc.SessionServResp, tc.SessionServErr)
+			mockEmailService.EXPECT().SendRegisterEmail(mock.Anything, mock.Anything).Maybe().Return(tc.respError)
 
 			err := service.RegisterUser(tc.data)
 
