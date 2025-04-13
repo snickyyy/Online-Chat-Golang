@@ -116,6 +116,16 @@ func TestConfirmAccount(t *testing.T) {
 		mustErr                        bool
 	}{
 		{
+			testName: "ConfirmAccountAlreadyActive",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: true,
+			},
+			ExpectedError: api_errors.ErrAlreadyLoggedIn,
+			mustErr:       true,
+		},
+		{
 			testName: "ConfirmAccountInvalidSession",
 			caller: dto.UserDTO{
 				ID:       1,
@@ -215,6 +225,16 @@ func TestRegisterUser(t *testing.T) {
 		respError       error
 		mustErr         bool
 	}{
+		{
+			testName: "RegisterUserAlreadyLoggedIn",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: true,
+			},
+			respError: api_errors.ErrAlreadyLoggedIn,
+			mustErr:   true,
+		},
 		{
 			testName: "RegisterUserPasswordsDontMatch",
 			caller: dto.UserDTO{
@@ -316,6 +336,16 @@ func TestLogin(t *testing.T) {
 		expectedError error
 		mustErr       bool
 	}{
+		{
+			testName: "LoginUserAlreadyLoggedIn",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: true,
+			},
+			expectedError: api_errors.ErrAlreadyLoggedIn,
+			mustErr:       true,
+		},
 		{
 			testName: "LoginUserNotFound",
 			caller: dto.UserDTO{
