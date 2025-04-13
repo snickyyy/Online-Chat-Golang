@@ -189,7 +189,7 @@ func TestInviteToChat(t *testing.T) {
 			mockChatMemberRepo.EXPECT().Count(mock.Anything, mock.Anything, mock.Anything).Return(0, nil)
 			mockChatMemberRepo.EXPECT().Create(mock.Anything).Return(nil)
 
-			err := service.InviteToChat(&dto.UserDTO{ID: tc.inviterId}, tc.inviteeUsername, tc.chatId)
+			err := service.InviteToChat(&dto.UserDTO{ID: tc.inviterId, Role: enums.USER, IsActive: true}, tc.inviteeUsername, tc.chatId)
 
 			if tc.mustErr {
 				assert.Error(t, err)
