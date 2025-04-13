@@ -50,7 +50,7 @@ func (s *ChatService) CreateChat(request dto.CreateChatRequest, user dto.UserDTO
 func (s *ChatService) DeleteChat(caller dto.UserDTO, chatID int64) error {
 	chat, err := s.ChatRepository.GetById(chatID)
 	if err != nil {
-		if errors.Is(err, repositories.ErrRecordNotFound) {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
 			return api_errors.ErrChatNotFound
 		}
 		return err
