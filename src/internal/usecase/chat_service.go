@@ -73,6 +73,33 @@ func (s *ChatService) DeleteChat(caller dto.UserDTO, chatID int64) error {
 	return nil
 }
 
-//func (s *ChatService) ChangeChat(caller dto.UserDTO, chatId int64, request dto.ChangeChatRequest) error {
-//
-//}
+func (s *ChatService) ChangeChat(caller dto.UserDTO, chatId int64, request dto.ChangeChatRequest) error {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return api_errors.ErrUnauthorized
+	}
+
+	chat, err := s.ChatRepository.GetById(chatId)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrChatNotFound
+		}
+		return err
+	}
+	if chat.OwnerID != caller.ID {
+		return api_errors.ErrNotEnoughPermissionsForChangeChat
+	}
+
+	filterData := map[string]*string{
+		"title":       request.NewTitle,
+		"description": request.NewDescription,
+	}
+
+	updateData := make(map[string]any, len(filterData))
+
+	for k, v := range filterData {
+		if v != nil {
+			updateData[k] = v
+		}
+	}
+	return s.ChatRepository.UpdateById(chatId, updateData)
+}

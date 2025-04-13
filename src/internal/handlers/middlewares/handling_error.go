@@ -140,6 +140,16 @@ func parseError(err error) (int, gin.H) {
 			"error": "Inviter not in chat",
 		}
 	}
+	if errors.Is(err, api_errors.ErrNotEnoughPermissionsForDelete) {
+		return http.StatusForbidden, gin.H{
+			"error": "not enough permissions for delete",
+		}
+	}
+	if errors.Is(err, api_errors.ErrNotEnoughPermissionsForChangeChat) {
+		return http.StatusForbidden, gin.H{
+			"error": "not enough permissions for change chat",
+		}
+	}
 
 	return http.StatusInternalServerError, gin.H{
 		"error": "Internal server error",
