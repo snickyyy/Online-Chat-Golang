@@ -59,6 +59,13 @@ func (s *ChatService) DeleteChat(caller dto.UserDTO, chatID int64) error {
 	if chat.OwnerID != caller.ID {
 		return api_errors.ErrNotEnoughPermissionsForDelete
 	}
+	err = s.ChatRepository.DeleteById(chatID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			return api_errors.ErrChatNotFound
+		}
+		return err
+	}
 
-	return s.ChatRepository.DeleteById(chatID)
+	return nil
 }

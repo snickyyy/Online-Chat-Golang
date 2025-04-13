@@ -66,6 +66,9 @@ func (repo *BasePostgresRepository[T]) DeleteById(id int64) error {
 	if result.Error != nil {
 		return parsePgError(result.Error)
 	}
+	if result.RowsAffected == 0 {
+		return ErrRecordNotFound
+	}
 	return nil
 }
 
