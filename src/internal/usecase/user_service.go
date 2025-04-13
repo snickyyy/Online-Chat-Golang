@@ -92,13 +92,8 @@ func (s *UserService) GetUserProfile(username string) (*dto.UserProfile, error) 
 	return profile, nil
 }
 
-func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessionId string) error {
-	user, err := s.SessionService.GetUserByAuthSession(sessionId)
-	if err != nil {
-		return err
-	}
-
-	if user.Role == enums.ANONYMOUS || !user.IsActive {
+func (s *UserService) ChangeUserProfile(caller dto.UserDTO, data dto.ChangeUserProfileRequest) error {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
 		return api_errors.ErrNeedLoginForChangeProfile
 	}
 
@@ -108,7 +103,7 @@ func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessi
 	}
 
 	if data.NewImage != nil {
-		fileName, err := s.saveUserAvatar(user.Image, data.NewImage)
+		fileName, err := s.saveUserAvatar(caller.Image, data.NewImage)
 		if err != nil {
 			return err
 		}
@@ -123,7 +118,7 @@ func (s *UserService) ChangeUserProfile(data dto.ChangeUserProfileRequest, sessi
 		}
 	}
 
-	err = s.UserRepository.UpdateById(user.ID, updateData)
+	err := s.UserRepository.UpdateById(caller.ID, updateData)
 	if err != nil {
 		if errors.Is(err, repositories.ErrDuplicate) {
 			return api_errors.ErrUserAlreadyExists
@@ -219,13 +214,8 @@ func (s *UserService) ConfirmResetPassword(token string, request dto.ConfirmRese
 	return nil
 }
 
-func (s *UserService) ChangePassword(sessionId string, request dto.ChangePasswordRequest) error {
-	userDto, err := s.SessionService.GetUserByAuthSession(sessionId)
-	if err != nil {
-		return err
-	}
-
-	user, err := s.UserRepository.GetById(userDto.ID)
+func (s *UserService) ChangePassword(caller dto.UserDTO, request dto.ChangePasswordRequest) error {
+	user, err := s.UserRepository.GetById(caller.ID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {
 			return api_errors.ErrInvalidSession
@@ -252,7 +242,7 @@ func (s *UserService) ChangePassword(sessionId string, request dto.ChangePasswor
 		return err
 	}
 
-	err = s.UserRepository.UpdateById(userDto.ID, map[string]any{"password": passToHash})
+	err = s.UserRepository.UpdateById(user.ID, map[string]any{"password": passToHash})
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {
 			return api_errors.ErrInvalidSession

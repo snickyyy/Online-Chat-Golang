@@ -49,12 +49,8 @@ func UserProfile(c *gin.Context) {
 // @Router /accounts/profile/edit [patch]
 func ChangeUserProfile(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
-	sessId, err := c.Cookie("sessionID") //TODO: доставать юзера из di и по юзеру проверять права а не по сессии
+	user := c.MustGet("user").(dto.UserDTO)
 	var requestData dto.ChangeUserProfileRequest
-	if err != nil {
-		c.Error(api_errors.ErrNeedLoginForChangeProfile)
-		return
-	}
 
 	if err := c.ShouldBind(&requestData); err != nil {
 		c.Error(api_errors.ErrInvalidData)
@@ -62,7 +58,7 @@ func ChangeUserProfile(c *gin.Context) {
 	}
 
 	service := services.NewUserService(app)
-	err = service.ChangeUserProfile(requestData, sessId)
+	err := service.ChangeUserProfile(user, requestData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -139,11 +135,7 @@ func ConfirmResetPassword(c *gin.Context) {
 // @Router /accounts/profile/change-password [put]
 func ChangePassword(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
-	sessId, err := c.Cookie("sessionID")
-	if err != nil {
-		c.Error(api_errors.ErrUnauthorized)
-		return
-	}
+	user := c.MustGet("user").(dto.UserDTO)
 
 	var requestData dto.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&requestData); err != nil {
@@ -152,7 +144,7 @@ func ChangePassword(c *gin.Context) {
 	}
 
 	service := services.NewUserService(app)
-	err = service.ChangePassword(sessId, requestData)
+	err := service.ChangePassword(user, requestData)
 	if err != nil {
 		c.Error(err)
 		return
