@@ -84,3 +84,40 @@ func InviteToChat(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
 }
+
+// @Summary Delete chat
+// @Description deleting a chat
+// @Tags Chat
+// @Accept json
+// @Produce json
+// @Param chatId path int true "Chat ID"
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /messenger/chat/delete/{chatId} [delete]
+func DeleteChat(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+	user := c.MustGet("user").(dto.UserDTO)
+
+	if user.Role == enums.ANONYMOUS || !user.IsActive {
+		c.Error(api_errors.ErrUnauthorized)
+		return
+	}
+
+	chatID := c.Param("chat_id")
+	if chatID == "" {
+		c.Error(api_errors.ErrInvalidData)
+		return
+	}
+
+	service := services.NewChatService(app)
+
+	chatIDInt, err := strconv.Atoi(chatID)
+
+	err = service.DeleteChat(user, int64(chatIDInt))
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
+}
