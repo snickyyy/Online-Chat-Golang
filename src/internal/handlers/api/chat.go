@@ -112,9 +112,9 @@ func DeleteChat(c *gin.Context) {
 
 	service := services.NewChatService(app)
 
-	chatIDInt, err := strconv.Atoi(chatID)
+	chatIDInt, _ := strconv.Atoi(chatID)
 
-	err = service.DeleteChat(user, int64(chatIDInt))
+	err := service.DeleteChat(user, int64(chatIDInt))
 	if err != nil {
 		c.Error(err)
 		return
