@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"libs/src/internal/domain/enums"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
@@ -19,7 +20,7 @@ func (suite *AppTestSuite) TestCreateChat() {
 
 	err := userService.CreateSuperUser("TestCreateChat", "TestCreateChat@test.com", "test123")
 	suite.NoError(err)
-	sess, err := authService.Login(dto.LoginRequest{UsernameOrEmail: "TestCreateChat", Password: "test123"})
+	sess, err := authService.Login(dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false}, dto.LoginRequest{UsernameOrEmail: "TestCreateChat", Password: "test123"})
 	suite.NoError(err)
 
 	dataCreateChat, _ := json.Marshal(dto.CreateChatRequest{
@@ -54,7 +55,7 @@ func (suite *AppTestSuite) TestInviteToChat() {
 	suite.NoError(err)
 
 	// Create session for the inviter
-	sess, err := authService.Login(dto.LoginRequest{UsernameOrEmail: "TestInviter", Password: "test123"})
+	sess, err := authService.Login(dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false}, dto.LoginRequest{UsernameOrEmail: "TestInviter", Password: "test123"})
 	suite.NoError(err)
 
 	// Create a chat

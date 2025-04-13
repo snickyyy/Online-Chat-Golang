@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"libs/src/internal/domain/enums"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
 	"libs/src/settings"
@@ -22,6 +23,7 @@ func (suite *AppTestSuite) TestGetProfile() {
 	suite.NoError(err)
 
 	err = authService.RegisterUser(
+		dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false},
 		dto.RegisterRequest{
 			Username:        "profileNonConfirm",
 			Email:           "profileNonConfirm@test.com",
@@ -56,7 +58,7 @@ func (suite *AppTestSuite) TestChangeProfile() {
 	err := userService.CreateSuperUser("TestProfileEdit", "profileEditTest@test.com", "test123")
 	suite.NoError(err)
 
-	sess, err := authService.Login(dto.LoginRequest{UsernameOrEmail: "TestProfileEdit", Password: "test123"})
+	sess, err := authService.Login(dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false}, dto.LoginRequest{UsernameOrEmail: "TestProfileEdit", Password: "test123"})
 	suite.NoError(err)
 
 	request, err := http.NewRequest("PATCH", url, &bytes.Buffer{})
