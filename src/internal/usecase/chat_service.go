@@ -101,5 +101,12 @@ func (s *ChatService) ChangeChat(caller dto.UserDTO, chatId int64, request dto.C
 			updateData[k] = v
 		}
 	}
-	return s.ChatRepository.UpdateById(chatId, updateData)
+
+	err = s.ChatRepository.UpdateById(chatId, updateData)
+	if err != nil {
+		if errors.As(err, &repositories.ErrDuplicate) {
+			return api_errors.ErrChatAlreadyExists
+		}
+	}
+	return nil
 }
