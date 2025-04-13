@@ -39,3 +39,8 @@ type MemberInfo struct {
 	DateJoined time.Time `json:"date_joined" gorm:"column:date_joined"`
 	UpdateAt   time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
+
+type ChangeChatRequest struct {
+	NewTitle       *string `json:"new_title" binding:"required,min=1,max=38"`
+	NewDescription *string `json:"new_description" binding:"required,min=1,max=254"`
+}
