@@ -46,3 +46,22 @@ func (s *ChatService) CreateChat(request dto.CreateChatRequest, user dto.UserDTO
 	}
 	return newChat.ToDTO(), nil
 }
+
+func (s *ChatService) DeleteChat(caller dto.UserDTO, chatID int64) error {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return api_errors.ErrUnauthorized
+	}
+	chat, err := s.ChatRepository.GetById(chatID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			return api_errors.ErrChatNotFound
+		}
+		return err
+	}
+
+	if chat.OwnerID != caller.ID {
+		return api_errors.ErrNotEnoughPermissionsForDelete
+	}
+
+	return s.ChatRepository.DeleteById(chatID)
+}
