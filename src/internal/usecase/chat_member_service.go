@@ -46,6 +46,9 @@ func (s *ChatMemberService) CreateMember(userId int64, chatId int64) error {
 }
 
 func (s *ChatMemberService) InviteToChat(inviter *dto.UserDTO, inviteeUsername string, chatId int64) error {
+	if inviter.Role == enums.ANONYMOUS || !inviter.IsActive {
+		return api_errors.ErrUnauthorized
+	}
 	inviterInfo, err := s.ChatMemberRepository.GetMemberInfo(inviter.ID, chatId)
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {

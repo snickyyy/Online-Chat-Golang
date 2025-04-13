@@ -48,6 +48,10 @@ func (s *ChatService) CreateChat(request dto.CreateChatRequest, user dto.UserDTO
 }
 
 func (s *ChatService) DeleteChat(caller dto.UserDTO, chatID int64) error {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return api_errors.ErrUnauthorized
+	}
+
 	chat, err := s.ChatRepository.GetById(chatID)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
@@ -66,6 +70,9 @@ func (s *ChatService) DeleteChat(caller dto.UserDTO, chatID int64) error {
 		}
 		return err
 	}
-
 	return nil
 }
+
+//func (s *ChatService) ChangeChat(caller dto.UserDTO, chatId int64, request dto.ChangeChatRequest) error {
+//
+//}

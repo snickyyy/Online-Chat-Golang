@@ -2,7 +2,6 @@ package handler_api
 
 import (
 	"github.com/gin-gonic/gin"
-	"libs/src/internal/domain/enums"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
 	api_errors "libs/src/internal/usecase/errors"
@@ -57,11 +56,6 @@ func InviteToChat(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	inviter := c.MustGet("user").(dto.UserDTO)
 
-	if inviter.Role == enums.ANONYMOUS || !inviter.IsActive {
-		c.Error(api_errors.ErrUnauthorized)
-		return
-	}
-
 	invitee := c.Query("invitee")
 	chatID := c.Query("chat_id")
 	if invitee == "" || chatID == "" {
@@ -98,11 +92,6 @@ func InviteToChat(c *gin.Context) {
 func DeleteChat(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	user := c.MustGet("user").(dto.UserDTO)
-
-	if user.Role == enums.ANONYMOUS || !user.IsActive {
-		c.Error(api_errors.ErrUnauthorized)
-		return
-	}
 
 	chatID := c.Param("chat_id")
 	if chatID == "" {

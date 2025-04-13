@@ -49,7 +49,7 @@ func UserProfile(c *gin.Context) {
 // @Router /accounts/profile/edit [patch]
 func ChangeUserProfile(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
-	sessId, err := c.Cookie("sessionID")
+	sessId, err := c.Cookie("sessionID") //TODO: доставать юзера из di и по юзеру проверять права а не по сессии
 	var requestData dto.ChangeUserProfileRequest
 	if err != nil {
 		c.Error(api_errors.ErrNeedLoginForChangeProfile)

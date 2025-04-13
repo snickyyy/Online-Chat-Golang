@@ -2,7 +2,6 @@ package handler_api
 
 import (
 	_ "libs/src/docs"
-	"libs/src/internal/domain/enums"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
 	api_errors "libs/src/internal/usecase/errors"
@@ -25,10 +24,6 @@ import (
 func Register(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	user := c.MustGet("user").(dto.UserDTO)
-	if user.Role != enums.ANONYMOUS || user.IsActive {
-		c.Error(api_errors.ErrAlreadyLoggedIn)
-		return
-	}
 
 	var registerData dto.RegisterRequest
 
@@ -39,7 +34,7 @@ func Register(c *gin.Context) {
 
 	service := services.NewAuthService(app)
 
-	err := service.RegisterUser(registerData)
+	err := service.RegisterUser(user, registerData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -60,14 +55,10 @@ func Register(c *gin.Context) {
 func ConfirmAccount(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	user := c.MustGet("user").(dto.UserDTO)
-	if user.Role != enums.ANONYMOUS || user.IsActive {
-		c.Error(api_errors.ErrAlreadyLoggedIn)
-		return
-	}
 	session_id := c.Param("token")
 
 	service := services.NewAuthService(app)
-	sess, err := service.ConfirmAccount(session_id)
+	sess, err := service.ConfirmAccount(user, session_id)
 	if err != nil {
 		c.Error(err)
 		return
@@ -89,10 +80,6 @@ func ConfirmAccount(c *gin.Context) {
 func Login(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	user := c.MustGet("user").(dto.UserDTO)
-	if user.Role != enums.ANONYMOUS || user.IsActive {
-		c.Error(api_errors.ErrAlreadyLoggedIn)
-		return
-	}
 
 	var loginData dto.LoginRequest
 
@@ -103,7 +90,7 @@ func Login(c *gin.Context) {
 
 	service := services.NewAuthService(app)
 
-	sess, err := service.Login(loginData)
+	sess, err := service.Login(user, loginData)
 	if err != nil {
 		c.Error(err)
 		return
