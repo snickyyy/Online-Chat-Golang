@@ -520,6 +520,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/messenger/chat/edit/{chatId}": {
+            "patch": {
+                "description": "change chat",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Change chat",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chat ID",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangeChatRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/messenger/chat/invite": {
             "post": {
                 "description": "inviting a user to an existing chat",
@@ -573,6 +626,25 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.ChangeChatRequest": {
+            "type": "object",
+            "required": [
+                "new_description",
+                "new_title"
+            ],
+            "properties": {
+                "new_description": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "minLength": 1
+                },
+                "new_title": {
+                    "type": "string",
+                    "maxLength": 38,
+                    "minLength": 1
+                }
+            }
+        },
         "dto.ChangePasswordRequest": {
             "type": "object",
             "required": [

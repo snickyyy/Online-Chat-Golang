@@ -84,6 +84,7 @@ func RunServer() {
 			chat.POST("/create", handler_api.CreateChat)
 			chat.POST("/invite", handler_api.InviteToChat)
 			chat.DELETE("/delete/:chat_id", handler_api.DeleteChat)
+			chat.PATCH("/edit/:chat_id", handler_api.ChangeChat)
 		}
 	}
 

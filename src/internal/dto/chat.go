@@ -41,6 +41,6 @@ type MemberInfo struct {
 }
 
 type ChangeChatRequest struct {
-	NewTitle       *string `json:"new_title" binding:"required,min=1,max=38"`
-	NewDescription *string `json:"new_description" binding:"required,min=1,max=254"`
+	NewTitle       *string `json:"new_title" binding:"omitempty,min=1,max=38"`
+	NewDescription *string `json:"new_description" binding:"omitempty,min=1,max=254"`
 }
