@@ -69,8 +69,17 @@ type AuthConfig struct {
 	TimeToChangePassword int64 `mapstructure:"time_to_change_password"`
 }
 
+type Pagination struct {
+	ChatList        int `mapstructure:"chat_list"`
+	GlobalChatList  int `mapstructure:"global_chat_list"`
+	MessagesList    int `mapstructure:"messages_list"`
+	UsersInChatList int `mapstructure:"users_in_chat_list"`
+	SearchUsersList int `mapstructure:"search_users_list"`
+}
+
 type BaseConfig struct {
 	AppConfig      AppConfig      `mapstructure:"app"`
+	Pagination     Pagination     `mapstructure:"pagination"`
 	PostgresConfig PostgresConfig `mapstructure:"db"`
 	AuthConfig     AuthConfig     `mapstructure:"auth"`
 	MongoConfig    MongoConfig    `mapstructure:"mongo"`

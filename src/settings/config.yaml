@@ -35,6 +35,13 @@ redis:
     confirm_email: "confirm_email:"
     confirm_reset_password: "confirm_reset_password:"
 
+pagination:
+  chat_list: 25
+  global_chat_list: 20
+  messages_list: 100
+  users_in_chat: 20
+  search_users_list: 20
+
 mail:
   username: "${MAIL_USERNAME}"
   password: "${MAIL_PASSWORD}"
