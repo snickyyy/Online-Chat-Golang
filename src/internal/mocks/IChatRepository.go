@@ -419,9 +419,9 @@ func (_c *IChatRepository_GetById_Call) RunAndReturn(run func(int64) (domain.Cha
 	return _c
 }
 
-// GetListForUser provides a mock function with given fields: userId
-func (_m *IChatRepository) GetListForUser(userId int64) ([]domain.Chat, error) {
-	ret := _m.Called(userId)
+// GetListForUser provides a mock function with given fields: userId, limit, offset
+func (_m *IChatRepository) GetListForUser(userId int64, limit int, offset int) ([]domain.Chat, error) {
+	ret := _m.Called(userId, limit, offset)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetListForUser")
@@ -429,19 +429,19 @@ func (_m *IChatRepository) GetListForUser(userId int64) ([]domain.Chat, error) {
 
 	var r0 []domain.Chat
 	var r1 error
-	if rf, ok := ret.Get(0).(func(int64) ([]domain.Chat, error)); ok {
-		return rf(userId)
+	if rf, ok := ret.Get(0).(func(int64, int, int) ([]domain.Chat, error)); ok {
+		return rf(userId, limit, offset)
 	}
-	if rf, ok := ret.Get(0).(func(int64) []domain.Chat); ok {
-		r0 = rf(userId)
+	if rf, ok := ret.Get(0).(func(int64, int, int) []domain.Chat); ok {
+		r0 = rf(userId, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.Chat)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(int64) error); ok {
-		r1 = rf(userId)
+	if rf, ok := ret.Get(1).(func(int64, int, int) error); ok {
+		r1 = rf(userId, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -456,13 +456,15 @@ type IChatRepository_GetListForUser_Call struct {
 
 // GetListForUser is a helper method to define mock.On call
 //   - userId int64
-func (_e *IChatRepository_Expecter) GetListForUser(userId interface{}) *IChatRepository_GetListForUser_Call {
-	return &IChatRepository_GetListForUser_Call{Call: _e.mock.On("GetListForUser", userId)}
+//   - limit int
+//   - offset int
+func (_e *IChatRepository_Expecter) GetListForUser(userId interface{}, limit interface{}, offset interface{}) *IChatRepository_GetListForUser_Call {
+	return &IChatRepository_GetListForUser_Call{Call: _e.mock.On("GetListForUser", userId, limit, offset)}
 }
 
-func (_c *IChatRepository_GetListForUser_Call) Run(run func(userId int64)) *IChatRepository_GetListForUser_Call {
+func (_c *IChatRepository_GetListForUser_Call) Run(run func(userId int64, limit int, offset int)) *IChatRepository_GetListForUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int64))
+		run(args[0].(int64), args[1].(int), args[2].(int))
 	})
 	return _c
 }
@@ -472,7 +474,7 @@ func (_c *IChatRepository_GetListForUser_Call) Return(_a0 []domain.Chat, _a1 err
 	return _c
 }
 
-func (_c *IChatRepository_GetListForUser_Call) RunAndReturn(run func(int64) ([]domain.Chat, error)) *IChatRepository_GetListForUser_Call {
+func (_c *IChatRepository_GetListForUser_Call) RunAndReturn(run func(int64, int, int) ([]domain.Chat, error)) *IChatRepository_GetListForUser_Call {
 	_c.Call.Return(run)
 	return _c
 }
