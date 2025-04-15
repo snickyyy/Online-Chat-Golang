@@ -9,6 +9,7 @@ import (
 //go:generate mockery --name=IChatRepository --dir=. --output=../mocks --with-expecter
 type IChatRepository interface {
 	IBasePostgresRepository[domain.Chat]
+	GetListForUser(userId int64, limit int, offset int) ([]domain.Chat, error)
 }
 
 func NewChatRepository(app *settings.App) *ChatRepository {
@@ -44,4 +45,21 @@ func (r *ChatRepository) Create(chat *domain.Chat) error {
 		return parsePgError(err)
 	}
 	return nil
+}
+
+func (r *ChatRepository) GetListForUser(userId int64, limit int, offset int) ([]domain.Chat, error) {
+	var chats []domain.Chat
+	err := r.Db.Table("chats").
+		Select("chats.*").
+		Joins("JOIN chat_members ON chat_members.chat_id = chats.id").
+		Where("chat_members.user_id = ?", userId).
+		Limit(limit).
+		Offset(offset).
+		Find(&chats).Error
+
+	if err != nil {
+		return nil, parsePgError(err)
+	}
+
+	return chats, nil
 }
