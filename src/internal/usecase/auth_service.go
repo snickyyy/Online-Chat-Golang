@@ -9,7 +9,7 @@ import (
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
 	api_errors "libs/src/internal/usecase/errors"
-	"libs/src/internal/usecase/utils"
+	"libs/src/pkg/utils"
 	"libs/src/settings"
 	"time"
 

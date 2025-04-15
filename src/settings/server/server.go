@@ -4,7 +4,7 @@ import (
 	_ "libs/src/docs"
 	handler_api "libs/src/internal/handlers/api"
 	handler_middlewares "libs/src/internal/handlers/middlewares"
-	"libs/src/internal/validators"
+	"libs/src/pkg/validators"
 
 	files "github.com/swaggo/files"
 	swagger "github.com/swaggo/gin-swagger"

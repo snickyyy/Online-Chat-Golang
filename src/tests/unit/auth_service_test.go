@@ -11,7 +11,7 @@ import (
 	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
 	api_errors "libs/src/internal/usecase/errors"
-	"libs/src/internal/usecase/utils"
+	"libs/src/pkg/utils"
 	"testing"
 )
 
