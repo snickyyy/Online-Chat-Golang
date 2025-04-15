@@ -9,9 +9,6 @@ definitions:
         maxLength: 38
         minLength: 1
         type: string
-    required:
-    - new_description
-    - new_title
     type: object
   dto.ChangePasswordRequest:
     properties:
@@ -42,6 +39,24 @@ definitions:
         $ref: '#/definitions/dto.ChangeUserProfileRequest'
       message:
         type: string
+    type: object
+  dto.ChatDTO:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      owner_id:
+        type: integer
+      title:
+        type: string
+    type: object
+  dto.ChatsForUserResponse:
+    properties:
+      chats:
+        items:
+          $ref: '#/definitions/dto.ChatDTO'
+        type: array
     type: object
   dto.ConfirmResetPasswordRequest:
     properties:
@@ -435,6 +450,35 @@ paths:
       summary: confirm reset password
       tags:
       - profile
+  /messenger/chat/all:
+    get:
+      consumes:
+      - application/json
+      description: get all the chats in which the user consists
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChatsForUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get chats for user
+      tags:
+      - Chat
   /messenger/chat/create:
     post:
       consumes:

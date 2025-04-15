@@ -419,6 +419,50 @@
                 }
             }
         },
+        "/messenger/chat/all": {
+            "get": {
+                "description": "get all the chats in which the user consists",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Get chats for user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChatsForUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/messenger/chat/create": {
             "post": {
                 "description": "Creating a new chat",
@@ -617,10 +661,6 @@
     "definitions": {
         "dto.ChangeChatRequest": {
             "type": "object",
-            "required": [
-                "new_description",
-                "new_title"
-            ],
             "properties": {
                 "new_description": {
                     "type": "string",
@@ -676,6 +716,34 @@
                 },
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.ChatDTO": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "owner_id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ChatsForUserResponse": {
+            "type": "object",
+            "properties": {
+                "chats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ChatDTO"
+                    }
                 }
             }
         },

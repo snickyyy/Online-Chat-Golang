@@ -112,3 +112,34 @@ func ChangeChat(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
 }
+
+// @Summary Get chats for user
+// @Description get all the chats in which the user consists
+// @Tags Chat
+// @Accept json
+// @Produce json
+// @Param page query int true "Page"
+// @Success 200 {object} dto.ChatsForUserResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /messenger/chat/all [get]
+func GetChatsForUser(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+	user := c.MustGet("user").(dto.UserDTO)
+
+	page := c.Query("page")
+	if page == "" {
+		page = "1"
+	}
+
+	service := services.NewChatService(app)
+
+	pageInt, _ := strconv.Atoi(page)
+
+	chats, err := service.GetListForUser(user, pageInt)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, chats)
+}

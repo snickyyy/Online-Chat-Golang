@@ -44,3 +44,7 @@ type ChangeChatRequest struct {
 	NewTitle       *string `json:"new_title" binding:"omitempty,min=1,max=38"`
 	NewDescription *string `json:"new_description" binding:"omitempty,min=1,max=254"`
 }
+
+type ChatsForUserResponse struct {
+	Chats []ChatDTO `json:"chats"`
+}
