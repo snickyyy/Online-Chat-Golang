@@ -135,3 +135,28 @@ func (s *ChatService) GetListForUser(caller dto.UserDTO, page int) ([]dto.ChatDT
 	}
 	return result, nil
 }
+
+func (s *ChatService) Search(caller dto.UserDTO, name string, page int) ([]dto.ChatDTO, error) {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return []dto.ChatDTO{}, nil
+	}
+
+	if page < 1 {
+		return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+	}
+
+	list, err := s.ChatRepository.SearchForUser(caller.ID, name, s.App.Config.Pagination.ChatList, (page-1)*s.App.Config.Pagination.ChatList)
+	if err != nil {
+		if errors.As(err, &repositories.ErrLimitMustBePositive) || errors.As(err, &repositories.ErrOffsetMustBePositive) {
+			return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+		}
+		return []dto.ChatDTO{}, err
+	}
+
+	result := make([]dto.ChatDTO, len(list))
+
+	for i, v := range list {
+		result[i] = v.ToDTO()
+	}
+	return result, nil
+}
