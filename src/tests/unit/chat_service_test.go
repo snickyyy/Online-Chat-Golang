@@ -304,7 +304,6 @@ func TestGetChatListForUser(t *testing.T) {
 		})
 	}
 }
-
 func TestSearchChat(t *testing.T) {
 	mockApp := GetAppMock()
 	service := services.ChatService{
@@ -434,6 +433,120 @@ func TestSearchChat(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, len(chats), len(tc.expectResp))
+			}
+		})
+	}
+}
+func TestGetChatById(t *testing.T) {
+	mockApp := GetAppMock()
+	service := services.ChatService{
+		App: mockApp,
+	}
+
+	testCases := []struct {
+		testName    string
+		caller      dto.UserDTO
+		chatId      int64
+		FilterResp  []domain.ChatMember
+		FilterErr   error
+		GetByIdResp domain.Chat
+		GetByIdErr  error
+		expectResp  dto.ChatDTO
+		expectErr   error
+		mustErr     bool
+	}{
+		{
+			testName: "TestGetChatByIdUnauthorized",
+			caller: dto.UserDTO{
+				Role:     enums.ANONYMOUS,
+				IsActive: true,
+			},
+			chatId:    1,
+			expectErr: api_errors.ErrUnauthorized,
+			mustErr:   true,
+		},
+		{
+			testName: "TestGetChatByIdNotActive",
+			caller: dto.UserDTO{
+				Role:     enums.USER,
+				IsActive: false,
+			},
+			chatId:    1,
+			expectErr: api_errors.ErrUnauthorized,
+			mustErr:   true,
+		},
+		{
+			testName: "TestGetChatByIdUserNotInChat",
+			caller: dto.UserDTO{
+				Role:     enums.USER,
+				IsActive: true,
+			},
+			chatId:    1,
+			expectErr: api_errors.ErrChatNotFound,
+			mustErr:   true,
+		},
+		{
+			testName: "TestGetChatByIdChatNotExist",
+			caller: dto.UserDTO{
+				Role:     enums.USER,
+				IsActive: true,
+			},
+			chatId: 1,
+			FilterResp: []domain.ChatMember{
+				{
+					ChatID: 1,
+					UserID: 1,
+				},
+			},
+			GetByIdErr: repositories.ErrRecordNotFound,
+			expectErr:  api_errors.ErrChatNotFound,
+			mustErr:    true,
+		},
+		{
+			testName: "TestGetChatByIdSuccess",
+			caller: dto.UserDTO{
+				Role:     enums.USER,
+				IsActive: true,
+			},
+			chatId: 1,
+			FilterResp: []domain.ChatMember{
+				{
+					ChatID: 1,
+					UserID: 1,
+				},
+			},
+			GetByIdResp: domain.Chat{
+				Title:       "Test Chat 1",
+				Description: "Test Description 1",
+				OwnerID:     1,
+			},
+			expectResp: dto.ChatDTO{
+				Title:       "Test Chat 1",
+				Description: "Test Description 1",
+				OwnerID:     1,
+			},
+			mustErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		mockChatRepository := new(mocks.IChatRepository)
+		mockChatMemberRepository := new(mocks.IChatMemberRepository)
+		service.ChatRepository = mockChatRepository
+		service.ChatMemberRepository = mockChatMemberRepository
+
+		t.Run(tc.testName, func(t *testing.T) {
+			mockChatMemberRepository.EXPECT().Filter(mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.FilterResp, tc.FilterErr)
+			mockChatRepository.EXPECT().GetById(mock.Anything).Maybe().Return(tc.GetByIdResp, tc.GetByIdErr)
+
+			chat, err := service.GetById(tc.caller, tc.chatId)
+
+			if tc.mustErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectErr, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, chat, tc.expectResp)
 			}
 		})
 	}
