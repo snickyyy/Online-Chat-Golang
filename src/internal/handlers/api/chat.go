@@ -118,7 +118,8 @@ func ChangeChat(c *gin.Context) {
 // @Tags Chat
 // @Accept json
 // @Produce json
-// @Param page query int true "Page"
+// @Param search query string false "Search name"
+// @Param page query int false "Page"
 // @Success 200 {object} dto.ChatsForUserResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -128,15 +129,26 @@ func GetChatsForUser(c *gin.Context) {
 	user := c.MustGet("user").(dto.UserDTO)
 
 	page := c.Query("page")
+	search := c.Query("search")
+
 	if page == "" {
 		page = "1"
 	}
+	pageInt, _ := strconv.Atoi(page)
 
 	service := services.NewChatService(app)
 
-	pageInt, _ := strconv.Atoi(page)
+	var (
+		chats []dto.ChatDTO
+		err   error
+	)
 
-	chats, err := service.GetListForUser(user, pageInt)
+	if search != "" {
+		chats, err = service.Search(user, search, pageInt)
+	} else {
+		chats, err = service.GetListForUser(user, pageInt)
+	}
+
 	if err != nil {
 		c.Error(err)
 		return

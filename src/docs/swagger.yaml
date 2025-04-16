@@ -456,10 +456,13 @@ paths:
       - application/json
       description: get all the chats in which the user consists
       parameters:
+      - description: Search name
+        in: query
+        name: search
+        type: string
       - description: Page
         in: query
         name: page
-        required: true
         type: integer
       produces:
       - application/json
