@@ -160,3 +160,26 @@ func (s *ChatService) Search(caller dto.UserDTO, name string, page int) ([]dto.C
 	}
 	return result, nil
 }
+
+func (s *ChatService) GetById(caller dto.UserDTO, chatId int64) (dto.ChatDTO, error) {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return dto.ChatDTO{}, api_errors.ErrUnauthorized
+	}
+
+	member, err := s.ChatMemberRepository.Filter("user_id = ? AND chat_id = ?", caller.ID, chatId)
+	if err != nil {
+		return dto.ChatDTO{}, err
+	}
+	if len(member) < 1 {
+		return dto.ChatDTO{}, api_errors.ErrChatNotFound
+	}
+
+	chat, err := s.ChatRepository.GetById(chatId)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return dto.ChatDTO{}, api_errors.ErrChatNotFound
+		}
+		return dto.ChatDTO{}, err
+	}
+	return chat.ToDTO(), nil
+}
