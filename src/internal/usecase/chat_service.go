@@ -46,3 +46,140 @@ func (s *ChatService) CreateChat(request dto.CreateChatRequest, user dto.UserDTO
 	}
 	return newChat.ToDTO(), nil
 }
+
+func (s *ChatService) DeleteChat(caller dto.UserDTO, chatID int64) error {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return api_errors.ErrUnauthorized
+	}
+
+	chat, err := s.ChatRepository.GetById(chatID)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrChatNotFound
+		}
+		return err
+	}
+
+	if chat.OwnerID != caller.ID {
+		return api_errors.ErrNotEnoughPermissionsForDelete
+	}
+	err = s.ChatRepository.DeleteById(chatID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			return api_errors.ErrChatNotFound
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *ChatService) ChangeChat(caller dto.UserDTO, chatId int64, request dto.ChangeChatRequest) error {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return api_errors.ErrUnauthorized
+	}
+
+	chat, err := s.ChatRepository.GetById(chatId)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrChatNotFound
+		}
+		return err
+	}
+	if chat.OwnerID != caller.ID {
+		return api_errors.ErrNotEnoughPermissionsForChangeChat
+	}
+
+	filterData := map[string]*string{
+		"title":       request.NewTitle,
+		"description": request.NewDescription,
+	}
+
+	updateData := make(map[string]any, len(filterData))
+
+	for k, v := range filterData {
+		if v != nil {
+			updateData[k] = v
+		}
+	}
+
+	err = s.ChatRepository.UpdateById(chatId, updateData)
+	if err != nil {
+		if errors.As(err, &repositories.ErrDuplicate) {
+			return api_errors.ErrChatAlreadyExists
+		}
+	}
+	return nil
+}
+
+func (s *ChatService) GetListForUser(caller dto.UserDTO, page int) ([]dto.ChatDTO, error) {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return []dto.ChatDTO{}, nil
+	}
+
+	if page < 1 {
+		return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+	}
+
+	list, err := s.ChatRepository.GetListForUser(caller.ID, s.App.Config.Pagination.ChatList, (page-1)*s.App.Config.Pagination.ChatList)
+	if err != nil {
+		if errors.As(err, &repositories.ErrLimitMustBePositive) || errors.As(err, &repositories.ErrOffsetMustBePositive) {
+			return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+		}
+		return []dto.ChatDTO{}, err
+	}
+
+	result := make([]dto.ChatDTO, len(list))
+
+	for i, v := range list {
+		result[i] = v.ToDTO()
+	}
+	return result, nil
+}
+
+func (s *ChatService) Search(caller dto.UserDTO, name string, page int) ([]dto.ChatDTO, error) {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return []dto.ChatDTO{}, nil
+	}
+
+	if page < 1 {
+		return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+	}
+
+	list, err := s.ChatRepository.SearchForUser(caller.ID, name, s.App.Config.Pagination.ChatList, (page-1)*s.App.Config.Pagination.ChatList)
+	if err != nil {
+		if errors.As(err, &repositories.ErrLimitMustBePositive) || errors.As(err, &repositories.ErrOffsetMustBePositive) {
+			return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+		}
+		return []dto.ChatDTO{}, err
+	}
+
+	result := make([]dto.ChatDTO, len(list))
+
+	for i, v := range list {
+		result[i] = v.ToDTO()
+	}
+	return result, nil
+}
+
+func (s *ChatService) GetById(caller dto.UserDTO, chatId int64) (dto.ChatDTO, error) {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return dto.ChatDTO{}, api_errors.ErrUnauthorized
+	}
+
+	member, err := s.ChatMemberRepository.Filter("user_id = ? AND chat_id = ?", caller.ID, chatId)
+	if err != nil {
+		return dto.ChatDTO{}, err
+	}
+	if len(member) < 1 {
+		return dto.ChatDTO{}, api_errors.ErrChatNotFound
+	}
+
+	chat, err := s.ChatRepository.GetById(chatId)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return dto.ChatDTO{}, api_errors.ErrChatNotFound
+		}
+		return dto.ChatDTO{}, err
+	}
+	return chat.ToDTO(), nil
+}

@@ -10,7 +10,7 @@ type Chat struct {
 
 	Owner User `gorm:"foreignKey:OwnerID;references:ID;constraint:OnDelete:CASCADE;"`
 
-	Members []ChatMember `gorm:"foreignKey:ChatID;"`
+	Members []ChatMember `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE"`
 }
 
 func (c *Chat) ToDTO() dto.ChatDTO {

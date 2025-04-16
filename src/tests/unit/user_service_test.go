@@ -11,7 +11,7 @@ import (
 	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
 	api_errors "libs/src/internal/usecase/errors"
-	"libs/src/internal/usecase/utils"
+	"libs/src/pkg/utils"
 	"testing"
 )
 
@@ -119,20 +119,17 @@ func TestChangeUserProfile(t *testing.T) {
 	}
 
 	testCases := []struct {
-		testName        string
-		data            dto.ChangeUserProfileRequest
-		sessionId       string
-		sessionServResp dto.UserDTO
-		sessionServErr  error
-		userRepoErr     error
-		expectedErr     error
-		mustErr         bool
+		testName    string
+		data        dto.ChangeUserProfileRequest
+		caller      dto.UserDTO
+		userRepoErr error
+		expectedErr error
+		mustErr     bool
 	}{
 		{
-			testName:  "ChangeUserProfileNotAuthenticated",
-			data:      data,
-			sessionId: "test",
-			sessionServResp: dto.UserDTO{
+			testName: "ChangeUserProfileNotAuthenticated",
+			data:     data,
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
@@ -141,10 +138,9 @@ func TestChangeUserProfile(t *testing.T) {
 			mustErr:     true,
 		},
 		{
-			testName:  "ChangeUserProfileNotActive",
-			data:      data,
-			sessionId: "test",
-			sessionServResp: dto.UserDTO{
+			testName: "ChangeUserProfileNotActive",
+			data:     data,
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.USER,
 				IsActive: false,
@@ -153,10 +149,9 @@ func TestChangeUserProfile(t *testing.T) {
 			mustErr:     true,
 		},
 		{
-			testName:  "ChangeUserProfileDbErrDuplicateUsername",
-			data:      data,
-			sessionId: "test",
-			sessionServResp: dto.UserDTO{
+			testName: "ChangeUserProfileDbErrDuplicateUsername",
+			data:     data,
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.USER,
 				IsActive: true,
@@ -167,10 +162,9 @@ func TestChangeUserProfile(t *testing.T) {
 			mustErr:     true,
 		},
 		{
-			testName:  "ChangeUserProfileSuccess",
-			data:      data,
-			sessionId: "test",
-			sessionServResp: dto.UserDTO{
+			testName: "ChangeUserProfileSuccess",
+			data:     data,
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.USER,
 				IsActive: true,
@@ -181,17 +175,14 @@ func TestChangeUserProfile(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mockSessionService := new(mocks.ISessionService)
 		mockUserRepository := new(mocks.IUserRepository)
 
-		service.SessionService = mockSessionService
 		service.UserRepository = mockUserRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockSessionService.EXPECT().GetUserByAuthSession(mock.Anything).Return(tc.sessionServResp, tc.sessionServErr)
 			mockUserRepository.EXPECT().UpdateById(mock.Anything, mock.Anything).Return(tc.userRepoErr)
 
-			err := service.ChangeUserProfile(tc.data, tc.sessionId)
+			err := service.ChangeUserProfile(tc.caller, tc.data)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -325,11 +316,8 @@ func TestChangePassword(t *testing.T) {
 	testCases := []struct {
 		testName string
 
-		sessionId string
-		request   dto.ChangePasswordRequest
-
-		sessionServResp dto.UserDTO
-		sessionServErr  error
+		caller  dto.UserDTO
+		request dto.ChangePasswordRequest
 
 		userRepoGetResp domain.User
 		userRepoGetErr  error
@@ -340,23 +328,9 @@ func TestChangePassword(t *testing.T) {
 		mustErr     bool
 	}{
 		{
-			testName:  "ChangePasswordUserNotFound",
-			sessionId: "test",
-			request:   request,
-			sessionServResp: dto.UserDTO{
-				Username: "testuser",
-				Role:     enums.USER,
-				IsActive: true,
-			},
-			userRepoGetErr: repositories.ErrRecordNotFound,
-			expectedErr:    api_errors.ErrInvalidSession,
-			mustErr:        true,
-		},
-		{
-			testName:  "ChangePasswordNotAuthenticated",
-			sessionId: "test",
-			request:   request,
-			sessionServResp: dto.UserDTO{
+			testName: "ChangePasswordNotAuthenticated",
+			request:  request,
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
@@ -370,10 +344,9 @@ func TestChangePassword(t *testing.T) {
 			mustErr:     true,
 		},
 		{
-			testName:  "ChangePasswordNotActive",
-			sessionId: "test",
-			request:   request,
-			sessionServResp: dto.UserDTO{
+			testName: "ChangePasswordNotActive",
+			request:  request,
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.USER,
 				IsActive: false,
@@ -387,10 +360,9 @@ func TestChangePassword(t *testing.T) {
 			mustErr:     true,
 		},
 		{
-			testName:  "ChangePasswordInvalidOldPassword",
-			sessionId: "test",
-			request:   request,
-			sessionServResp: dto.UserDTO{
+			testName: "ChangePasswordInvalidOldPassword",
+			request:  request,
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.USER,
 				IsActive: true,
@@ -409,14 +381,13 @@ func TestChangePassword(t *testing.T) {
 			mustErr:     true,
 		},
 		{
-			testName:  "ChangePasswordSamePassword",
-			sessionId: "test",
+			testName: "ChangePasswordSamePassword",
 			request: dto.ChangePasswordRequest{
 				OldPassword:        "test123",
 				NewPassword:        "test123",
 				ConfirmNewPassword: "test123",
 			},
-			sessionServResp: dto.UserDTO{
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.USER,
 				IsActive: true,
@@ -435,14 +406,13 @@ func TestChangePassword(t *testing.T) {
 			mustErr:     true,
 		},
 		{
-			testName:  "ChangePasswordPasswordsDontMatch",
-			sessionId: "test",
+			testName: "ChangePasswordPasswordsDontMatch",
 			request: dto.ChangePasswordRequest{
 				OldPassword:        "test123",
 				NewPassword:        "test",
 				ConfirmNewPassword: "test123",
 			},
-			sessionServResp: dto.UserDTO{
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.USER,
 				IsActive: true,
@@ -461,10 +431,9 @@ func TestChangePassword(t *testing.T) {
 			mustErr:     true,
 		},
 		{
-			testName:  "ChangePasswordSuccess",
-			sessionId: "test",
-			request:   request,
-			sessionServResp: dto.UserDTO{
+			testName: "ChangePasswordSuccess",
+			request:  request,
+			caller: dto.UserDTO{
 				Username: "testuser",
 				Role:     enums.USER,
 				IsActive: true,
@@ -484,18 +453,15 @@ func TestChangePassword(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mockSessionService := new(mocks.ISessionService)
 		mockUserRepository := new(mocks.IUserRepository)
 
-		service.SessionService = mockSessionService
 		service.UserRepository = mockUserRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockSessionService.EXPECT().GetUserByAuthSession(mock.Anything).Return(tc.sessionServResp, tc.sessionServErr)
 			mockUserRepository.EXPECT().GetById(mock.Anything).Return(tc.userRepoGetResp, tc.userRepoGetErr)
 			mockUserRepository.EXPECT().UpdateById(mock.Anything, mock.Anything).Return(tc.userRepoUpdateResp)
 
-			err := service.ChangePassword(tc.sessionId, tc.request)
+			err := service.ChangePassword(tc.caller, tc.request)
 
 			if tc.mustErr {
 				assert.Error(t, err)

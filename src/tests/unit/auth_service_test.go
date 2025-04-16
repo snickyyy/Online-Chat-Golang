@@ -11,7 +11,7 @@ import (
 	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
 	api_errors "libs/src/internal/usecase/errors"
-	"libs/src/internal/usecase/utils"
+	"libs/src/pkg/utils"
 	"testing"
 )
 
@@ -104,6 +104,7 @@ func TestConfirmAccount(t *testing.T) {
 
 	testCases := []struct {
 		testName                       string
+		caller                         dto.UserDTO
 		Param                          string
 		SessServGetUserByEmailSessResp dto.UserDTO
 		SessServGetUserByEmailSessErr  error
@@ -115,7 +116,22 @@ func TestConfirmAccount(t *testing.T) {
 		mustErr                        bool
 	}{
 		{
-			testName:                       "ConfirmAccountInvalidSession",
+			testName: "ConfirmAccountAlreadyActive",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: true,
+			},
+			ExpectedError: api_errors.ErrAlreadyLoggedIn,
+			mustErr:       true,
+		},
+		{
+			testName: "ConfirmAccountInvalidSession",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
 			Param:                          "invalidSession",
 			SessServGetUserByEmailSessResp: dto.UserDTO{},
 			SessServGetUserByEmailSessErr:  api_errors.ErrInvalidSession,
@@ -128,7 +144,12 @@ func TestConfirmAccount(t *testing.T) {
 		},
 		{
 			testName: "ConfirmAccountUserAlreadyLoggedIn",
-			Param:    "test",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
+			Param: "test",
 			SessServGetUserByEmailSessResp: dto.UserDTO{
 				ID:       1,
 				Role:     enums.USER,
@@ -144,7 +165,12 @@ func TestConfirmAccount(t *testing.T) {
 		},
 		{
 			testName: "ConfirmAccountSuccess",
-			Param:    "test",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
+			Param: "test",
 			SessServGetUserByEmailSessResp: dto.UserDTO{
 				ID:       1,
 				Role:     enums.ANONYMOUS,
@@ -171,7 +197,7 @@ func TestConfirmAccount(t *testing.T) {
 			mockSessionService.EXPECT().SetSession(mock.Anything).Maybe().Return(tc.SessServSetSessionResp, tc.SessServSetSessionErr)
 			mockSessionService.EXPECT().DeleteSession(mock.Anything, mock.Anything).Maybe().Return(tc.UserRepoUpdateByIdResp)
 
-			res, err := service.ConfirmAccount(tc.Param)
+			res, err := service.ConfirmAccount(tc.caller, tc.Param)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -191,6 +217,7 @@ func TestRegisterUser(t *testing.T) {
 
 	testCases := []struct {
 		testName        string
+		caller          dto.UserDTO
 		data            dto.RegisterRequest
 		UserRepoResp    error
 		SessionServResp string
@@ -199,7 +226,22 @@ func TestRegisterUser(t *testing.T) {
 		mustErr         bool
 	}{
 		{
+			testName: "RegisterUserAlreadyLoggedIn",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: true,
+			},
+			respError: api_errors.ErrAlreadyLoggedIn,
+			mustErr:   true,
+		},
+		{
 			testName: "RegisterUserPasswordsDontMatch",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
 			data: dto.RegisterRequest{
 				Username:        "test",
 				Email:           "test@ocg.com",
@@ -214,6 +256,11 @@ func TestRegisterUser(t *testing.T) {
 		},
 		{
 			testName: "RegisterUserEmailAlreadyExists",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
 			data: dto.RegisterRequest{
 				Username:        "test",
 				Email:           "test@ocg.com",
@@ -228,6 +275,11 @@ func TestRegisterUser(t *testing.T) {
 		},
 		{
 			testName: "RegisterUserSuccess",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
 			data: dto.RegisterRequest{
 				Username:        "test",
 				Email:           "test@ocg.com",
@@ -255,7 +307,7 @@ func TestRegisterUser(t *testing.T) {
 			mockSessionService.EXPECT().SetSession(mock.Anything).Return(tc.SessionServResp, tc.SessionServErr)
 			mockEmailService.EXPECT().SendRegisterEmail(mock.Anything, mock.Anything).Maybe().Return(tc.respError)
 
-			err := service.RegisterUser(tc.data)
+			err := service.RegisterUser(tc.caller, tc.data)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -266,7 +318,6 @@ func TestRegisterUser(t *testing.T) {
 		})
 	}
 }
-
 func TestLogin(t *testing.T) {
 	mockApp := GetAppMock()
 	service := services.AuthService{
@@ -275,6 +326,7 @@ func TestLogin(t *testing.T) {
 
 	testCases := []struct {
 		testName      string
+		caller        dto.UserDTO
 		data          dto.LoginRequest
 		userRepoResp  []domain.User
 		userRepoErr   error
@@ -285,7 +337,22 @@ func TestLogin(t *testing.T) {
 		mustErr       bool
 	}{
 		{
+			testName: "LoginUserAlreadyLoggedIn",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: true,
+			},
+			expectedError: api_errors.ErrAlreadyLoggedIn,
+			mustErr:       true,
+		},
+		{
 			testName: "LoginUserNotFound",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
 			data: dto.LoginRequest{
 				UsernameOrEmail: "test",
 				Password:        "test",
@@ -296,6 +363,11 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			testName: "LoginUserDbError",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
 			data: dto.LoginRequest{
 				UsernameOrEmail: "test",
 				Password:        "test",
@@ -307,6 +379,11 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			testName: "LoginUserInvalidPassword",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
 			data: dto.LoginRequest{
 				UsernameOrEmail: "test",
 				Password:        "invalidPassword",
@@ -330,6 +407,11 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			testName: "LoginUserNotActive",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
 			data: dto.LoginRequest{
 				UsernameOrEmail: "test",
 				Password: func() string {
@@ -359,6 +441,11 @@ func TestLogin(t *testing.T) {
 		},
 		{
 			testName: "LoginUserSuccess",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: false,
+			},
 			data: dto.LoginRequest{
 				UsernameOrEmail: "test",
 				Password:        "test",
@@ -394,7 +481,7 @@ func TestLogin(t *testing.T) {
 			mockUserRepository.EXPECT().Filter(mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
 			mockSessionService.EXPECT().SetSession(mock.Anything).Return(tc.sessServResp, tc.sessServErr)
 
-			res, err := service.Login(tc.data)
+			res, err := service.Login(tc.caller, tc.data)
 			if tc.mustErr {
 				assert.Error(t, err)
 				assert.Equal(t, tc.expectedError, err)

@@ -419,6 +419,127 @@ func (_c *IChatRepository_GetById_Call) RunAndReturn(run func(int64) (domain.Cha
 	return _c
 }
 
+// GetListForUser provides a mock function with given fields: userId, limit, offset
+func (_m *IChatRepository) GetListForUser(userId int64, limit int, offset int) ([]domain.Chat, error) {
+	ret := _m.Called(userId, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetListForUser")
+	}
+
+	var r0 []domain.Chat
+	var r1 error
+	if rf, ok := ret.Get(0).(func(int64, int, int) ([]domain.Chat, error)); ok {
+		return rf(userId, limit, offset)
+	}
+	if rf, ok := ret.Get(0).(func(int64, int, int) []domain.Chat); ok {
+		r0 = rf(userId, limit, offset)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.Chat)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(int64, int, int) error); ok {
+		r1 = rf(userId, limit, offset)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IChatRepository_GetListForUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetListForUser'
+type IChatRepository_GetListForUser_Call struct {
+	*mock.Call
+}
+
+// GetListForUser is a helper method to define mock.On call
+//   - userId int64
+//   - limit int
+//   - offset int
+func (_e *IChatRepository_Expecter) GetListForUser(userId interface{}, limit interface{}, offset interface{}) *IChatRepository_GetListForUser_Call {
+	return &IChatRepository_GetListForUser_Call{Call: _e.mock.On("GetListForUser", userId, limit, offset)}
+}
+
+func (_c *IChatRepository_GetListForUser_Call) Run(run func(userId int64, limit int, offset int)) *IChatRepository_GetListForUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(int64), args[1].(int), args[2].(int))
+	})
+	return _c
+}
+
+func (_c *IChatRepository_GetListForUser_Call) Return(_a0 []domain.Chat, _a1 error) *IChatRepository_GetListForUser_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *IChatRepository_GetListForUser_Call) RunAndReturn(run func(int64, int, int) ([]domain.Chat, error)) *IChatRepository_GetListForUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SearchForUser provides a mock function with given fields: userId, name, limit, offset
+func (_m *IChatRepository) SearchForUser(userId int64, name string, limit int, offset int) ([]domain.Chat, error) {
+	ret := _m.Called(userId, name, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SearchForUser")
+	}
+
+	var r0 []domain.Chat
+	var r1 error
+	if rf, ok := ret.Get(0).(func(int64, string, int, int) ([]domain.Chat, error)); ok {
+		return rf(userId, name, limit, offset)
+	}
+	if rf, ok := ret.Get(0).(func(int64, string, int, int) []domain.Chat); ok {
+		r0 = rf(userId, name, limit, offset)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.Chat)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(int64, string, int, int) error); ok {
+		r1 = rf(userId, name, limit, offset)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IChatRepository_SearchForUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SearchForUser'
+type IChatRepository_SearchForUser_Call struct {
+	*mock.Call
+}
+
+// SearchForUser is a helper method to define mock.On call
+//   - userId int64
+//   - name string
+//   - limit int
+//   - offset int
+func (_e *IChatRepository_Expecter) SearchForUser(userId interface{}, name interface{}, limit interface{}, offset interface{}) *IChatRepository_SearchForUser_Call {
+	return &IChatRepository_SearchForUser_Call{Call: _e.mock.On("SearchForUser", userId, name, limit, offset)}
+}
+
+func (_c *IChatRepository_SearchForUser_Call) Run(run func(userId int64, name string, limit int, offset int)) *IChatRepository_SearchForUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(int64), args[1].(string), args[2].(int), args[3].(int))
+	})
+	return _c
+}
+
+func (_c *IChatRepository_SearchForUser_Call) Return(_a0 []domain.Chat, _a1 error) *IChatRepository_SearchForUser_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *IChatRepository_SearchForUser_Call) RunAndReturn(run func(int64, string, int, int) ([]domain.Chat, error)) *IChatRepository_SearchForUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateById provides a mock function with given fields: id, updateFields
 func (_m *IChatRepository) UpdateById(id int64, updateFields map[string]interface{}) error {
 	ret := _m.Called(id, updateFields)

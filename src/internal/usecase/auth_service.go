@@ -9,7 +9,7 @@ import (
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
 	api_errors "libs/src/internal/usecase/errors"
-	"libs/src/internal/usecase/utils"
+	"libs/src/pkg/utils"
 	"libs/src/settings"
 	"time"
 
@@ -73,7 +73,10 @@ func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
 	return userDto, nil
 }
 
-func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
+func (s *AuthService) ConfirmAccount(caller dto.UserDTO, sessionId string) (string, error) {
+	if caller.Role != enums.ANONYMOUS || caller.IsActive {
+		return "", api_errors.ErrAlreadyLoggedIn
+	}
 	userDto, err := s.CheckEmailToken(sessionId)
 	if err != nil {
 		return "", err
@@ -108,7 +111,10 @@ func (s *AuthService) ConfirmAccount(sessionId string) (string, error) {
 	return session, nil
 }
 
-func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
+func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest) error {
+	if caller.Role != enums.ANONYMOUS || caller.IsActive {
+		return api_errors.ErrAlreadyLoggedIn
+	}
 	if data.Password != data.ConfirmPassword {
 		return api_errors.ErrPasswordsDontMatch
 	}
@@ -159,7 +165,10 @@ func (s *AuthService) RegisterUser(data dto.RegisterRequest) error {
 	return nil
 }
 
-func (s *AuthService) Login(data dto.LoginRequest) (string, error) {
+func (s *AuthService) Login(caller dto.UserDTO, data dto.LoginRequest) (string, error) {
+	if caller.Role != enums.ANONYMOUS || caller.IsActive {
+		return "", api_errors.ErrAlreadyLoggedIn
+	}
 	userRepository := s.UserRepository
 
 	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)

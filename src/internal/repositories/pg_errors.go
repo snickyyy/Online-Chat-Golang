@@ -10,6 +10,8 @@ var ErrDuplicate = errors.New("duplicated key not allowed")
 var ErrMissingWhereClause = errors.New("missing where clause in delete or update operation")
 var ErrInvalidField = errors.New("invalid field")
 var ErrInvalidValue = errors.New("invalid value")
+var ErrOffsetMustBePositive = errors.New("offset must be positive")
+var ErrLimitMustBePositive = errors.New("limit must be positive")
 
 func parsePgError(err error) error {
 	var pgErr *pgconn.PgError
@@ -25,6 +27,10 @@ func parsePgError(err error) error {
 			return ErrInvalidField
 		case "22P02", "22007", "22003":
 			return ErrInvalidValue
+		case "2201X":
+			return ErrOffsetMustBePositive
+		case "2201W":
+			return ErrLimitMustBePositive
 		default:
 			return err
 		}
