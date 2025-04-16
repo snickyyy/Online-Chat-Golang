@@ -155,3 +155,35 @@ func GetChatsForUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, chats)
 }
+
+// @Summary Get chat info
+// @Description get chat info by id
+// @Tags Chat
+// @Accept json
+// @Produce json
+// @Param ChatId path string true "Chat id"
+// @Success 200 {object} dto.ChatDTO
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /messenger/chat/{ChatId} [get]
+func GetChatInfo(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+	user := c.MustGet("user").(dto.UserDTO)
+
+	chatID := c.Param("chat_id")
+	if chatID == "" {
+		c.Error(api_errors.ErrChatNotFound)
+		return
+	}
+
+	service := services.NewChatService(app)
+	chatIDInt, _ := strconv.Atoi(chatID)
+	chat, err := service.GetById(user, int64(chatIDInt))
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, chat)
+}

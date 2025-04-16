@@ -82,6 +82,7 @@ func RunServer() {
 		chat := messenger.Group("/chat")
 		{
 			chat.GET("/all", handler_api.GetChatsForUser)
+			chat.GET("/:chat_id", handler_api.GetChatInfo)
 			chat.POST("/create", handler_api.CreateChat)
 			chat.POST("/invite", handler_api.InviteToChat)
 			chat.DELETE("/delete/:chat_id", handler_api.DeleteChat)

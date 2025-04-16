@@ -450,6 +450,35 @@ paths:
       summary: confirm reset password
       tags:
       - profile
+  /messenger/chat/{ChatId}:
+    get:
+      consumes:
+      - application/json
+      description: get chat info by id
+      parameters:
+      - description: Chat id
+        in: path
+        name: ChatId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChatDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get chat info
+      tags:
+      - Chat
   /messenger/chat/all:
     get:
       consumes:
