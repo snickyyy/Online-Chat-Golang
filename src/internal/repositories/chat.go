@@ -70,7 +70,7 @@ func (r *ChatRepository) SearchForUser(userId int64, name string, limit, offset 
 	err := r.Db.Table("chats").
 		Select("chats.*").
 		Joins("JOIN chat_members ON chat_members.chat_id = chats.id").
-		Where("chat_members.user_id = ? AND chats.title LIKE '%?%'", userId, name).
+		Where("chat_members.user_id = ? AND chats.title LIKE ?", userId, "%"+name+"%").
 		Limit(limit).
 		Offset(offset).
 		Find(&chats).Error
