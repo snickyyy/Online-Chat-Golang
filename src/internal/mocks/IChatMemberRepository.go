@@ -181,6 +181,53 @@ func (_c *IChatMemberRepository_DeleteById_Call) RunAndReturn(run func(int64) er
 	return _c
 }
 
+// DeleteMember provides a mock function with given fields: memberId, chatId
+func (_m *IChatMemberRepository) DeleteMember(memberId int64, chatId int64) error {
+	ret := _m.Called(memberId, chatId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteMember")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int64, int64) error); ok {
+		r0 = rf(memberId, chatId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// IChatMemberRepository_DeleteMember_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteMember'
+type IChatMemberRepository_DeleteMember_Call struct {
+	*mock.Call
+}
+
+// DeleteMember is a helper method to define mock.On call
+//   - memberId int64
+//   - chatId int64
+func (_e *IChatMemberRepository_Expecter) DeleteMember(memberId interface{}, chatId interface{}) *IChatMemberRepository_DeleteMember_Call {
+	return &IChatMemberRepository_DeleteMember_Call{Call: _e.mock.On("DeleteMember", memberId, chatId)}
+}
+
+func (_c *IChatMemberRepository_DeleteMember_Call) Run(run func(memberId int64, chatId int64)) *IChatMemberRepository_DeleteMember_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(int64), args[1].(int64))
+	})
+	return _c
+}
+
+func (_c *IChatMemberRepository_DeleteMember_Call) Return(_a0 error) *IChatMemberRepository_DeleteMember_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *IChatMemberRepository_DeleteMember_Call) RunAndReturn(run func(int64, int64) error) *IChatMemberRepository_DeleteMember_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ExecuteQuery provides a mock function with given fields: query, args
 func (_m *IChatMemberRepository) ExecuteQuery(query string, args ...interface{}) error {
 	var _ca []interface{}
