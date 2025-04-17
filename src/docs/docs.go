@@ -632,7 +632,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Chat"
+                    "ChatMembers"
                 ],
                 "summary": "Invite to chat",
                 "parameters": [
@@ -716,6 +716,66 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/messenger/chat/{chat_id}/members/{member_username}/change-role": {
+            "patch": {
+                "description": "сhanges the role of the user if possible",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ChatMembers"
+                ],
+                "summary": "Change member role",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "chat in which you want to change the role",
+                        "name": "chat_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "target member username",
+                        "name": "member_username",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "new role for the member",
+                        "name": "NewRole",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangeMemberRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -731,6 +791,14 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 38,
                     "minLength": 1
+                }
+            }
+        },
+        "dto.ChangeMemberRoleRequest": {
+            "type": "object",
+            "properties": {
+                "new_role": {
+                    "type": "string"
                 }
             }
         },
