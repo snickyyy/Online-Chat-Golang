@@ -130,3 +130,50 @@ func (s *ChatMemberService) ChangeMemberRole(caller dto.UserDTO, chatId int64, t
 	}
 	return nil
 }
+
+func (s *ChatMemberService) DeleteMember(caller dto.UserDTO, chatId int64, targetUsername string) error {
+	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
+		return api_errors.ErrUnauthorized
+	}
+
+	callerInfo, err := s.ChatMemberRepository.GetMemberInfo(caller.ID, chatId)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrUserNotInChat
+		}
+		return err
+	}
+
+	if callerInfo.MemberRole < enums.CHAT_ADMIN {
+		return api_errors.ErrNotEnoughPermissions
+	}
+
+	target, err := s.UserRepository.GetByUsername(targetUsername)
+	if err != nil {
+		if target.Role == enums.ANONYMOUS || !target.IsActive {
+			return api_errors.ErrUserNotFound
+		}
+		return err
+	}
+
+	targetInfo, err := s.ChatMemberRepository.GetMemberInfo(target.ID, chatId)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrUserNotInChat
+		}
+		return err
+	}
+
+	if targetInfo.MemberRole >= callerInfo.MemberRole {
+		return api_errors.ErrNotEnoughPermissions
+	}
+
+	err = s.ChatMemberRepository.DeleteMember(targetInfo.MemberID, chatId)
+	if err != nil {
+		if errors.As(err, &repositories.ErrRecordNotFound) {
+			return api_errors.ErrUserNotInChat
+		}
+		return err
+	}
+	return nil
+}

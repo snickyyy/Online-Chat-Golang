@@ -8,9 +8,10 @@ import (
 
 //go:generate mockery --name=IChatMemberRepository --dir=. --output=../mocks --with-expecter
 type IChatMemberRepository interface {
+	IBasePostgresRepository[domain.ChatMember]
 	SetNewRole(chatId, userId int64, role byte) error
 	GetMemberInfo(memberId, chatId int64) (dto.MemberInfo, error)
-	IBasePostgresRepository[domain.ChatMember]
+	DeleteMember(memberId, chatId int64) error
 }
 
 func NewChatMemberRepository(app *settings.App) *ChatMemberRepository {
@@ -61,4 +62,15 @@ func (r *ChatMemberRepository) GetMemberInfo(memberId, chatId int64) (dto.Member
 		return dto.MemberInfo{}, ErrRecordNotFound
 	}
 	return memberInfo, nil
+}
+
+func (r *ChatMemberRepository) DeleteMember(memberId, chatId int64) error {
+	res := r.Db.Where("user_id = ? AND chat_id = ?", memberId, chatId).Delete(&r.Model)
+	if res.Error != nil {
+		return parsePgError(res.Error)
+	}
+	if res.RowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+	return nil
 }
