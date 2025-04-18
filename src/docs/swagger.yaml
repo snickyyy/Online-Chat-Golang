@@ -586,6 +586,10 @@ paths:
         in: query
         name: page
         type: integer
+      - description: Search username
+        in: query
+        name: search
+        type: string
       - description: Chat id to get members from
         in: path
         name: chat_id

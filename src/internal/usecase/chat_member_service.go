@@ -178,7 +178,7 @@ func (s *ChatMemberService) DeleteMember(caller dto.UserDTO, chatId int64, targe
 	return nil
 }
 
-func (s *ChatMemberService) GetList(caller dto.UserDTO, chatId int64, page int) (dto.MemberListPreview, error) {
+func (s *ChatMemberService) GetList(caller dto.UserDTO, chatId int64, page int, searchName string) (dto.MemberListPreview, error) {
 	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
 		return dto.MemberListPreview{}, api_errors.ErrUnauthorized
 	}
@@ -192,7 +192,7 @@ func (s *ChatMemberService) GetList(caller dto.UserDTO, chatId int64, page int) 
 		return dto.MemberListPreview{}, api_errors.ErrUserNotInChat
 	}
 
-	res, err := s.ChatMemberRepository.GetMembersPreview(chatId, 25, (page-1)*25)
+	res, err := s.ChatMemberRepository.GetMembersPreview(chatId, 25, (page-1)*25, searchName)
 	if err != nil {
 		if errors.As(err, &repositories.ErrLimitMustBePositive) || errors.As(err, &repositories.ErrOffsetMustBePositive) {
 			return dto.MemberListPreview{}, api_errors.ErrInvalidPage

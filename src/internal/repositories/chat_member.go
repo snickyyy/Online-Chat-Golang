@@ -15,7 +15,7 @@ type IChatMemberRepository interface {
 	SetNewRole(chatId, userId int64, role byte) error
 	GetMemberInfo(memberId, chatId int64) (dto.MemberInfo, error)
 	DeleteMember(memberId, chatId int64) error
-	GetMembersPreview(chatId int64, limit, offset int) ([]dto.MemberPreview, error)
+	GetMembersPreview(chatId int64, limit, offset int, searchUsername string) ([]dto.MemberPreview, error)
 }
 
 func NewChatMemberRepository(app *settings.App) *ChatMemberRepository {
@@ -79,7 +79,7 @@ func (r *ChatMemberRepository) DeleteMember(memberId, chatId int64) error {
 	return nil
 }
 
-func (r *ChatMemberRepository) GetMembersPreview(chatId int64, limit, offset int) ([]dto.MemberPreview, error) {
+func (r *ChatMemberRepository) GetMembersPreview(chatId int64, limit, offset int, searchUsername string) ([]dto.MemberPreview, error) {
 	members := []struct {
 		Username string    `gorm:"column:username"`
 		Avatar   string    `gorm:"column:avatar"`
@@ -89,10 +89,10 @@ func (r *ChatMemberRepository) GetMembersPreview(chatId int64, limit, offset int
 
 	buildRoleCase := ""
 	for k, v := range enums.ChatRolesToLabels {
-		buildRoleCase += fmt.Sprintf("WHEN member_role = %d THEN '%s'\n", k, v)
+		buildRoleCase += fmt.Sprintf("WHEN member_role = %d THEN '%s'\n", k, v) // Create cases for a string display of roles
 	}
 
-	res := r.Db.Raw(fmt.Sprintf(
+	baseQuery := fmt.Sprintf( // Create a base query with a case statement for roles
 		`SELECT
 	   	users.username AS username,
 	   	users.image AS avatar,
@@ -102,8 +102,19 @@ func (r *ChatMemberRepository) GetMembersPreview(chatId int64, limit, offset int
 	   	END AS role
 		FROM chat_members
 		JOIN users ON chat_members.user_id = users.id
-		WHERE chat_members.chat_id = ?
-		LIMIT ? OFFSET ?`, buildRoleCase), chatId, limit, offset).Scan(&members)
+		WHERE chat_members.chat_id = ?`, buildRoleCase)
+
+	args := []interface{}{chatId} // Add chatId to the arguments
+
+	if searchUsername != "" { // If a username is provided, add it to the query
+		baseQuery += " AND users.username LIKE ? "
+		args = append(args, "%"+searchUsername+"%")
+	}
+
+	baseQuery += ` LIMIT ? OFFSET ? `  // Add limit and offset to the query
+	args = append(args, limit, offset) // Add limit and offset to the arguments
+
+	res := r.Db.Raw(baseQuery, args...).Scan(&members) // коментарии - колхоз, добавил чисто что бы через неделю понять что тут происходит
 	if res.Error != nil {
 		return nil, parsePgError(res.Error)
 	}

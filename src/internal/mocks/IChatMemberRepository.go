@@ -524,9 +524,9 @@ func (_c *IChatMemberRepository_GetMemberInfo_Call) RunAndReturn(run func(int64,
 	return _c
 }
 
-// GetMembersPreview provides a mock function with given fields: chatId, limit, offset
-func (_m *IChatMemberRepository) GetMembersPreview(chatId int64, limit int, offset int) ([]dto.MemberPreview, error) {
-	ret := _m.Called(chatId, limit, offset)
+// GetMembersPreview provides a mock function with given fields: chatId, limit, offset, searchUsername
+func (_m *IChatMemberRepository) GetMembersPreview(chatId int64, limit int, offset int, searchUsername string) ([]dto.MemberPreview, error) {
+	ret := _m.Called(chatId, limit, offset, searchUsername)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetMembersPreview")
@@ -534,19 +534,19 @@ func (_m *IChatMemberRepository) GetMembersPreview(chatId int64, limit int, offs
 
 	var r0 []dto.MemberPreview
 	var r1 error
-	if rf, ok := ret.Get(0).(func(int64, int, int) ([]dto.MemberPreview, error)); ok {
-		return rf(chatId, limit, offset)
+	if rf, ok := ret.Get(0).(func(int64, int, int, string) ([]dto.MemberPreview, error)); ok {
+		return rf(chatId, limit, offset, searchUsername)
 	}
-	if rf, ok := ret.Get(0).(func(int64, int, int) []dto.MemberPreview); ok {
-		r0 = rf(chatId, limit, offset)
+	if rf, ok := ret.Get(0).(func(int64, int, int, string) []dto.MemberPreview); ok {
+		r0 = rf(chatId, limit, offset, searchUsername)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]dto.MemberPreview)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(int64, int, int) error); ok {
-		r1 = rf(chatId, limit, offset)
+	if rf, ok := ret.Get(1).(func(int64, int, int, string) error); ok {
+		r1 = rf(chatId, limit, offset, searchUsername)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -563,13 +563,14 @@ type IChatMemberRepository_GetMembersPreview_Call struct {
 //   - chatId int64
 //   - limit int
 //   - offset int
-func (_e *IChatMemberRepository_Expecter) GetMembersPreview(chatId interface{}, limit interface{}, offset interface{}) *IChatMemberRepository_GetMembersPreview_Call {
-	return &IChatMemberRepository_GetMembersPreview_Call{Call: _e.mock.On("GetMembersPreview", chatId, limit, offset)}
+//   - searchUsername string
+func (_e *IChatMemberRepository_Expecter) GetMembersPreview(chatId interface{}, limit interface{}, offset interface{}, searchUsername interface{}) *IChatMemberRepository_GetMembersPreview_Call {
+	return &IChatMemberRepository_GetMembersPreview_Call{Call: _e.mock.On("GetMembersPreview", chatId, limit, offset, searchUsername)}
 }
 
-func (_c *IChatMemberRepository_GetMembersPreview_Call) Run(run func(chatId int64, limit int, offset int)) *IChatMemberRepository_GetMembersPreview_Call {
+func (_c *IChatMemberRepository_GetMembersPreview_Call) Run(run func(chatId int64, limit int, offset int, searchUsername string)) *IChatMemberRepository_GetMembersPreview_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int64), args[1].(int), args[2].(int))
+		run(args[0].(int64), args[1].(int), args[2].(int), args[3].(string))
 	})
 	return _c
 }
@@ -579,7 +580,7 @@ func (_c *IChatMemberRepository_GetMembersPreview_Call) Return(_a0 []dto.MemberP
 	return _c
 }
 
-func (_c *IChatMemberRepository_GetMembersPreview_Call) RunAndReturn(run func(int64, int, int) ([]dto.MemberPreview, error)) *IChatMemberRepository_GetMembersPreview_Call {
+func (_c *IChatMemberRepository_GetMembersPreview_Call) RunAndReturn(run func(int64, int, int, string) ([]dto.MemberPreview, error)) *IChatMemberRepository_GetMembersPreview_Call {
 	_c.Call.Return(run)
 	return _c
 }

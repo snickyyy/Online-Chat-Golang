@@ -128,6 +128,7 @@ func DeleteMember(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "Page"
+// @Param search query string false "Search username"
 // @Param chat_id path int true "Chat id to get members from"
 // @Success 200 {object} dto.MemberListPreview
 // @Failure 400 {object} dto.ErrorResponse
@@ -138,6 +139,7 @@ func GetMemberList(c *gin.Context) {
 	caller := c.MustGet("user").(dto.UserDTO)
 
 	chatId, _ := strconv.Atoi(c.Param("chat_id"))
+	search := c.Query("search")
 	page := c.Query("page")
 	if page == "" {
 		page = "1"
@@ -152,7 +154,7 @@ func GetMemberList(c *gin.Context) {
 
 	service := services.NewChatMemberService(app)
 
-	members, err := service.GetList(caller, int64(chatId), pageInt)
+	members, err := service.GetList(caller, int64(chatId), pageInt, search)
 	if err != nil {
 		c.Error(err)
 		return
