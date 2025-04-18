@@ -524,6 +524,66 @@ func (_c *IChatMemberRepository_GetMemberInfo_Call) RunAndReturn(run func(int64,
 	return _c
 }
 
+// GetMembersPreview provides a mock function with given fields: chatId, limit, offset
+func (_m *IChatMemberRepository) GetMembersPreview(chatId int64, limit int, offset int) ([]dto.MemberPreview, error) {
+	ret := _m.Called(chatId, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMembersPreview")
+	}
+
+	var r0 []dto.MemberPreview
+	var r1 error
+	if rf, ok := ret.Get(0).(func(int64, int, int) ([]dto.MemberPreview, error)); ok {
+		return rf(chatId, limit, offset)
+	}
+	if rf, ok := ret.Get(0).(func(int64, int, int) []dto.MemberPreview); ok {
+		r0 = rf(chatId, limit, offset)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]dto.MemberPreview)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(int64, int, int) error); ok {
+		r1 = rf(chatId, limit, offset)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IChatMemberRepository_GetMembersPreview_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetMembersPreview'
+type IChatMemberRepository_GetMembersPreview_Call struct {
+	*mock.Call
+}
+
+// GetMembersPreview is a helper method to define mock.On call
+//   - chatId int64
+//   - limit int
+//   - offset int
+func (_e *IChatMemberRepository_Expecter) GetMembersPreview(chatId interface{}, limit interface{}, offset interface{}) *IChatMemberRepository_GetMembersPreview_Call {
+	return &IChatMemberRepository_GetMembersPreview_Call{Call: _e.mock.On("GetMembersPreview", chatId, limit, offset)}
+}
+
+func (_c *IChatMemberRepository_GetMembersPreview_Call) Run(run func(chatId int64, limit int, offset int)) *IChatMemberRepository_GetMembersPreview_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(int64), args[1].(int), args[2].(int))
+	})
+	return _c
+}
+
+func (_c *IChatMemberRepository_GetMembersPreview_Call) Return(_a0 []dto.MemberPreview, _a1 error) *IChatMemberRepository_GetMembersPreview_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *IChatMemberRepository_GetMembersPreview_Call) RunAndReturn(run func(int64, int, int) ([]dto.MemberPreview, error)) *IChatMemberRepository_GetMembersPreview_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetNewRole provides a mock function with given fields: chatId, userId, role
 func (_m *IChatMemberRepository) SetNewRole(chatId int64, userId int64, role byte) error {
 	ret := _m.Called(chatId, userId, role)
