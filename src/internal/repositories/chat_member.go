@@ -1,9 +1,12 @@
 package repositories
 
 import (
+	"fmt"
+	"libs/src/internal/domain/enums"
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/settings"
+	"time"
 )
 
 //go:generate mockery --name=IChatMemberRepository --dir=. --output=../mocks --with-expecter
@@ -73,4 +76,45 @@ func (r *ChatMemberRepository) DeleteMember(memberId, chatId int64) error {
 		return ErrRecordNotFound
 	}
 	return nil
+}
+
+func (r *ChatMemberRepository) GetMembersPreview(chatId int64) ([]dto.MemberPreview, error) {
+	members := []struct {
+		Username string    `gorm:"column:username"`
+		Avatar   string    `gorm:"column:avatar"`
+		JoinedAt time.Time `gorm:"column:joined_at"`
+		Role     string    `gorm:"column:role"`
+	}{}
+
+	buildRoleCase := ""
+	for k, v := range enums.ChatRolesToLabels {
+		buildRoleCase += fmt.Sprintf("WHEN member_role = %d THEN '%s'\n", k, v)
+	}
+
+	res := r.Db.Raw(fmt.Sprintf(
+		`SELECT
+	   	users.username AS username,
+	   	users.image AS avatar,
+	   	chat_members.created_at AS joined_at,
+	   	CASE
+	            %s
+	   	END AS role
+		FROM chat_members
+		JOIN users ON chat_members.user_id = users.id
+		WHERE chat_members.chat_id = ?`, buildRoleCase), chatId).Scan(&members)
+	if res.Error != nil {
+		return nil, parsePgError(res.Error)
+	}
+
+	result := make([]dto.MemberPreview, len(members))
+	for i, member := range members {
+		result[i] = dto.MemberPreview{
+			Username: member.Username,
+			Avatar:   member.Avatar,
+			JoinedAt: member.JoinedAt,
+			Role:     member.Role,
+		}
+	}
+
+	return result, nil
 }
