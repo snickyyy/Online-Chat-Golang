@@ -15,6 +15,7 @@ type IChatMemberRepository interface {
 	SetNewRole(chatId, userId int64, role byte) error
 	GetMemberInfo(memberId, chatId int64) (dto.MemberInfo, error)
 	DeleteMember(memberId, chatId int64) error
+	GetMembersPreview(chatId int64, limit, offset int) ([]dto.MemberPreview, error)
 }
 
 func NewChatMemberRepository(app *settings.App) *ChatMemberRepository {
@@ -78,7 +79,7 @@ func (r *ChatMemberRepository) DeleteMember(memberId, chatId int64) error {
 	return nil
 }
 
-func (r *ChatMemberRepository) GetMembersPreview(chatId int64) ([]dto.MemberPreview, error) {
+func (r *ChatMemberRepository) GetMembersPreview(chatId int64, limit, offset int) ([]dto.MemberPreview, error) {
 	members := []struct {
 		Username string    `gorm:"column:username"`
 		Avatar   string    `gorm:"column:avatar"`
@@ -101,7 +102,8 @@ func (r *ChatMemberRepository) GetMembersPreview(chatId int64) ([]dto.MemberPrev
 	   	END AS role
 		FROM chat_members
 		JOIN users ON chat_members.user_id = users.id
-		WHERE chat_members.chat_id = ?`, buildRoleCase), chatId).Scan(&members)
+		WHERE chat_members.chat_id = ?
+		LIMIT ? OFFSET ?`, buildRoleCase), chatId, limit, offset).Scan(&members)
 	if res.Error != nil {
 		return nil, parsePgError(res.Error)
 	}
