@@ -177,3 +177,5 @@ func (s *ChatMemberService) DeleteMember(caller dto.UserDTO, chatId int64, targe
 	}
 	return nil
 }
+
+//func (s *ChatMemberService) GetList(caller dto.UserDTO, chatId int64) ([]dto.ChatMemberDTO, error) {}
