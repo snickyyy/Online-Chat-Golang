@@ -89,3 +89,35 @@ func ChangeMemberRole(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
 }
+
+// @Summary Delete member
+// @Description Remove the member from the chat
+// @Tags ChatMembers
+// @Accept json
+// @Produce json
+// @Param chat_id path int true "chat from which you want to delete a member"
+// @Param member_username path string true "target member username"
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /messenger/chat/{chat_id}/members/{member_username}/delete [delete]
+func DeleteMember(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+	caller := c.MustGet("user").(dto.UserDTO)
+
+	chatId, _ := strconv.Atoi(c.Param("chat_id"))
+	memberUsername := c.Param("member_username")
+	if chatId == 0 || memberUsername == "" {
+		c.Error(api_errors.ErrInvalidData)
+		return
+	}
+
+	service := services.NewChatMemberService(app)
+
+	err := service.DeleteMember(caller, int64(chatId), memberUsername)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
+}
