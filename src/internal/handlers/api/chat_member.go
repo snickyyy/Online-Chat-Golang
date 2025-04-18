@@ -121,3 +121,41 @@ func DeleteMember(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, dto.MessageResponse{Message: "success"})
 }
+
+// @Summary Get member list
+// @Description Get member list of chat
+// @Tags ChatMembers
+// @Accept json
+// @Produce json
+// @Param page query int false "Page"
+// @Param chat_id path int true "Chat id to get members from"
+// @Success 200 {object} dto.MemberListPreview
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /messenger/chat/{chat_id}/members/all [get]
+func GetMemberList(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+	caller := c.MustGet("user").(dto.UserDTO)
+
+	chatId, _ := strconv.Atoi(c.Param("chat_id"))
+	page := c.Query("page")
+	if page == "" {
+		page = "1"
+	}
+
+	pageInt, _ := strconv.Atoi(page)
+
+	if chatId == 0 {
+		c.Error(api_errors.ErrInvalidData)
+		return
+	}
+
+	service := services.NewChatMemberService(app)
+
+	members, err := service.GetList(caller, int64(chatId), pageInt)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, members)
+}

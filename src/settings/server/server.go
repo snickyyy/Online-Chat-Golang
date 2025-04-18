@@ -88,6 +88,7 @@ func RunServer() {
 			chat.DELETE("/delete/:chat_id", handler_api.DeleteChat)
 			chat.PATCH("/edit/:chat_id", handler_api.ChangeChat)
 
+			chat.GET("/:chat_id/members/all", handler_api.GetMemberList)
 			chat.PATCH("/:chat_id/members/:member_username/change-role", handler_api.ChangeMemberRole)
 			chat.DELETE("/:chat_id/members/:member_username/delete", handler_api.DeleteMember)
 		}

@@ -194,6 +194,9 @@ func (s *ChatMemberService) GetList(caller dto.UserDTO, chatId int64, page int) 
 
 	res, err := s.ChatMemberRepository.GetMembersPreview(chatId, 25, (page-1)*25)
 	if err != nil {
+		if errors.As(err, &repositories.ErrLimitMustBePositive) || errors.As(err, &repositories.ErrOffsetMustBePositive) {
+			return dto.MemberListPreview{}, api_errors.ErrInvalidPage
+		}
 		return dto.MemberListPreview{}, err
 	}
 
