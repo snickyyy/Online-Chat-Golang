@@ -150,6 +150,11 @@ func parseError(err error) (int, gin.H) {
 			"error": "not enough permissions for change chat",
 		}
 	}
+	if errors.Is(err, api_errors.ErrNotEnoughPermissions) {
+		return http.StatusForbidden, gin.H{
+			"error": "not enough permissions",
+		}
+	}
 
 	return http.StatusInternalServerError, gin.H{
 		"error": "Internal server error",
