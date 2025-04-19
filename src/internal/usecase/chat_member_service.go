@@ -183,6 +183,10 @@ func (s *ChatMemberService) GetList(caller dto.UserDTO, chatId int64, page int, 
 		return dto.MemberListPreview{}, api_errors.ErrUnauthorized
 	}
 
+	if page < 1 {
+		return dto.MemberListPreview{}, api_errors.ErrInvalidPage
+	}
+
 	callerMember, err := s.ChatMemberRepository.Filter("chat_id = ? AND user_id = ?", chatId, caller.ID)
 	if err != nil {
 		return dto.MemberListPreview{}, err

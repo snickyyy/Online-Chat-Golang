@@ -408,3 +408,118 @@ func TestChangeMemberRole(t *testing.T) {
 		})
 	}
 }
+func TestGetMemberList(t *testing.T) {
+	mockApp := GetAppMock()
+	service := services.ChatMemberService{
+		App: mockApp,
+	}
+
+	testCases := []struct {
+		testName          string
+		caller            dto.UserDTO
+		chatId            int64
+		page              int
+		searchName        string
+		FilterResp        []domain.ChatMember
+		FilterErr         error
+		GetMemberListResp []dto.MemberPreview
+		GetMemberListErr  error
+		expectedResp      dto.MemberListPreview
+		expectedErr       error
+		mustErr           bool
+	}{
+		{
+			testName: "User is not active",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.USER,
+				IsActive: false,
+			},
+			expectedErr: api_errors.ErrUnauthorized,
+			mustErr:     true,
+		},
+		{
+			testName: "User is anonymous",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.ANONYMOUS,
+				IsActive: true,
+			},
+			expectedErr: api_errors.ErrUnauthorized,
+			mustErr:     true,
+		},
+		{
+			testName: "User is not in chat",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.USER,
+				IsActive: true,
+			},
+			chatId:      1,
+			page:        1,
+			expectedErr: api_errors.ErrUserNotInChat,
+			mustErr:     true,
+		},
+		{
+			testName: "Db error",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.USER,
+				IsActive: true,
+			},
+			chatId: 1,
+			page:   1,
+			FilterResp: []domain.ChatMember{
+				{
+					ChatID:     1,
+					UserID:     1,
+					MemberRole: enums.MEMBER,
+				},
+			},
+			GetMemberListErr: repositories.ErrOffsetMustBePositive,
+			expectedErr:      api_errors.ErrInvalidPage,
+			mustErr:          true,
+		},
+		{
+			testName: "Success",
+			caller: dto.UserDTO{
+				ID:       1,
+				Role:     enums.USER,
+				IsActive: true,
+			},
+			chatId: 1,
+			page:   1,
+			FilterResp: []domain.ChatMember{
+				{
+					ChatID:     1,
+					UserID:     1,
+					MemberRole: enums.MEMBER,
+				},
+			},
+			expectedResp: dto.MemberListPreview{
+				Members: []dto.MemberPreview{},
+			},
+			mustErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		mockChatMemberRepo := new(mocks.IChatMemberRepository)
+		service.ChatMemberRepository = mockChatMemberRepo
+
+		t.Run(tc.testName, func(t *testing.T) {
+			mockChatMemberRepo.EXPECT().Filter(mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.FilterResp, tc.FilterErr)
+			mockChatMemberRepo.EXPECT().GetMembersPreview(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.GetMemberListResp, tc.GetMemberListErr)
+
+			resp, err := service.GetList(tc.caller, tc.chatId, tc.page, tc.searchName)
+
+			if tc.mustErr {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedErr, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, len(tc.expectedResp.Members), len(resp.Members))
+			}
+		})
+	}
+}
