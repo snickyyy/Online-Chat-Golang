@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"net/http"
 	"strconv"
@@ -27,7 +27,7 @@ func CreateChat(c *gin.Context) {
 	var chatData dto.CreateChatRequest
 
 	if err := c.ShouldBindJSON(&chatData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
@@ -57,7 +57,7 @@ func DeleteChat(c *gin.Context) {
 
 	chatID := c.Param("chat_id")
 	if chatID == "" {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: "chat_id is empty"})
 		return
 	}
 
@@ -90,14 +90,14 @@ func ChangeChat(c *gin.Context) {
 
 	chatID := c.Param("chat_id")
 	if chatID == "" {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: "chat_id is empty"})
 		return
 	}
 
 	var chatData dto.ChangeChatRequest
 
 	if err := c.ShouldBindJSON(&chatData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
@@ -172,7 +172,7 @@ func GetChatInfo(c *gin.Context) {
 
 	chatID := c.Param("chat_id")
 	if chatID == "" {
-		c.Error(api_errors.ErrChatNotFound)
+		c.Error(usecase_errors.BadRequestError{Msg: "chat_id is empty"})
 		return
 	}
 

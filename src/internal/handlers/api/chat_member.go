@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"net/http"
 	"strconv"
@@ -28,19 +28,15 @@ func InviteToChat(c *gin.Context) {
 	invitee := c.Query("invitee")
 	chatID := c.Query("chat_id")
 	if invitee == "" || chatID == "" {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: "invitee or chat_id is empty"})
 		return
 	}
 
 	service := services.NewChatMemberService(app)
 
-	chatIDInt, err := strconv.Atoi(chatID)
-	if err != nil {
-		c.Error(api_errors.ErrInvalidData)
-		return
-	}
+	chatIDInt, _ := strconv.Atoi(chatID)
 
-	err = service.InviteToChat(&inviter, invitee, int64(chatIDInt))
+	err := service.InviteToChat(&inviter, invitee, int64(chatIDInt))
 	if err != nil {
 		c.Error(err)
 		return
@@ -66,7 +62,7 @@ func ChangeMemberRole(c *gin.Context) {
 
 	var newRole dto.ChangeMemberRoleRequest
 	if err := c.ShouldBindJSON(&newRole); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
@@ -74,7 +70,7 @@ func ChangeMemberRole(c *gin.Context) {
 	memberUsername := c.Param("member_username")
 
 	if chatId == "" || memberUsername == "" {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: "chat_id or username is empty"})
 		return
 	}
 
@@ -108,7 +104,7 @@ func DeleteMember(c *gin.Context) {
 	chatId, _ := strconv.Atoi(c.Param("chat_id"))
 	memberUsername := c.Param("member_username")
 	if chatId == 0 || memberUsername == "" {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: "chat_id or username is empty"})
 		return
 	}
 
@@ -148,7 +144,7 @@ func GetMemberList(c *gin.Context) {
 	pageInt, _ := strconv.Atoi(page)
 
 	if chatId == 0 {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: "chat_id is invalid"})
 		return
 	}
 

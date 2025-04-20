@@ -4,7 +4,7 @@ import (
 	_ "libs/src/docs"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"net/http"
 
@@ -28,7 +28,7 @@ func Register(c *gin.Context) {
 	var registerData dto.RegisterRequest
 
 	if err := c.ShouldBindJSON(&registerData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
@@ -84,7 +84,7 @@ func Login(c *gin.Context) {
 	var loginData dto.LoginRequest
 
 	if err := c.ShouldBindJSON(&loginData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
@@ -110,11 +110,7 @@ func Login(c *gin.Context) {
 // @Router /accounts/auth/logout [delete]
 func Logout(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
-	cookie, err := c.Cookie("sessionID")
-	if err != nil {
-		c.Error(api_errors.ErrNotLoggedIn)
-		return
-	}
+	cookie, _ := c.Cookie("sessionID")
 
 	services.NewAuthService(app).Logout(cookie)
 
