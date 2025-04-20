@@ -632,7 +632,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Chat"
+                    "ChatMembers"
                 ],
                 "summary": "Invite to chat",
                 "parameters": [
@@ -716,6 +716,173 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/messenger/chat/{chat_id}/members/all": {
+            "get": {
+                "description": "Get member list of chat",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ChatMembers"
+                ],
+                "summary": "Get member list",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search username",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Chat id to get members from",
+                        "name": "chat_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MemberListPreview"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messenger/chat/{chat_id}/members/{member_username}/change-role": {
+            "patch": {
+                "description": "сhanges the role of the user if possible",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ChatMembers"
+                ],
+                "summary": "Change member role",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "chat in which you want to change the role",
+                        "name": "chat_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "target member username",
+                        "name": "member_username",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "new role for the member",
+                        "name": "NewRole",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangeMemberRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messenger/chat/{chat_id}/members/{member_username}/delete": {
+            "delete": {
+                "description": "Remove the member from the chat",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ChatMembers"
+                ],
+                "summary": "Delete member",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "chat from which you want to delete a member",
+                        "name": "chat_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "target member username",
+                        "name": "member_username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -731,6 +898,14 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 38,
                     "minLength": 1
+                }
+            }
+        },
+        "dto.ChangeMemberRoleRequest": {
+            "type": "object",
+            "properties": {
+                "new_role": {
+                    "type": "string"
                 }
             }
         },
@@ -867,6 +1042,34 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username_or_email": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.MemberListPreview": {
+            "type": "object",
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MemberPreview"
+                    }
+                }
+            }
+        },
+        "dto.MemberPreview": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "joined_at": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

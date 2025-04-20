@@ -10,6 +10,11 @@ definitions:
         minLength: 1
         type: string
     type: object
+  dto.ChangeMemberRoleRequest:
+    properties:
+      new_role:
+        type: string
+    type: object
   dto.ChangePasswordRequest:
     properties:
       confirm_new_password:
@@ -101,6 +106,24 @@ definitions:
     required:
     - password
     - username_or_email
+    type: object
+  dto.MemberListPreview:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/dto.MemberPreview'
+        type: array
+    type: object
+  dto.MemberPreview:
+    properties:
+      avatar:
+        type: string
+      joined_at:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
     type: object
   dto.MessageResponse:
     properties:
@@ -479,6 +502,117 @@ paths:
       summary: Get chat info
       tags:
       - Chat
+  /messenger/chat/{chat_id}/members/{member_username}/change-role:
+    patch:
+      consumes:
+      - application/json
+      description: сhanges the role of the user if possible
+      parameters:
+      - description: chat in which you want to change the role
+        in: path
+        name: chat_id
+        required: true
+        type: integer
+      - description: target member username
+        in: path
+        name: member_username
+        required: true
+        type: string
+      - description: new role for the member
+        in: body
+        name: NewRole
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangeMemberRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Change member role
+      tags:
+      - ChatMembers
+  /messenger/chat/{chat_id}/members/{member_username}/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Remove the member from the chat
+      parameters:
+      - description: chat from which you want to delete a member
+        in: path
+        name: chat_id
+        required: true
+        type: integer
+      - description: target member username
+        in: path
+        name: member_username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Delete member
+      tags:
+      - ChatMembers
+  /messenger/chat/{chat_id}/members/all:
+    get:
+      consumes:
+      - application/json
+      description: Get member list of chat
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Search username
+        in: query
+        name: search
+        type: string
+      - description: Chat id to get members from
+        in: path
+        name: chat_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MemberListPreview'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get member list
+      tags:
+      - ChatMembers
   /messenger/chat/all:
     get:
       consumes:
@@ -638,5 +772,5 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Invite to chat
       tags:
-      - Chat
+      - ChatMembers
 swagger: "2.0"
