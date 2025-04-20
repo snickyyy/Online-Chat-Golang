@@ -21,7 +21,7 @@ type IBadRequestError interface {
 }
 
 type NotFoundError struct {
-	BaseError
+	Msg string
 }
 
 func (e NotFoundError) NotFountError() string {
@@ -32,7 +32,7 @@ func (e NotFoundError) Error() string {
 }
 
 type PermissionError struct {
-	BaseError
+	Msg string
 }
 
 func (e PermissionError) PermissionError() string {
@@ -43,7 +43,7 @@ func (e PermissionError) Error() string {
 }
 
 type AlreadyExistsError struct {
-	BaseError
+	Msg string
 }
 
 func (e AlreadyExistsError) AlreadyExistsError() string {
@@ -54,7 +54,7 @@ func (e AlreadyExistsError) Error() string {
 }
 
 type UnauthorizedError struct {
-	BaseError
+	Msg string
 }
 
 func (e UnauthorizedError) UnauthorizedError() string {
@@ -65,7 +65,7 @@ func (e UnauthorizedError) Error() string {
 }
 
 type BadRequestError struct {
-	BaseError
+	Msg string
 }
 
 func (e BadRequestError) BadRequestError() string {
