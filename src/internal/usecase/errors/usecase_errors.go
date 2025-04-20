@@ -1,4 +1,4 @@
-package errors
+package usecase_errors
 
 type INotFoundError interface {
 	NotFountError() string
@@ -24,10 +24,10 @@ type NotFoundError struct {
 	BaseError
 }
 
-func (e *NotFoundError) NotFountError() string {
+func (e NotFoundError) NotFountError() string {
 	return e.Msg
 }
-func (e *NotFoundError) Error() string {
+func (e NotFoundError) Error() string {
 	return e.Msg
 }
 
@@ -35,10 +35,10 @@ type PermissionError struct {
 	BaseError
 }
 
-func (e *PermissionError) PermissionError() string {
+func (e PermissionError) PermissionError() string {
 	return e.Msg
 }
-func (e *PermissionError) Error() string {
+func (e PermissionError) Error() string {
 	return e.Msg
 }
 
@@ -46,10 +46,10 @@ type AlreadyExistsError struct {
 	BaseError
 }
 
-func (e *AlreadyExistsError) AlreadyExistsError() string {
+func (e AlreadyExistsError) AlreadyExistsError() string {
 	return e.Msg
 }
-func (e *AlreadyExistsError) Error() string {
+func (e AlreadyExistsError) Error() string {
 	return e.Msg
 }
 
@@ -57,10 +57,10 @@ type UnauthorizedError struct {
 	BaseError
 }
 
-func (e *UnauthorizedError) UnauthorizedError() string {
+func (e UnauthorizedError) UnauthorizedError() string {
 	return e.Msg
 }
-func (e *UnauthorizedError) Error() string {
+func (e UnauthorizedError) Error() string {
 	return e.Msg
 }
 
@@ -68,9 +68,9 @@ type BadRequestError struct {
 	BaseError
 }
 
-func (e *BadRequestError) BadRequestError() string {
+func (e BadRequestError) BadRequestError() string {
 	return e.Msg
 }
-func (e *BadRequestError) Error() string {
+func (e BadRequestError) Error() string {
 	return e.Msg
 }
