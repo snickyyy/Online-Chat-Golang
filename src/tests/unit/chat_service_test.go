@@ -9,7 +9,8 @@ import (
 	"libs/src/internal/mocks"
 	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
+	"reflect"
 	"testing"
 )
 
@@ -39,10 +40,10 @@ func TestCreateChat(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			api_errors.ErrUnauthorized,
+			usecase_errors.UnauthorizedError{},
 			true,
 			dto.ChatDTO{},
-			api_errors.ErrUnauthorized,
+			usecase_errors.UnauthorizedError{},
 		},
 		{
 			"TestCreateChatDuplicate",
@@ -58,7 +59,7 @@ func TestCreateChat(t *testing.T) {
 			repositories.ErrDuplicate,
 			true,
 			dto.ChatDTO{},
-			api_errors.ErrChatAlreadyExists,
+			usecase_errors.AlreadyExistsError{},
 		},
 		{
 			"TestCreateChatSuccess",
@@ -90,7 +91,7 @@ func TestCreateChat(t *testing.T) {
 			chat, err := chatService.CreateChat(tc.request, tc.user)
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, err, tc.respErr)
+				assert.Equal(t, reflect.TypeOf(err), reflect.TypeOf(tc.respErr))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, chat.Title, tc.request.Title)
@@ -125,7 +126,7 @@ func TestDeleteChat(t *testing.T) {
 			chatID:      1,
 			GetByIdResp: domain.Chat{},
 			GetByIdErr:  repositories.ErrRecordNotFound,
-			expectErr:   api_errors.ErrChatNotFound,
+			expectErr:   usecase_errors.NotFoundError{},
 			mustErr:     true,
 		},
 		{
@@ -139,7 +140,7 @@ func TestDeleteChat(t *testing.T) {
 			GetByIdResp: domain.Chat{
 				OwnerID: 12,
 			},
-			expectErr: api_errors.ErrNotEnoughPermissionsForDelete,
+			expectErr: usecase_errors.PermissionError{},
 			mustErr:   true,
 		},
 		{
@@ -169,7 +170,7 @@ func TestDeleteChat(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 			}
@@ -218,7 +219,7 @@ func TestGetChatListForUser(t *testing.T) {
 				IsActive: true,
 			},
 			page:      -1,
-			expectErr: api_errors.ErrInvalidPage,
+			expectErr: usecase_errors.BadRequestError{},
 			mustErr:   true,
 		},
 		{
@@ -229,7 +230,7 @@ func TestGetChatListForUser(t *testing.T) {
 			},
 			page:      1,
 			RepoErr:   repositories.ErrLimitMustBePositive,
-			expectErr: api_errors.ErrInvalidPage,
+			expectErr: usecase_errors.BadRequestError{},
 			mustErr:   true,
 		},
 		{
@@ -296,7 +297,7 @@ func TestGetChatListForUser(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, len(chats), len(tc.expectResp))
@@ -349,7 +350,7 @@ func TestSearchChat(t *testing.T) {
 			},
 			query:     "Test",
 			page:      -1,
-			expectErr: api_errors.ErrInvalidPage,
+			expectErr: usecase_errors.BadRequestError{},
 			mustErr:   true,
 		},
 		{
@@ -361,7 +362,7 @@ func TestSearchChat(t *testing.T) {
 			query:     "Test",
 			page:      1,
 			RepoErr:   repositories.ErrLimitMustBePositive,
-			expectErr: api_errors.ErrInvalidPage,
+			expectErr: usecase_errors.BadRequestError{},
 			mustErr:   true,
 		},
 		{
@@ -429,7 +430,7 @@ func TestSearchChat(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, len(chats), len(tc.expectResp))
@@ -462,7 +463,7 @@ func TestGetChatById(t *testing.T) {
 				IsActive: true,
 			},
 			chatId:    1,
-			expectErr: api_errors.ErrUnauthorized,
+			expectErr: usecase_errors.UnauthorizedError{},
 			mustErr:   true,
 		},
 		{
@@ -472,7 +473,7 @@ func TestGetChatById(t *testing.T) {
 				IsActive: false,
 			},
 			chatId:    1,
-			expectErr: api_errors.ErrUnauthorized,
+			expectErr: usecase_errors.UnauthorizedError{},
 			mustErr:   true,
 		},
 		{
@@ -482,7 +483,7 @@ func TestGetChatById(t *testing.T) {
 				IsActive: true,
 			},
 			chatId:    1,
-			expectErr: api_errors.ErrChatNotFound,
+			expectErr: usecase_errors.NotFoundError{},
 			mustErr:   true,
 		},
 		{
@@ -499,7 +500,7 @@ func TestGetChatById(t *testing.T) {
 				},
 			},
 			GetByIdErr: repositories.ErrRecordNotFound,
-			expectErr:  api_errors.ErrChatNotFound,
+			expectErr:  usecase_errors.NotFoundError{},
 			mustErr:    true,
 		},
 		{
@@ -543,7 +544,7 @@ func TestGetChatById(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, chat, tc.expectResp)
