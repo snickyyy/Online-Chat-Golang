@@ -8,7 +8,7 @@ import (
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/pkg/utils"
 	"libs/src/settings"
 	"time"
@@ -64,18 +64,18 @@ func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
 func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
 	userDto, err := s.SessionService.GetUserByEmailSession(sessionId)
 	if err != nil {
-		return dto.UserDTO{}, api_errors.ErrInvalidToken
+		return dto.UserDTO{}, usecase_errors.BadRequestError{Msg: "Invalid email token"}
 	}
 
 	if userDto.Role != enums.ANONYMOUS || userDto.IsActive {
-		return dto.UserDTO{}, api_errors.ErrInvalidToken
+		return dto.UserDTO{}, usecase_errors.BadRequestError{Msg: "Invalid email token"}
 	}
 	return userDto, nil
 }
 
 func (s *AuthService) ConfirmAccount(caller dto.UserDTO, sessionId string) (string, error) {
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
-		return "", api_errors.ErrAlreadyLoggedIn
+		return "", usecase_errors.BadRequestError{Msg: "User is already authenticated"}
 	}
 	userDto, err := s.CheckEmailToken(sessionId)
 	if err != nil {
@@ -113,10 +113,10 @@ func (s *AuthService) ConfirmAccount(caller dto.UserDTO, sessionId string) (stri
 
 func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest) error {
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
-		return api_errors.ErrAlreadyLoggedIn
+		return usecase_errors.BadRequestError{Msg: "User is already authenticated"}
 	}
 	if data.Password != data.ConfirmPassword {
-		return api_errors.ErrPasswordsDontMatch
+		return usecase_errors.BadRequestError{Msg: "Passwords don't match"}
 	}
 
 	hashedPassword, err := utils.HashPassword(data.Password)
@@ -135,7 +135,7 @@ func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest)
 
 	if err != nil {
 		if errors.Is(err, repositories.ErrDuplicate) {
-			return api_errors.ErrUserAlreadyExists
+			return usecase_errors.AlreadyExistsError{Msg: "User with this email or username already exists"}
 		}
 		return err
 	}
@@ -167,23 +167,22 @@ func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest)
 
 func (s *AuthService) Login(caller dto.UserDTO, data dto.LoginRequest) (string, error) {
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
-		return "", api_errors.ErrAlreadyLoggedIn
+		return "", usecase_errors.BadRequestError{Msg: "User is already authorized"}
 	}
 	userRepository := s.UserRepository
 
 	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
 	if err != nil {
-		s.App.Logger.Error(fmt.Sprintf("Error getting user in login: %v", err))
-		return "", api_errors.ErrInvalidCredentials
+		return "", usecase_errors.BadRequestError{Msg: "Invalid credentials"}
 	}
 
 	if len(users) != 1 {
-		return "", api_errors.ErrInvalidCredentials
+		return "", usecase_errors.BadRequestError{Msg: "Invalid credentials"}
 	}
 
 	user := users[0]
 	if !utils.CheckPasswordHash(user.Password, data.Password) || !user.IsActive || user.Role == enums.ANONYMOUS {
-		return "", api_errors.ErrInvalidCredentials
+		return "", usecase_errors.BadRequestError{Msg: "Invalid credentials"}
 	}
 
 	session, err := s.setAuthCookie(user.ToDTO())

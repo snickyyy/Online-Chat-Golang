@@ -77,7 +77,7 @@ func (suite *AppTestSuite) TestLogin() {
 	})
 	res, err = suite.client.Post(url, contType, bytes.NewBuffer(dataFail))
 	suite.NoError(err)
-	suite.Equal(http.StatusUnauthorized, res.StatusCode)
+	suite.Equal(http.StatusBadRequest, res.StatusCode)
 
 	// TEST LOGOUT
 	urlLogout := "http://127.0.0.1:8000/accounts/auth/logout"

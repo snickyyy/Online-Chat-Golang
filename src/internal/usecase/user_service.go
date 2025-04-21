@@ -9,7 +9,7 @@ import (
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/pkg/utils"
 	"libs/src/settings"
 	"mime/multipart"
@@ -72,13 +72,13 @@ func (s *UserService) GetUserProfile(username string) (*dto.UserProfile, error) 
 	}
 
 	if len(user) != 1 {
-		return nil, api_errors.ErrProfileNotFound
+		return nil, usecase_errors.NotFoundError{Msg: "Profile not found"}
 	}
 
 	oneUser := user[0]
 
 	if !oneUser.IsActive || oneUser.Role == enums.ANONYMOUS {
-		return nil, api_errors.ErrProfileNotFound
+		return nil, usecase_errors.NotFoundError{Msg: "Profile not found"}
 	}
 
 	profile := &dto.UserProfile{
@@ -94,7 +94,7 @@ func (s *UserService) GetUserProfile(username string) (*dto.UserProfile, error) 
 
 func (s *UserService) ChangeUserProfile(caller dto.UserDTO, data dto.ChangeUserProfileRequest) error {
 	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
-		return api_errors.ErrNeedLoginForChangeProfile
+		return usecase_errors.UnauthorizedError{Msg: "You must be logged in to change your profile"}
 	}
 
 	filterData := map[string]*string{
@@ -121,7 +121,7 @@ func (s *UserService) ChangeUserProfile(caller dto.UserDTO, data dto.ChangeUserP
 	err := s.UserRepository.UpdateById(caller.ID, updateData)
 	if err != nil {
 		if errors.Is(err, repositories.ErrDuplicate) {
-			return api_errors.ErrUserAlreadyExists
+			return usecase_errors.AlreadyExistsError{Msg: "User with this username already exists"}
 		}
 		return err
 	}
@@ -135,12 +135,12 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 		return -1, err
 	}
 	if len(users) != 1 {
-		return -1, api_errors.ErrUserNotFound
+		return -1, usecase_errors.NotFoundError{Msg: "User not found"}
 	}
 
 	user := users[0]
 	if !user.IsActive || user.Role == enums.ANONYMOUS {
-		return -1, api_errors.ErrUserNotFound
+		return -1, usecase_errors.NotFoundError{Msg: "User not found"}
 	}
 	userDto := user.ToDTO()
 
@@ -179,22 +179,22 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 
 func (s *UserService) ConfirmResetPassword(token string, request dto.ConfirmResetPasswordRequest) error {
 	if request.NewPassword != request.ConfirmNewPassword {
-		return api_errors.ErrPasswordsDontMatch
+		return usecase_errors.BadRequestError{Msg: "Password does not match"}
 	}
 
 	session, err := s.SessionService.GetSession(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, token)
 	if err != nil {
-		return api_errors.ErrInvalidToken
+		return usecase_errors.BadRequestError{Msg: "Invalid token"}
 	}
 
 	var sessionBody dto.ResetPasswordSession
 	err = s.SessionService.DecryptAndParsePayload(session, &sessionBody)
 	if err != nil {
-		return api_errors.ErrInvalidToken
+		return usecase_errors.BadRequestError{Msg: "Invalid token"}
 	}
 
 	if sessionBody.Code != request.Code {
-		return api_errors.ErrInvalidCode
+		return usecase_errors.BadRequestError{Msg: "Invalid code"}
 	}
 
 	passToHash, err := utils.HashPassword(request.NewPassword)
@@ -202,15 +202,16 @@ func (s *UserService) ConfirmResetPassword(token string, request dto.ConfirmRese
 		return err
 	}
 
-	err = s.UserRepository.UpdateById(sessionBody.UserDTO.ID, map[string]any{"password": passToHash})
-	if err != nil {
-		return api_errors.ErrInvalidToken
-	}
-
 	err = s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, token)
 	if err != nil {
-		return api_errors.ErrInvalidToken
+		return usecase_errors.BadRequestError{Msg: "Invalid token"}
 	}
+
+	err = s.UserRepository.UpdateById(sessionBody.UserDTO.ID, map[string]any{"password": passToHash})
+	if err != nil {
+		return usecase_errors.BadRequestError{Msg: "Invalid token"}
+	}
+
 	return nil
 }
 
@@ -218,23 +219,23 @@ func (s *UserService) ChangePassword(caller dto.UserDTO, request dto.ChangePassw
 	user, err := s.UserRepository.GetById(caller.ID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {
-			return api_errors.ErrInvalidSession
+			return usecase_errors.BadRequestError{Msg: "Invalid session, login again"}
 		}
 		return err
 	}
 
 	if !user.IsActive || user.Role == enums.ANONYMOUS {
-		return api_errors.ErrUnauthorized
+		return usecase_errors.UnauthorizedError{Msg: "You must be logged in to change"}
 	} else if !utils.CheckPasswordHash(user.Password, request.OldPassword) {
-		return api_errors.ErrInvalidPassword
+		return usecase_errors.BadRequestError{Msg: "Invalid old password"}
 	}
 
 	if request.NewPassword == request.OldPassword {
-		return api_errors.ErrSamePassword
+		return usecase_errors.BadRequestError{Msg: "Old password cannot be the same one"}
 	}
 
 	if request.NewPassword != request.ConfirmNewPassword {
-		return api_errors.ErrPasswordsDontMatch
+		return usecase_errors.BadRequestError{Msg: "Password does not match"}
 	}
 
 	passToHash, err := utils.HashPassword(request.NewPassword)
@@ -245,7 +246,7 @@ func (s *UserService) ChangePassword(caller dto.UserDTO, request dto.ChangePassw
 	err = s.UserRepository.UpdateById(user.ID, map[string]any{"password": passToHash})
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {
-			return api_errors.ErrInvalidSession
+			return usecase_errors.BadRequestError{Msg: "Invalid session, login again"}
 		}
 	}
 	return nil

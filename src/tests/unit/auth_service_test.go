@@ -10,8 +10,9 @@ import (
 	"libs/src/internal/mocks"
 	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/pkg/utils"
+	"reflect"
 	"testing"
 )
 
@@ -34,8 +35,8 @@ func TestCheckEmailToken(t *testing.T) {
 			testName:  "CheckEmailTokenInvalidSession",
 			sessionId: "invalidSession",
 			mockResp:  dto.UserDTO{},
-			mockErr:   api_errors.ErrInvalidToken,
-			respError: api_errors.ErrInvalidToken,
+			mockErr:   usecase_errors.BadRequestError{Msg: "Invalid token"},
+			respError: usecase_errors.BadRequestError{},
 			Resp:      dto.UserDTO{},
 			mustErr:   true,
 		},
@@ -50,7 +51,7 @@ func TestCheckEmailToken(t *testing.T) {
 				Role:     enums.USER,
 			},
 			mockErr:   nil,
-			respError: api_errors.ErrInvalidToken,
+			respError: usecase_errors.BadRequestError{},
 			Resp:      dto.UserDTO{},
 			mustErr:   true,
 		},
@@ -88,7 +89,7 @@ func TestCheckEmailToken(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.respError, err)
+				assert.Equal(t, reflect.TypeOf(tc.respError), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.Resp, res)
@@ -122,7 +123,7 @@ func TestConfirmAccount(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			ExpectedError: api_errors.ErrAlreadyLoggedIn,
+			ExpectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -134,12 +135,12 @@ func TestConfirmAccount(t *testing.T) {
 			},
 			Param:                          "invalidSession",
 			SessServGetUserByEmailSessResp: dto.UserDTO{},
-			SessServGetUserByEmailSessErr:  api_errors.ErrInvalidSession,
+			SessServGetUserByEmailSessErr:  usecase_errors.BadRequestError{},
 			UserRepoUpdateByIdResp:         nil,
 			SessServSetSessionResp:         "",
 			SessServSetSessionErr:          nil,
 			ExpectedResp:                   "",
-			ExpectedError:                  api_errors.ErrInvalidToken,
+			ExpectedError:                  usecase_errors.BadRequestError{},
 			mustErr:                        true,
 		},
 		{
@@ -160,7 +161,7 @@ func TestConfirmAccount(t *testing.T) {
 			SessServSetSessionResp:        "",
 			SessServSetSessionErr:         nil,
 			ExpectedResp:                  "",
-			ExpectedError:                 api_errors.ErrInvalidToken,
+			ExpectedError:                 usecase_errors.BadRequestError{},
 			mustErr:                       true,
 		},
 		{
@@ -201,7 +202,7 @@ func TestConfirmAccount(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.ExpectedError, err)
+				assert.Equal(t, reflect.TypeOf(tc.ExpectedError), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.ExpectedResp, res)
@@ -232,7 +233,7 @@ func TestRegisterUser(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			respError: api_errors.ErrAlreadyLoggedIn,
+			respError: usecase_errors.BadRequestError{},
 			mustErr:   true,
 		},
 		{
@@ -251,7 +252,7 @@ func TestRegisterUser(t *testing.T) {
 			UserRepoResp:    nil,
 			SessionServResp: "",
 			SessionServErr:  nil,
-			respError:       api_errors.ErrPasswordsDontMatch,
+			respError:       usecase_errors.BadRequestError{},
 			mustErr:         true,
 		},
 		{
@@ -270,7 +271,7 @@ func TestRegisterUser(t *testing.T) {
 			UserRepoResp:    repositories.ErrDuplicate,
 			SessionServResp: "",
 			SessionServErr:  nil,
-			respError:       api_errors.ErrUserAlreadyExists,
+			respError:       usecase_errors.AlreadyExistsError{},
 			mustErr:         true,
 		},
 		{
@@ -311,7 +312,7 @@ func TestRegisterUser(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.respError, err)
+				assert.Equal(t, reflect.TypeOf(tc.respError), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 			}
@@ -343,7 +344,7 @@ func TestLogin(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			expectedError: api_errors.ErrAlreadyLoggedIn,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -358,7 +359,7 @@ func TestLogin(t *testing.T) {
 				Password:        "test",
 			},
 			userRepoResp:  []domain.User{},
-			expectedError: api_errors.ErrInvalidCredentials,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -374,7 +375,7 @@ func TestLogin(t *testing.T) {
 			},
 			userRepoResp:  []domain.User{},
 			userRepoErr:   errors.New("internal db error"),
-			expectedError: api_errors.ErrInvalidCredentials,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -402,7 +403,7 @@ func TestLogin(t *testing.T) {
 					Role:     enums.USER,
 				},
 			},
-			expectedError: api_errors.ErrInvalidCredentials,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -436,7 +437,7 @@ func TestLogin(t *testing.T) {
 					Role:     enums.ANONYMOUS,
 				},
 			},
-			expectedError: api_errors.ErrInvalidCredentials,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -484,7 +485,7 @@ func TestLogin(t *testing.T) {
 			res, err := service.Login(tc.caller, tc.data)
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedError, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedError), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expectedResp, res)

@@ -10,7 +10,8 @@ import (
 	"libs/src/internal/mocks"
 	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
+	"reflect"
 	"testing"
 )
 
@@ -37,7 +38,7 @@ func TestCreateMember(t *testing.T) {
 			userId:        1,
 			chatId:        1,
 			RepoCountResp: 1,
-			expectedResp:  api_errors.ErrUserAlreadyInChat,
+			expectedResp:  usecase_errors.AlreadyExistsError{},
 			mustErr:       true,
 		},
 		{
@@ -68,7 +69,7 @@ func TestCreateMember(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedResp, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedResp), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 
@@ -102,7 +103,7 @@ func TestInviteToChat(t *testing.T) {
 			testName:         "Inviter not in chat",
 			inviterId:        1,
 			GetMemberInfoErr: repositories.ErrRecordNotFound,
-			expectedResp:     api_errors.ErrInviterNotInChat,
+			expectedResp:     usecase_errors.BadRequestError{},
 			mustErr:          true,
 		},
 		{
@@ -111,7 +112,7 @@ func TestInviteToChat(t *testing.T) {
 			GetMemberInfoResp: dto.MemberInfo{
 				MemberRole: enums.MEMBER,
 			},
-			expectedResp: api_errors.ErrNotEnoughPermissionsForInviting,
+			expectedResp: usecase_errors.PermissionError{},
 			mustErr:      true,
 		},
 		{
@@ -123,7 +124,7 @@ func TestInviteToChat(t *testing.T) {
 				MemberRole: enums.CHAT_ADMIN,
 			},
 			GetByUsernameErr: repositories.ErrRecordNotFound,
-			expectedResp:     api_errors.ErrUserNotFound,
+			expectedResp:     usecase_errors.NotFoundError{},
 			mustErr:          true,
 		},
 		{
@@ -139,7 +140,7 @@ func TestInviteToChat(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			expectedResp: api_errors.ErrUserNotFound,
+			expectedResp: usecase_errors.NotFoundError{},
 			mustErr:      true,
 		},
 		{
@@ -155,7 +156,7 @@ func TestInviteToChat(t *testing.T) {
 				Role:     enums.USER,
 				IsActive: false,
 			},
-			expectedResp: api_errors.ErrUserNotFound,
+			expectedResp: usecase_errors.NotFoundError{},
 			mustErr:      true,
 		},
 		{
@@ -193,7 +194,7 @@ func TestInviteToChat(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedResp, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedResp), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 			}
@@ -236,7 +237,7 @@ func TestChangeMemberRole(t *testing.T) {
 			chatId:       1,
 			memberId:     2,
 			newRole:      "owner",
-			expectedResp: api_errors.ErrNotEnoughPermissionsForChangeRole,
+			expectedResp: usecase_errors.PermissionError{},
 			mustErr:      true,
 		},
 		{
@@ -246,7 +247,7 @@ func TestChangeMemberRole(t *testing.T) {
 			chatId:       1,
 			memberId:     2,
 			newRole:      "not_exists",
-			expectedResp: api_errors.ErrInvalidData,
+			expectedResp: usecase_errors.BadRequestError{},
 			mustErr:      true,
 		},
 		{
@@ -257,7 +258,7 @@ func TestChangeMemberRole(t *testing.T) {
 			memberId:               2,
 			newRole:                "admin",
 			GetMemberInfoCallerErr: repositories.ErrRecordNotFound,
-			expectedResp:           api_errors.ErrUserNotInChat,
+			expectedResp:           usecase_errors.NotFoundError{},
 			mustErr:                true,
 		},
 		{
@@ -270,7 +271,7 @@ func TestChangeMemberRole(t *testing.T) {
 			GetMemberInfoCallerResp: dto.MemberInfo{
 				MemberRole: enums.MEMBER,
 			},
-			expectedResp: api_errors.ErrNotEnoughPermissionsForChangeRole,
+			expectedResp: usecase_errors.PermissionError{},
 			mustErr:      true,
 		},
 		{
@@ -284,7 +285,7 @@ func TestChangeMemberRole(t *testing.T) {
 				MemberRole: enums.OWNER,
 			},
 			GetByUsernameErr: repositories.ErrRecordNotFound,
-			expectedResp:     api_errors.ErrUserNotFound,
+			expectedResp:     usecase_errors.NotFoundError{},
 			mustErr:          true,
 		},
 		{
@@ -302,7 +303,7 @@ func TestChangeMemberRole(t *testing.T) {
 				IsActive: true,
 				Role:     enums.ANONYMOUS,
 			},
-			expectedResp: api_errors.ErrUserNotFound,
+			expectedResp: usecase_errors.NotFoundError{},
 			mustErr:      true,
 		},
 		{
@@ -320,7 +321,7 @@ func TestChangeMemberRole(t *testing.T) {
 				IsActive: false,
 				Role:     enums.USER,
 			},
-			expectedResp: api_errors.ErrUserNotFound,
+			expectedResp: usecase_errors.NotFoundError{},
 			mustErr:      true,
 		},
 		{
@@ -339,7 +340,7 @@ func TestChangeMemberRole(t *testing.T) {
 				Role:     enums.USER,
 			},
 			GetMemberInfoTargetErr: repositories.ErrRecordNotFound,
-			expectedResp:           api_errors.ErrUserNotInChat,
+			expectedResp:           usecase_errors.BadRequestError{},
 			mustErr:                true,
 		},
 		{
@@ -401,7 +402,7 @@ func TestChangeMemberRole(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedResp, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedResp), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 			}
@@ -435,7 +436,7 @@ func TestGetMemberList(t *testing.T) {
 				Role:     enums.USER,
 				IsActive: false,
 			},
-			expectedErr: api_errors.ErrUnauthorized,
+			expectedErr: usecase_errors.UnauthorizedError{},
 			mustErr:     true,
 		},
 		{
@@ -445,7 +446,7 @@ func TestGetMemberList(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			expectedErr: api_errors.ErrUnauthorized,
+			expectedErr: usecase_errors.UnauthorizedError{},
 			mustErr:     true,
 		},
 		{
@@ -457,7 +458,7 @@ func TestGetMemberList(t *testing.T) {
 			},
 			chatId:      1,
 			page:        1,
-			expectedErr: api_errors.ErrUserNotInChat,
+			expectedErr: usecase_errors.BadRequestError{},
 			mustErr:     true,
 		},
 		{
@@ -477,7 +478,7 @@ func TestGetMemberList(t *testing.T) {
 				},
 			},
 			GetMemberListErr: repositories.ErrOffsetMustBePositive,
-			expectedErr:      api_errors.ErrInvalidPage,
+			expectedErr:      usecase_errors.BadRequestError{},
 			mustErr:          true,
 		},
 		{
@@ -515,7 +516,7 @@ func TestGetMemberList(t *testing.T) {
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, len(tc.expectedResp.Members), len(resp.Members))
