@@ -14,7 +14,7 @@ func ErrorHandler(c *gin.Context) {
 	err := c.Errors.Last()
 	if err != nil {
 		app.Logger.Error(fmt.Sprintf("\nrequest error: %v\nurl: %s\nmethod: %s\n", err.Error(), c.Request.URL.Path, c.Request.Method))
-		c.JSON(parseError(err))
+		c.JSON(parseError(err.Err))
 		c.Abort()
 	}
 }
