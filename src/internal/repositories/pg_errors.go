@@ -12,6 +12,7 @@ var ErrInvalidField = errors.New("invalid field")
 var ErrInvalidValue = errors.New("invalid value")
 var ErrOffsetMustBePositive = errors.New("offset must be positive")
 var ErrLimitMustBePositive = errors.New("limit must be positive")
+var ErrTimeout = errors.New("timeout error")
 
 func parsePgError(err error) error {
 	var pgErr *pgconn.PgError
@@ -31,6 +32,8 @@ func parsePgError(err error) error {
 			return ErrOffsetMustBePositive
 		case "2201W":
 			return ErrLimitMustBePositive
+		case "57014":
+			return ErrTimeout
 		default:
 			return err
 		}
