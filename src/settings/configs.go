@@ -21,6 +21,30 @@ type AppConfig struct {
 	UploadDir  string `mapstructure:"upload_dir"`
 }
 
+type PostgresTimeout struct {
+	Small  int `mapstructure:"small"`
+	Medium int `mapstructure:"medium"`
+	Large  int `mapstructure:"large"`
+}
+
+type MongoTimeout struct {
+	Small  int `mapstructure:"small"`
+	Medium int `mapstructure:"medium"`
+	Large  int `mapstructure:"large"`
+}
+
+type RedisTimeout struct {
+	Small  int `mapstructure:"small"`
+	Medium int `mapstructure:"medium"`
+	Large  int `mapstructure:"large"`
+}
+
+type Timeout struct {
+	Postgres PostgresTimeout `mapstructure:"postgres"`
+	Mongo    MongoTimeout    `mapstructure:"mongo"`
+	Redis    RedisTimeout    `mapstructure:"redis"`
+}
+
 type Mail struct {
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
@@ -79,6 +103,7 @@ type Pagination struct {
 
 type BaseConfig struct {
 	AppConfig      AppConfig      `mapstructure:"app"`
+	Timeout        Timeout        `mapstructure:"context_timeout_ms"`
 	Pagination     Pagination     `mapstructure:"pagination"`
 	PostgresConfig PostgresConfig `mapstructure:"db"`
 	AuthConfig     AuthConfig     `mapstructure:"auth"`
