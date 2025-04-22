@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -15,6 +16,10 @@ var ErrLimitMustBePositive = errors.New("limit must be positive")
 var ErrTimeout = errors.New("timeout error")
 
 func parsePgError(err error) error {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return ErrTimeout
+	}
+
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
