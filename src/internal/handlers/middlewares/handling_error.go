@@ -1,10 +1,10 @@
 package handler_middlewares
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"libs/src/internal/repositories"
 	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"net/http"
@@ -37,7 +37,7 @@ func parseError(err error) (int, gin.H) {
 	if _, ok := err.(usecase_errors.INotFoundError); ok {
 		return http.StatusNotFound, gin.H{"error": err.Error()}
 	}
-	if errors.Is(err, repositories.ErrTimeout) {
+	if errors.Is(err, context.DeadlineExceeded) {
 		return http.StatusServiceUnavailable, gin.H{"error": "Request timeout"}
 	}
 	return http.StatusServiceUnavailable, gin.H{
