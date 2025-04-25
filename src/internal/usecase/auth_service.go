@@ -158,9 +158,7 @@ func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest)
 		return err
 	}
 
-	go func() {
-		s.EmailService.SendRegisterEmail(user.Email, sessionId)
-	}()
+	go s.EmailService.SendRegisterEmail(user.Email, sessionId)
 
 	return nil
 }

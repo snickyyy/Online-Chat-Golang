@@ -171,9 +171,8 @@ func (s *UserService) ResetPassword(request dto.ResetPasswordRequest) (int, erro
 		return -1, err
 	}
 
-	go func() {
-		s.EmailService.SendResetPasswordEmail(user.Email, sessionBody.SessionID)
-	}()
+	go s.EmailService.SendResetPasswordEmail(user.Email, sessionBody.SessionID)
+
 	return secretCode, nil
 }
 
