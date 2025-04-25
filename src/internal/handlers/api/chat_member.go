@@ -36,7 +36,7 @@ func InviteToChat(c *gin.Context) {
 
 	chatIDInt, _ := strconv.Atoi(chatID)
 
-	err := service.InviteToChat(&inviter, invitee, int64(chatIDInt))
+	err := service.InviteToChat(c.Request.Context(), &inviter, invitee, int64(chatIDInt))
 	if err != nil {
 		c.Error(err)
 		return
@@ -78,7 +78,7 @@ func ChangeMemberRole(c *gin.Context) {
 
 	chatIdInt, _ := strconv.Atoi(chatId)
 
-	err := service.ChangeMemberRole(caller, int64(chatIdInt), memberUsername, newRole.NewRole)
+	err := service.ChangeMemberRole(c.Request.Context(), caller, int64(chatIdInt), memberUsername, newRole.NewRole)
 	if err != nil {
 		c.Error(err)
 		return
@@ -110,7 +110,7 @@ func DeleteMember(c *gin.Context) {
 
 	service := services.NewChatMemberService(app)
 
-	err := service.DeleteMember(caller, int64(chatId), memberUsername)
+	err := service.DeleteMember(c.Request.Context(), caller, int64(chatId), memberUsername)
 	if err != nil {
 		c.Error(err)
 		return
@@ -150,7 +150,7 @@ func GetMemberList(c *gin.Context) {
 
 	service := services.NewChatMemberService(app)
 
-	members, err := service.GetList(caller, int64(chatId), pageInt, search)
+	members, err := service.GetList(c.Request.Context(), caller, int64(chatId), pageInt, search)
 	if err != nil {
 		c.Error(err)
 		return

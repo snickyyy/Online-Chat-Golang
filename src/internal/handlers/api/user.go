@@ -26,7 +26,7 @@ func UserProfile(c *gin.Context) {
 
 	username := c.Param("username")
 
-	profile, err := service.GetUserProfile(username)
+	profile, err := service.GetUserProfile(c.Request.Context(), username)
 	if err != nil {
 		c.Error(err)
 		return
@@ -58,7 +58,7 @@ func ChangeUserProfile(c *gin.Context) {
 	}
 
 	service := services.NewUserService(app)
-	err := service.ChangeUserProfile(user, requestData)
+	err := service.ChangeUserProfile(c.Request.Context(), user, requestData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -85,7 +85,7 @@ func ResetPassword(c *gin.Context) {
 	}
 
 	service := services.NewUserService(app)
-	code, err := service.ResetPassword(requestData)
+	code, err := service.ResetPassword(c.Request.Context(), requestData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -114,7 +114,7 @@ func ConfirmResetPassword(c *gin.Context) {
 	}
 
 	service := services.NewUserService(app)
-	err := service.ConfirmResetPassword(token, requestData)
+	err := service.ConfirmResetPassword(c.Request.Context(), token, requestData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -144,7 +144,7 @@ func ChangePassword(c *gin.Context) {
 	}
 
 	service := services.NewUserService(app)
-	err := service.ChangePassword(user, requestData)
+	err := service.ChangePassword(c.Request.Context(), user, requestData)
 	if err != nil {
 		c.Error(err)
 		return

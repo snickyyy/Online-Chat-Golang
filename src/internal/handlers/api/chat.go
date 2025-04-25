@@ -33,7 +33,7 @@ func CreateChat(c *gin.Context) {
 
 	service := services.NewChatService(app)
 
-	chat, err := service.CreateChat(chatData, user)
+	chat, err := service.CreateChat(c.Request.Context(), chatData, user)
 	if err != nil {
 		c.Error(err)
 		return
@@ -65,7 +65,7 @@ func DeleteChat(c *gin.Context) {
 
 	chatIDInt, _ := strconv.Atoi(chatID)
 
-	err := service.DeleteChat(user, int64(chatIDInt))
+	err := service.DeleteChat(c.Request.Context(), user, int64(chatIDInt))
 	if err != nil {
 		c.Error(err)
 		return
@@ -105,7 +105,7 @@ func ChangeChat(c *gin.Context) {
 
 	chatIDInt, _ := strconv.Atoi(chatID)
 
-	err := service.ChangeChat(user, int64(chatIDInt), chatData)
+	err := service.ChangeChat(c.Request.Context(), user, int64(chatIDInt), chatData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -144,9 +144,9 @@ func GetChatsForUser(c *gin.Context) {
 	)
 
 	if search != "" {
-		chats, err = service.Search(user, search, pageInt)
+		chats, err = service.Search(c.Request.Context(), user, search, pageInt)
 	} else {
-		chats, err = service.GetListForUser(user, pageInt)
+		chats, err = service.GetListForUser(c.Request.Context(), user, pageInt)
 	}
 
 	if err != nil {
@@ -178,7 +178,7 @@ func GetChatInfo(c *gin.Context) {
 
 	service := services.NewChatService(app)
 	chatIDInt, _ := strconv.Atoi(chatID)
-	chat, err := service.GetById(user, int64(chatIDInt))
+	chat, err := service.GetById(c.Request.Context(), user, int64(chatIDInt))
 
 	if err != nil {
 		c.Error(err)
