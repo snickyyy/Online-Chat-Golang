@@ -59,7 +59,7 @@ func (repo *BaseRedisRepository) GetByKey(Ctx context.Context, prefix string, ke
 }
 
 func (repo *BaseRedisRepository) Create(Ctx context.Context, prefix string, key string, value any, expiration time.Duration) (string, error) {
-	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Redis.Large)*time.Nanosecond)
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Redis.Large)*time.Millisecond)
 	defer cancel()
 
 	result, err := repo.Client.Set(ctx, prefix+key, value, expiration).Result()
