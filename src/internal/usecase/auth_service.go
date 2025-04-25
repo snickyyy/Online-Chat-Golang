@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -73,7 +74,7 @@ func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
 	return userDto, nil
 }
 
-func (s *AuthService) ConfirmAccount(caller dto.UserDTO, sessionId string) (string, error) {
+func (s *AuthService) ConfirmAccount(ctx context.Context, caller dto.UserDTO, sessionId string) (string, error) {
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
 		return "", usecase_errors.BadRequestError{Msg: "User is already authenticated"}
 	}
@@ -89,7 +90,7 @@ func (s *AuthService) ConfirmAccount(caller dto.UserDTO, sessionId string) (stri
 		"Role":     enums.USER,
 	}
 
-	err = userRepository.UpdateById(userDto.ID, changeFields)
+	err = userRepository.UpdateById(ctx, userDto.ID, changeFields)
 	if err != nil {
 		return "", err
 	}
@@ -111,7 +112,7 @@ func (s *AuthService) ConfirmAccount(caller dto.UserDTO, sessionId string) (stri
 	return session, nil
 }
 
-func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest) error {
+func (s *AuthService) RegisterUser(ctx context.Context, caller dto.UserDTO, data dto.RegisterRequest) error {
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
 		return usecase_errors.BadRequestError{Msg: "User is already authenticated"}
 	}
@@ -131,7 +132,7 @@ func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest)
 		IsActive: false,
 		Role:     enums.ANONYMOUS,
 	}
-	err = s.UserRepository.Create(&user)
+	err = s.UserRepository.Create(ctx, &user)
 
 	if err != nil {
 		if errors.Is(err, repositories.ErrDuplicate) {
@@ -163,13 +164,13 @@ func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest)
 	return nil
 }
 
-func (s *AuthService) Login(caller dto.UserDTO, data dto.LoginRequest) (string, error) {
+func (s *AuthService) Login(ctx context.Context, caller dto.UserDTO, data dto.LoginRequest) (string, error) {
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
 		return "", usecase_errors.BadRequestError{Msg: "User is already authorized"}
 	}
 	userRepository := s.UserRepository
 
-	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
+	users, err := userRepository.Filter(ctx, "username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
 	if err != nil {
 		return "", usecase_errors.BadRequestError{Msg: "Invalid credentials"}
 	}
