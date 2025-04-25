@@ -12,14 +12,14 @@ import (
 )
 
 type IBasePostgresRepository[T models.User | models.Chat | models.ChatMember] interface {
-	Create(obj *T) error
-	GetById(id int64) (T, error)
-	GetAll() ([]T, error)
-	Filter(query string, args ...interface{}) ([]T, error)
-	DeleteById(id int64) error
-	UpdateById(id int64, updateFields map[string]interface{}) error
-	Count(filter string, args ...interface{}) (int64, error)
-	ExecuteQuery(query string, args ...interface{}) error
+	Create(Ctx context.Context, obj *T) error
+	GetById(Ctx context.Context, id int64) (T, error)
+	GetAll(Ctx context.Context) ([]T, error)
+	Filter(Ctx context.Context, query string, args ...interface{}) ([]T, error)
+	DeleteById(Ctx context.Context, id int64) error
+	UpdateById(Ctx context.Context, id int64, updateFields map[string]interface{}) error
+	Count(Ctx context.Context, filter string, args ...interface{}) (int64, error)
+	ExecuteQuery(Ctx context.Context, query string, args ...interface{}) error
 }
 
 type BasePostgresRepository[T models.User | models.Chat | models.ChatMember] struct {
@@ -27,8 +27,8 @@ type BasePostgresRepository[T models.User | models.Chat | models.ChatMember] str
 	Db    *gorm.DB
 }
 
-func (r *BasePostgresRepository[T]) Create(obj *T) error {
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
+func (r *BasePostgresRepository[T]) Create(Ctx context.Context, obj *T) error {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
 	defer cancel()
 
 	result := r.Db.
@@ -41,10 +41,10 @@ func (r *BasePostgresRepository[T]) Create(obj *T) error {
 	return nil
 }
 
-func (r *BasePostgresRepository[T]) GetById(id int64) (T, error) {
+func (r *BasePostgresRepository[T]) GetById(Ctx context.Context, id int64) (T, error) {
 	var obj T
 
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Small)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Small)*time.Millisecond)
 	defer cancel()
 
 	result := r.Db.
@@ -56,10 +56,10 @@ func (r *BasePostgresRepository[T]) GetById(id int64) (T, error) {
 	return obj, nil
 }
 
-func (repo *BasePostgresRepository[T]) GetAll() ([]T, error) {
+func (repo *BasePostgresRepository[T]) GetAll(Ctx context.Context) ([]T, error) {
 	var result []T
 
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
 	defer cancel()
 
 	stmt := repo.Db.
@@ -71,8 +71,8 @@ func (repo *BasePostgresRepository[T]) GetAll() ([]T, error) {
 	return result, nil
 }
 
-func (repo *BasePostgresRepository[T]) Filter(query string, args ...interface{}) ([]T, error) {
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+func (repo *BasePostgresRepository[T]) Filter(Ctx context.Context, query string, args ...interface{}) ([]T, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
 	defer cancel()
 
 	var result []T
@@ -87,10 +87,10 @@ func (repo *BasePostgresRepository[T]) Filter(query string, args ...interface{})
 	return result, nil
 }
 
-func (repo *BasePostgresRepository[T]) DeleteById(id int64) error {
+func (repo *BasePostgresRepository[T]) DeleteById(Ctx context.Context, id int64) error {
 	var obj T
 
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Small)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Small)*time.Millisecond)
 	defer cancel()
 
 	result := repo.Db.
@@ -106,10 +106,10 @@ func (repo *BasePostgresRepository[T]) DeleteById(id int64) error {
 	return nil
 }
 
-func (repo *BasePostgresRepository[T]) UpdateById(id int64, updateFields map[string]interface{}) error {
+func (repo *BasePostgresRepository[T]) UpdateById(Ctx context.Context, id int64, updateFields map[string]interface{}) error {
 	var obj T
 
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
 	defer cancel()
 
 	result := repo.Db.
@@ -127,11 +127,11 @@ func (repo *BasePostgresRepository[T]) UpdateById(id int64, updateFields map[str
 	return nil
 }
 
-func (repo *BasePostgresRepository[T]) Count(filter string, args ...interface{}) (int64, error) {
+func (repo *BasePostgresRepository[T]) Count(Ctx context.Context, filter string, args ...interface{}) (int64, error) {
 	var obj T
 	var count int64
 
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
 	defer cancel()
 
 	result := repo.Db.
@@ -147,8 +147,8 @@ func (repo *BasePostgresRepository[T]) Count(filter string, args ...interface{})
 	return count, nil
 }
 
-func (repo *BasePostgresRepository[T]) ExecuteQuery(query string, args ...interface{}) error {
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+func (repo *BasePostgresRepository[T]) ExecuteQuery(Ctx context.Context, query string, args ...interface{}) error {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
 	defer cancel()
 
 	stmt := repo.Db.

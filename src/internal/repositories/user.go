@@ -9,7 +9,7 @@ import (
 
 //go:generate mockery --name=IUserRepository --dir=. --output=../mocks --with-expecter
 type IUserRepository interface {
-	GetByUsername(username string) (domain.User, error)
+	GetByUsername(Ctx context.Context, username string) (domain.User, error)
 	IBasePostgresRepository[domain.User]
 }
 
@@ -26,8 +26,8 @@ func NewUserRepository(app *settings.App) *UserRepository {
 	}
 }
 
-func (r *UserRepository) GetByUsername(username string) (domain.User, error) {
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+func (r *UserRepository) GetByUsername(Ctx context.Context, username string) (domain.User, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
 	defer cancel()
 
 	var user domain.User
