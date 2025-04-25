@@ -1,9 +1,12 @@
 package repositories
 
 import (
+	"context"
 	models "libs/src/internal/domain/models"
+	"libs/src/settings"
 	"maps"
 	"slices"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -25,7 +28,12 @@ type BasePostgresRepository[T models.User | models.Chat | models.ChatMember] str
 }
 
 func (r *BasePostgresRepository[T]) Create(obj *T) error {
-	result := r.Db.Create(obj)
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
+	defer cancel()
+
+	result := r.Db.
+		WithContext(ctx).
+		Create(obj)
 	if result.Error != nil {
 		return parsePgError(result.Error)
 	}
@@ -35,7 +43,13 @@ func (r *BasePostgresRepository[T]) Create(obj *T) error {
 
 func (r *BasePostgresRepository[T]) GetById(id int64) (T, error) {
 	var obj T
-	result := r.Db.First(&obj, id)
+
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Small)*time.Millisecond)
+	defer cancel()
+
+	result := r.Db.
+		WithContext(ctx).
+		First(&obj, id)
 	if result.Error != nil {
 		return obj, parsePgError(result.Error)
 	}
@@ -44,7 +58,13 @@ func (r *BasePostgresRepository[T]) GetById(id int64) (T, error) {
 
 func (repo *BasePostgresRepository[T]) GetAll() ([]T, error) {
 	var result []T
-	stmt := repo.Db.Find(&result)
+
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	defer cancel()
+
+	stmt := repo.Db.
+		WithContext(ctx).
+		Find(&result)
 	if stmt.Error != nil {
 		return result, parsePgError(stmt.Error)
 	}
@@ -52,8 +72,15 @@ func (repo *BasePostgresRepository[T]) GetAll() ([]T, error) {
 }
 
 func (repo *BasePostgresRepository[T]) Filter(query string, args ...interface{}) ([]T, error) {
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	defer cancel()
+
 	var result []T
-	stmt := repo.Db.Where(query, args...).Find(&result)
+
+	stmt := repo.Db.
+		WithContext(ctx).
+		Where(query, args...).
+		Find(&result)
 	if stmt.Error != nil {
 		return result, parsePgError(stmt.Error)
 	}
@@ -62,7 +89,14 @@ func (repo *BasePostgresRepository[T]) Filter(query string, args ...interface{})
 
 func (repo *BasePostgresRepository[T]) DeleteById(id int64) error {
 	var obj T
-	result := repo.Db.Where("id = ?", id).Delete(&obj)
+
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Small)*time.Millisecond)
+	defer cancel()
+
+	result := repo.Db.
+		WithContext(ctx).
+		Where("id = ?", id).
+		Delete(&obj)
 	if result.Error != nil {
 		return parsePgError(result.Error)
 	}
@@ -75,7 +109,14 @@ func (repo *BasePostgresRepository[T]) DeleteById(id int64) error {
 func (repo *BasePostgresRepository[T]) UpdateById(id int64, updateFields map[string]interface{}) error {
 	var obj T
 
-	result := repo.Db.Model(&obj).Where("id = ?", id).Select(slices.Collect(maps.Keys(updateFields))).Updates(updateFields)
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
+	defer cancel()
+
+	result := repo.Db.
+		WithContext(ctx).
+		Model(&obj).
+		Where("id = ?", id).Select(slices.Collect(maps.Keys(updateFields))).
+		Updates(updateFields)
 
 	if result.Error != nil {
 		return parsePgError(result.Error)
@@ -89,7 +130,13 @@ func (repo *BasePostgresRepository[T]) UpdateById(id int64, updateFields map[str
 func (repo *BasePostgresRepository[T]) Count(filter string, args ...interface{}) (int64, error) {
 	var obj T
 	var count int64
-	result := repo.Db.Model(&obj)
+
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	defer cancel()
+
+	result := repo.Db.
+		WithContext(ctx).
+		Model(&obj)
 	if filter != "" {
 		result = result.Where(filter, args...)
 	}
@@ -101,7 +148,12 @@ func (repo *BasePostgresRepository[T]) Count(filter string, args ...interface{})
 }
 
 func (repo *BasePostgresRepository[T]) ExecuteQuery(query string, args ...interface{}) error {
-	stmt := repo.Db.Exec(query, args...)
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	defer cancel()
+
+	stmt := repo.Db.
+		WithContext(ctx).
+		Exec(query, args...)
 	if stmt.Error != nil {
 		return parsePgError(stmt.Error)
 	}

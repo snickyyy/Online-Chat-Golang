@@ -33,10 +33,13 @@ func NewBaseRedisRepository(app *settings.App) *BaseRedisRepository {
 }
 
 func (repo *BaseRedisRepository) SetDTO(prefix string, obj dto.SessionDTO) (string, error) {
+	ctx, cancel := context.WithTimeout(repo.Ctx, time.Duration(settings.AppVar.Config.Timeout.Redis.Large)*time.Millisecond)
+	defer cancel()
+
 	toJson, _ := json.Marshal(obj)
 	obj.SessionID = prefix + obj.SessionID
 	result, err := repo.Client.Set(
-		repo.Ctx,
+		ctx,
 		obj.SessionID,
 		toJson,
 		time.Until(obj.Expire)).Result()
@@ -47,7 +50,10 @@ func (repo *BaseRedisRepository) SetDTO(prefix string, obj dto.SessionDTO) (stri
 }
 
 func (repo *BaseRedisRepository) GetByKey(prefix string, key string) (string, error) {
-	result, err := repo.Client.Get(repo.Ctx, prefix+key).Result()
+	ctx, cancel := context.WithTimeout(repo.Ctx, time.Duration(settings.AppVar.Config.Timeout.Redis.Small)*time.Millisecond)
+	defer cancel()
+
+	result, err := repo.Client.Get(ctx, prefix+key).Result()
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +61,10 @@ func (repo *BaseRedisRepository) GetByKey(prefix string, key string) (string, er
 }
 
 func (repo *BaseRedisRepository) Create(prefix string, key string, value any, expiration time.Duration) (string, error) {
-	result, err := repo.Client.Set(repo.Ctx, prefix+key, value, expiration).Result()
+	ctx, cancel := context.WithTimeout(repo.Ctx, time.Duration(settings.AppVar.Config.Timeout.Redis.Large)*time.Millisecond)
+	defer cancel()
+
+	result, err := repo.Client.Set(ctx, prefix+key, value, expiration).Result()
 	if err != nil {
 		return "", err
 	}
@@ -63,7 +72,10 @@ func (repo *BaseRedisRepository) Create(prefix string, key string, value any, ex
 }
 
 func (repo *BaseRedisRepository) Delete(prefix string, key string) (int64, error) {
-	res, err := repo.Client.Del(repo.Ctx, prefix+key).Result()
+	ctx, cancel := context.WithTimeout(repo.Ctx, time.Duration(settings.AppVar.Config.Timeout.Redis.Small)*time.Millisecond)
+	defer cancel()
+
+	res, err := repo.Client.Del(ctx, prefix+key).Result()
 	if err != nil {
 		return 0, err
 	}
@@ -71,12 +83,18 @@ func (repo *BaseRedisRepository) Delete(prefix string, key string) (int64, error
 }
 
 func (repo *BaseRedisRepository) CountAll() (int64, error) {
-	count, err := repo.Client.DBSize(repo.Ctx).Result()
+	ctx, cancel := context.WithTimeout(repo.Ctx, time.Duration(settings.AppVar.Config.Timeout.Redis.Medium)*time.Millisecond)
+	defer cancel()
+
+	count, err := repo.Client.DBSize(ctx).Result()
 	return count, err
 }
 
 func (repo *BaseRedisRepository) IsExist(prefix string, key string) (bool, error) {
-	res, err := repo.Client.Exists(repo.Ctx, prefix+key).Result()
+	ctx, cancel := context.WithTimeout(repo.Ctx, time.Duration(settings.AppVar.Config.Timeout.Redis.Small)*time.Millisecond)
+	defer cancel()
+
+	res, err := repo.Client.Exists(ctx, prefix+key).Result()
 	if err != nil {
 		return false, err
 	}

@@ -21,15 +21,18 @@ type BaseMongoRepository[T models.Message] struct {
 }
 
 func (repo *BaseMongoRepository[T]) Create(obj T) (*mongo.InsertOneResult, error) {
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Large)*time.Millisecond)
+	defer cancel()
+
 	con := repo.Db.Collection(repo.CollectionName)
-	return con.InsertOne(settings.Context.Ctx, obj)
+	return con.InsertOne(ctx, obj)
 }
 
 func (repo *BaseMongoRepository[T]) GetOne(filters interface{}) (T, error) {
-	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Small)*time.Millisecond)
 	defer cancel()
+
+	con := repo.Db.Collection(repo.CollectionName)
 
 	var chat T
 	err := con.FindOne(ctx, filters).Decode(&chat)
@@ -38,12 +41,12 @@ func (repo *BaseMongoRepository[T]) GetOne(filters interface{}) (T, error) {
 }
 
 func (repo *BaseMongoRepository[T]) GetAll(filter interface{}, offset int64, limit int64, sortOption ...bson.D) ([]T, error) {
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Medium)*time.Millisecond)
+	defer cancel()
+
 	result := []T{}
 
 	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
 
 	options := options.Find().SetSkip(offset).SetLimit(limit)
 
@@ -65,10 +68,10 @@ func (repo *BaseMongoRepository[T]) GetAll(filter interface{}, offset int64, lim
 }
 
 func (repo *BaseMongoRepository[T]) UpdateById(id string, updateFields bson.M) (*mongo.UpdateResult, error) {
-	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Large)*time.Millisecond)
 	defer cancel()
+
+	con := repo.Db.Collection(repo.CollectionName)
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -80,10 +83,10 @@ func (repo *BaseMongoRepository[T]) UpdateById(id string, updateFields bson.M) (
 }
 
 func (repo *BaseMongoRepository[T]) DeleteById(id string) (*mongo.DeleteResult, error) {
-	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Large)*time.Millisecond)
 	defer cancel()
+
+	con := repo.Db.Collection(repo.CollectionName)
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -95,10 +98,10 @@ func (repo *BaseMongoRepository[T]) DeleteById(id string) (*mongo.DeleteResult, 
 }
 
 func (repo *BaseMongoRepository[T]) Count(filters interface{}) (int64, error) {
-	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Small)*time.Millisecond)
 	defer cancel()
+
+	con := repo.Db.Collection(repo.CollectionName)
 
 	count, err := con.CountDocuments(ctx, filters)
 	return count, err
