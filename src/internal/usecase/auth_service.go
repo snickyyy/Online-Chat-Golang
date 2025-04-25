@@ -33,7 +33,7 @@ func NewAuthService(app *settings.App) *AuthService {
 	}
 }
 
-func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
+func (s *AuthService) setAuthCookie(ctx context.Context, userDto dto.UserDTO) (string, error) {
 	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.AuthSessionTTL) * time.Second)
 
 	encoding, _ := json.Marshal(
@@ -54,7 +54,7 @@ func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
 		Payload:   encrypt,
 	}
 
-	sessionId, err := s.SessionService.SetSession(session)
+	sessionId, err := s.SessionService.SetSession(ctx, session)
 	if err != nil {
 		return "", err
 	}
@@ -62,8 +62,8 @@ func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
 	return sessionId, nil
 }
 
-func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
-	userDto, err := s.SessionService.GetUserByEmailSession(sessionId)
+func (s *AuthService) CheckEmailToken(ctx context.Context, sessionId string) (dto.UserDTO, error) {
+	userDto, err := s.SessionService.GetUserByEmailSession(ctx, sessionId)
 	if err != nil {
 		return dto.UserDTO{}, usecase_errors.BadRequestError{Msg: "Invalid email token"}
 	}
@@ -78,7 +78,7 @@ func (s *AuthService) ConfirmAccount(ctx context.Context, caller dto.UserDTO, se
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
 		return "", usecase_errors.BadRequestError{Msg: "User is already authenticated"}
 	}
-	userDto, err := s.CheckEmailToken(sessionId)
+	userDto, err := s.CheckEmailToken(ctx, sessionId)
 	if err != nil {
 		return "", err
 	}
@@ -96,7 +96,7 @@ func (s *AuthService) ConfirmAccount(ctx context.Context, caller dto.UserDTO, se
 	}
 
 	go func() {
-		err = s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
+		err = s.SessionService.DeleteSession(ctx, s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error delete email confirm session: %v", err))
 		}
@@ -104,7 +104,7 @@ func (s *AuthService) ConfirmAccount(ctx context.Context, caller dto.UserDTO, se
 
 	userDto.Role = enums.USER
 	userDto.IsActive = true
-	session, err := s.setAuthCookie(userDto)
+	session, err := s.setAuthCookie(ctx, userDto)
 	if err != nil {
 		return "", err
 	}
@@ -154,7 +154,7 @@ func (s *AuthService) RegisterUser(ctx context.Context, caller dto.UserDTO, data
 		Payload:   encrypt,
 	}
 
-	sessionId, err := s.SessionService.SetSession(session)
+	sessionId, err := s.SessionService.SetSession(ctx, session)
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func (s *AuthService) Login(ctx context.Context, caller dto.UserDTO, data dto.Lo
 		return "", usecase_errors.BadRequestError{Msg: "Invalid credentials"}
 	}
 
-	session, err := s.setAuthCookie(user.ToDTO())
+	session, err := s.setAuthCookie(ctx, user.ToDTO())
 	if err != nil {
 		return "", err
 	}
@@ -192,9 +192,9 @@ func (s *AuthService) Login(ctx context.Context, caller dto.UserDTO, data dto.Lo
 	return session, nil
 }
 
-func (s *AuthService) Logout(sessionId string) {
+func (s *AuthService) Logout(ctx context.Context, sessionId string) {
 	go func() {
-		err := s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
+		err := s.SessionService.DeleteSession(ctx, s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
 		}

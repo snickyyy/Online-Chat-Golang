@@ -167,7 +167,7 @@ func (s *UserService) ResetPassword(ctx context.Context, request dto.ResetPasswo
 		Prefix:    s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword,
 		Payload:   encrypt,
 	}
-	_, err = s.SessionService.SetSession(sessionBody)
+	_, err = s.SessionService.SetSession(ctx, sessionBody)
 	if err != nil {
 		s.App.Logger.Error(fmt.Sprintf("Error while set session to redis: %s", err.Error()))
 		return -1, err
@@ -183,7 +183,7 @@ func (s *UserService) ConfirmResetPassword(ctx context.Context, token string, re
 		return usecase_errors.BadRequestError{Msg: "Password does not match"}
 	}
 
-	session, err := s.SessionService.GetSession(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, token)
+	session, err := s.SessionService.GetSession(ctx, s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, token)
 	if err != nil {
 		return usecase_errors.BadRequestError{Msg: "Invalid token"}
 	}
@@ -203,7 +203,7 @@ func (s *UserService) ConfirmResetPassword(ctx context.Context, token string, re
 		return err
 	}
 
-	err = s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, token)
+	err = s.SessionService.DeleteSession(ctx, s.App.Config.RedisConfig.Prefixes.ConfirmResetPassword, token)
 	if err != nil {
 		return usecase_errors.BadRequestError{Msg: "Invalid token"}
 	}
