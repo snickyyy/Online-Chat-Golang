@@ -1,8 +1,10 @@
 package repositories
 
 import (
+	"context"
 	domain "libs/src/internal/domain/models"
 	"libs/src/settings"
+	"time"
 )
 
 //go:generate mockery --name=IUserRepository --dir=. --output=../mocks --with-expecter
@@ -25,8 +27,11 @@ func NewUserRepository(app *settings.App) *UserRepository {
 }
 
 func (r *UserRepository) GetByUsername(username string) (domain.User, error) {
+	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	defer cancel()
+
 	var user domain.User
-	err := r.Db.Where("username = ?", username).First(&user).Error
+	err := r.Db.WithContext(ctx).Where("username = ?", username).First(&user).Error
 	if err != nil {
 		return domain.User{}, parsePgError(err)
 	}
