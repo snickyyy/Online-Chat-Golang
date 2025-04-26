@@ -1,15 +1,12 @@
 package settings
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
 )
-
-var Context *Ctx
 
 type AppConfig struct {
 	SecretKey  string `mapstructure:"secret_key"`
@@ -51,11 +48,6 @@ type Mail struct {
 	From     string `mapstructure:"from"`
 	Port     int    `mapstructure:"port"`
 	Server   string `mapstructure:"server"`
-}
-
-type Ctx struct {
-	Ctx    context.Context
-	Cancel context.CancelFunc
 }
 
 type RedisPrefixes struct {
@@ -158,12 +150,4 @@ func GetBaseConfig() (*BaseConfig, error) {
 	cfg.AppConfig.UploadDir = filepath.Join(basePath, "assets")
 
 	return cfg, nil
-}
-
-func InitContext() {
-	ctx, cancel := context.WithCancel(context.Background())
-	Context = &Ctx{
-		Ctx:    ctx,
-		Cancel: cancel,
-	}
 }

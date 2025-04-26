@@ -30,6 +30,6 @@ func (r *MessageRepository) CreateIndex() error {
 		},
 		Options: options.Index().SetName("chat_id_created_at_index"),
 	}
-	_, err := r.Db.Collection(r.CollectionName).Indexes().CreateOne(settings.Context.Ctx, compoundIndex)
+	_, err := r.Db.Collection(r.CollectionName).Indexes().CreateOne(settings.AppVar.Ctx, compoundIndex)
 	return err
 }

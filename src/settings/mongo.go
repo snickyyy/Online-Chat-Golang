@@ -6,12 +6,12 @@ import (
 )
 
 func GetMongoClient(config *BaseConfig, dbName string) (*mongo.Database, error) {
-	client, err := mongo.Connect(Context.Ctx, options.Client().ApplyURI(config.MongoConfig.Uri))
+	client, err := mongo.Connect(AppVar.Ctx, options.Client().ApplyURI(config.MongoConfig.Uri))
 	if err != nil {
 		return nil, err
 	}
-	
-	if err = client.Ping(Context.Ctx, nil); err != nil {
+
+	if err = client.Ping(AppVar.Ctx, nil); err != nil {
 		return nil, err
 	}
 

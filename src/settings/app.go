@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"context"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
@@ -17,10 +18,14 @@ type App struct {
 	MongoDB     *mongo.Database
 	RedisClient *redis.Client
 	Mail        *gomail.Dialer
+	Ctx         context.Context
+	Cancel      context.CancelFunc
 }
 
 func NewApp(db *gorm.DB, logger *zap.Logger, config *BaseConfig, mongodb *mongo.Database, redis *redis.Client, mail *gomail.Dialer) *App {
 	AppVar = &App{
+		Ctx:         AppVar.Ctx,
+		Cancel:      AppVar.Cancel,
 		DB:          db,
 		Logger:      logger,
 		Config:      config,
@@ -28,5 +33,6 @@ func NewApp(db *gorm.DB, logger *zap.Logger, config *BaseConfig, mongodb *mongo.
 		RedisClient: redis,
 		Mail:        mail,
 	}
+
 	return AppVar
 }
