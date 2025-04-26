@@ -112,7 +112,7 @@ func Logout(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	cookie, _ := c.Cookie("sessionID")
 
-	services.NewAuthService(app).Logout(c.Request.Context(), cookie)
+	services.NewAuthService(app).Logout(cookie)
 
 	c.SetCookie("sessionID", "", -1, "/", "", true, true)
 	c.JSON(200, dto.MessageResponse{Message: "success"})

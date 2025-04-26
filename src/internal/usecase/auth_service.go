@@ -95,12 +95,7 @@ func (s *AuthService) ConfirmAccount(ctx context.Context, caller dto.UserDTO, se
 		return "", err
 	}
 
-	go func() {
-		err = s.SessionService.DeleteSession(ctx, s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
-		if err != nil {
-			s.App.Logger.Error(fmt.Sprintf("Error delete email confirm session: %v", err))
-		}
-	}()
+	go s.SessionService.DeleteSession(s.App.Ctx, s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
 
 	userDto.Role = enums.USER
 	userDto.IsActive = true
@@ -192,9 +187,9 @@ func (s *AuthService) Login(ctx context.Context, caller dto.UserDTO, data dto.Lo
 	return session, nil
 }
 
-func (s *AuthService) Logout(ctx context.Context, sessionId string) {
+func (s *AuthService) Logout(sessionId string) {
 	go func() {
-		err := s.SessionService.DeleteSession(ctx, s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
+		err := s.SessionService.DeleteSession(s.App.Ctx, s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
 		}
