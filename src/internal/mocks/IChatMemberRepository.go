@@ -3,6 +3,7 @@
 package mocks
 
 import (
+	context "context"
 	domain "libs/src/internal/domain/models"
 	dto "libs/src/internal/dto"
 
@@ -22,10 +23,10 @@ func (_m *IChatMemberRepository) EXPECT() *IChatMemberRepository_Expecter {
 	return &IChatMemberRepository_Expecter{mock: &_m.Mock}
 }
 
-// Count provides a mock function with given fields: filter, args
-func (_m *IChatMemberRepository) Count(filter string, args ...interface{}) (int64, error) {
+// Count provides a mock function with given fields: Ctx, filter, args
+func (_m *IChatMemberRepository) Count(Ctx context.Context, filter string, args ...interface{}) (int64, error) {
 	var _ca []interface{}
-	_ca = append(_ca, filter)
+	_ca = append(_ca, Ctx, filter)
 	_ca = append(_ca, args...)
 	ret := _m.Called(_ca...)
 
@@ -35,17 +36,17 @@ func (_m *IChatMemberRepository) Count(filter string, args ...interface{}) (int6
 
 	var r0 int64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, ...interface{}) (int64, error)); ok {
-		return rf(filter, args...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...interface{}) (int64, error)); ok {
+		return rf(Ctx, filter, args...)
 	}
-	if rf, ok := ret.Get(0).(func(string, ...interface{}) int64); ok {
-		r0 = rf(filter, args...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...interface{}) int64); ok {
+		r0 = rf(Ctx, filter, args...)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, ...interface{}) error); ok {
-		r1 = rf(filter, args...)
+	if rf, ok := ret.Get(1).(func(context.Context, string, ...interface{}) error); ok {
+		r1 = rf(Ctx, filter, args...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -59,22 +60,23 @@ type IChatMemberRepository_Count_Call struct {
 }
 
 // Count is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - filter string
 //   - args ...interface{}
-func (_e *IChatMemberRepository_Expecter) Count(filter interface{}, args ...interface{}) *IChatMemberRepository_Count_Call {
+func (_e *IChatMemberRepository_Expecter) Count(Ctx interface{}, filter interface{}, args ...interface{}) *IChatMemberRepository_Count_Call {
 	return &IChatMemberRepository_Count_Call{Call: _e.mock.On("Count",
-		append([]interface{}{filter}, args...)...)}
+		append([]interface{}{Ctx, filter}, args...)...)}
 }
 
-func (_c *IChatMemberRepository_Count_Call) Run(run func(filter string, args ...interface{})) *IChatMemberRepository_Count_Call {
+func (_c *IChatMemberRepository_Count_Call) Run(run func(Ctx context.Context, filter string, args ...interface{})) *IChatMemberRepository_Count_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]interface{}, len(args)-1)
-		for i, a := range args[1:] {
+		variadicArgs := make([]interface{}, len(args)-2)
+		for i, a := range args[2:] {
 			if a != nil {
 				variadicArgs[i] = a.(interface{})
 			}
 		}
-		run(args[0].(string), variadicArgs...)
+		run(args[0].(context.Context), args[1].(string), variadicArgs...)
 	})
 	return _c
 }
@@ -84,22 +86,22 @@ func (_c *IChatMemberRepository_Count_Call) Return(_a0 int64, _a1 error) *IChatM
 	return _c
 }
 
-func (_c *IChatMemberRepository_Count_Call) RunAndReturn(run func(string, ...interface{}) (int64, error)) *IChatMemberRepository_Count_Call {
+func (_c *IChatMemberRepository_Count_Call) RunAndReturn(run func(context.Context, string, ...interface{}) (int64, error)) *IChatMemberRepository_Count_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Create provides a mock function with given fields: obj
-func (_m *IChatMemberRepository) Create(obj *domain.ChatMember) error {
-	ret := _m.Called(obj)
+// Create provides a mock function with given fields: Ctx, obj
+func (_m *IChatMemberRepository) Create(Ctx context.Context, obj *domain.ChatMember) error {
+	ret := _m.Called(Ctx, obj)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*domain.ChatMember) error); ok {
-		r0 = rf(obj)
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.ChatMember) error); ok {
+		r0 = rf(Ctx, obj)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -113,14 +115,15 @@ type IChatMemberRepository_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - obj *domain.ChatMember
-func (_e *IChatMemberRepository_Expecter) Create(obj interface{}) *IChatMemberRepository_Create_Call {
-	return &IChatMemberRepository_Create_Call{Call: _e.mock.On("Create", obj)}
+func (_e *IChatMemberRepository_Expecter) Create(Ctx interface{}, obj interface{}) *IChatMemberRepository_Create_Call {
+	return &IChatMemberRepository_Create_Call{Call: _e.mock.On("Create", Ctx, obj)}
 }
 
-func (_c *IChatMemberRepository_Create_Call) Run(run func(obj *domain.ChatMember)) *IChatMemberRepository_Create_Call {
+func (_c *IChatMemberRepository_Create_Call) Run(run func(Ctx context.Context, obj *domain.ChatMember)) *IChatMemberRepository_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*domain.ChatMember))
+		run(args[0].(context.Context), args[1].(*domain.ChatMember))
 	})
 	return _c
 }
@@ -130,22 +133,22 @@ func (_c *IChatMemberRepository_Create_Call) Return(_a0 error) *IChatMemberRepos
 	return _c
 }
 
-func (_c *IChatMemberRepository_Create_Call) RunAndReturn(run func(*domain.ChatMember) error) *IChatMemberRepository_Create_Call {
+func (_c *IChatMemberRepository_Create_Call) RunAndReturn(run func(context.Context, *domain.ChatMember) error) *IChatMemberRepository_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// DeleteById provides a mock function with given fields: id
-func (_m *IChatMemberRepository) DeleteById(id int64) error {
-	ret := _m.Called(id)
+// DeleteById provides a mock function with given fields: Ctx, id
+func (_m *IChatMemberRepository) DeleteById(Ctx context.Context, id int64) error {
+	ret := _m.Called(Ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteById")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(int64) error); ok {
-		r0 = rf(id)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) error); ok {
+		r0 = rf(Ctx, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -159,14 +162,15 @@ type IChatMemberRepository_DeleteById_Call struct {
 }
 
 // DeleteById is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - id int64
-func (_e *IChatMemberRepository_Expecter) DeleteById(id interface{}) *IChatMemberRepository_DeleteById_Call {
-	return &IChatMemberRepository_DeleteById_Call{Call: _e.mock.On("DeleteById", id)}
+func (_e *IChatMemberRepository_Expecter) DeleteById(Ctx interface{}, id interface{}) *IChatMemberRepository_DeleteById_Call {
+	return &IChatMemberRepository_DeleteById_Call{Call: _e.mock.On("DeleteById", Ctx, id)}
 }
 
-func (_c *IChatMemberRepository_DeleteById_Call) Run(run func(id int64)) *IChatMemberRepository_DeleteById_Call {
+func (_c *IChatMemberRepository_DeleteById_Call) Run(run func(Ctx context.Context, id int64)) *IChatMemberRepository_DeleteById_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int64))
+		run(args[0].(context.Context), args[1].(int64))
 	})
 	return _c
 }
@@ -176,22 +180,22 @@ func (_c *IChatMemberRepository_DeleteById_Call) Return(_a0 error) *IChatMemberR
 	return _c
 }
 
-func (_c *IChatMemberRepository_DeleteById_Call) RunAndReturn(run func(int64) error) *IChatMemberRepository_DeleteById_Call {
+func (_c *IChatMemberRepository_DeleteById_Call) RunAndReturn(run func(context.Context, int64) error) *IChatMemberRepository_DeleteById_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// DeleteMember provides a mock function with given fields: memberId, chatId
-func (_m *IChatMemberRepository) DeleteMember(memberId int64, chatId int64) error {
-	ret := _m.Called(memberId, chatId)
+// DeleteMember provides a mock function with given fields: Ctx, memberId, chatId
+func (_m *IChatMemberRepository) DeleteMember(Ctx context.Context, memberId int64, chatId int64) error {
+	ret := _m.Called(Ctx, memberId, chatId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteMember")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(int64, int64) error); ok {
-		r0 = rf(memberId, chatId)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) error); ok {
+		r0 = rf(Ctx, memberId, chatId)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -205,15 +209,16 @@ type IChatMemberRepository_DeleteMember_Call struct {
 }
 
 // DeleteMember is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - memberId int64
 //   - chatId int64
-func (_e *IChatMemberRepository_Expecter) DeleteMember(memberId interface{}, chatId interface{}) *IChatMemberRepository_DeleteMember_Call {
-	return &IChatMemberRepository_DeleteMember_Call{Call: _e.mock.On("DeleteMember", memberId, chatId)}
+func (_e *IChatMemberRepository_Expecter) DeleteMember(Ctx interface{}, memberId interface{}, chatId interface{}) *IChatMemberRepository_DeleteMember_Call {
+	return &IChatMemberRepository_DeleteMember_Call{Call: _e.mock.On("DeleteMember", Ctx, memberId, chatId)}
 }
 
-func (_c *IChatMemberRepository_DeleteMember_Call) Run(run func(memberId int64, chatId int64)) *IChatMemberRepository_DeleteMember_Call {
+func (_c *IChatMemberRepository_DeleteMember_Call) Run(run func(Ctx context.Context, memberId int64, chatId int64)) *IChatMemberRepository_DeleteMember_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int64), args[1].(int64))
+		run(args[0].(context.Context), args[1].(int64), args[2].(int64))
 	})
 	return _c
 }
@@ -223,15 +228,15 @@ func (_c *IChatMemberRepository_DeleteMember_Call) Return(_a0 error) *IChatMembe
 	return _c
 }
 
-func (_c *IChatMemberRepository_DeleteMember_Call) RunAndReturn(run func(int64, int64) error) *IChatMemberRepository_DeleteMember_Call {
+func (_c *IChatMemberRepository_DeleteMember_Call) RunAndReturn(run func(context.Context, int64, int64) error) *IChatMemberRepository_DeleteMember_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ExecuteQuery provides a mock function with given fields: query, args
-func (_m *IChatMemberRepository) ExecuteQuery(query string, args ...interface{}) error {
+// ExecuteQuery provides a mock function with given fields: Ctx, query, args
+func (_m *IChatMemberRepository) ExecuteQuery(Ctx context.Context, query string, args ...interface{}) error {
 	var _ca []interface{}
-	_ca = append(_ca, query)
+	_ca = append(_ca, Ctx, query)
 	_ca = append(_ca, args...)
 	ret := _m.Called(_ca...)
 
@@ -240,8 +245,8 @@ func (_m *IChatMemberRepository) ExecuteQuery(query string, args ...interface{})
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, ...interface{}) error); ok {
-		r0 = rf(query, args...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...interface{}) error); ok {
+		r0 = rf(Ctx, query, args...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -255,22 +260,23 @@ type IChatMemberRepository_ExecuteQuery_Call struct {
 }
 
 // ExecuteQuery is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - query string
 //   - args ...interface{}
-func (_e *IChatMemberRepository_Expecter) ExecuteQuery(query interface{}, args ...interface{}) *IChatMemberRepository_ExecuteQuery_Call {
+func (_e *IChatMemberRepository_Expecter) ExecuteQuery(Ctx interface{}, query interface{}, args ...interface{}) *IChatMemberRepository_ExecuteQuery_Call {
 	return &IChatMemberRepository_ExecuteQuery_Call{Call: _e.mock.On("ExecuteQuery",
-		append([]interface{}{query}, args...)...)}
+		append([]interface{}{Ctx, query}, args...)...)}
 }
 
-func (_c *IChatMemberRepository_ExecuteQuery_Call) Run(run func(query string, args ...interface{})) *IChatMemberRepository_ExecuteQuery_Call {
+func (_c *IChatMemberRepository_ExecuteQuery_Call) Run(run func(Ctx context.Context, query string, args ...interface{})) *IChatMemberRepository_ExecuteQuery_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]interface{}, len(args)-1)
-		for i, a := range args[1:] {
+		variadicArgs := make([]interface{}, len(args)-2)
+		for i, a := range args[2:] {
 			if a != nil {
 				variadicArgs[i] = a.(interface{})
 			}
 		}
-		run(args[0].(string), variadicArgs...)
+		run(args[0].(context.Context), args[1].(string), variadicArgs...)
 	})
 	return _c
 }
@@ -280,15 +286,15 @@ func (_c *IChatMemberRepository_ExecuteQuery_Call) Return(_a0 error) *IChatMembe
 	return _c
 }
 
-func (_c *IChatMemberRepository_ExecuteQuery_Call) RunAndReturn(run func(string, ...interface{}) error) *IChatMemberRepository_ExecuteQuery_Call {
+func (_c *IChatMemberRepository_ExecuteQuery_Call) RunAndReturn(run func(context.Context, string, ...interface{}) error) *IChatMemberRepository_ExecuteQuery_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Filter provides a mock function with given fields: query, args
-func (_m *IChatMemberRepository) Filter(query string, args ...interface{}) ([]domain.ChatMember, error) {
+// Filter provides a mock function with given fields: Ctx, query, args
+func (_m *IChatMemberRepository) Filter(Ctx context.Context, query string, args ...interface{}) ([]domain.ChatMember, error) {
 	var _ca []interface{}
-	_ca = append(_ca, query)
+	_ca = append(_ca, Ctx, query)
 	_ca = append(_ca, args...)
 	ret := _m.Called(_ca...)
 
@@ -298,19 +304,19 @@ func (_m *IChatMemberRepository) Filter(query string, args ...interface{}) ([]do
 
 	var r0 []domain.ChatMember
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, ...interface{}) ([]domain.ChatMember, error)); ok {
-		return rf(query, args...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...interface{}) ([]domain.ChatMember, error)); ok {
+		return rf(Ctx, query, args...)
 	}
-	if rf, ok := ret.Get(0).(func(string, ...interface{}) []domain.ChatMember); ok {
-		r0 = rf(query, args...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...interface{}) []domain.ChatMember); ok {
+		r0 = rf(Ctx, query, args...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.ChatMember)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, ...interface{}) error); ok {
-		r1 = rf(query, args...)
+	if rf, ok := ret.Get(1).(func(context.Context, string, ...interface{}) error); ok {
+		r1 = rf(Ctx, query, args...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -324,22 +330,23 @@ type IChatMemberRepository_Filter_Call struct {
 }
 
 // Filter is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - query string
 //   - args ...interface{}
-func (_e *IChatMemberRepository_Expecter) Filter(query interface{}, args ...interface{}) *IChatMemberRepository_Filter_Call {
+func (_e *IChatMemberRepository_Expecter) Filter(Ctx interface{}, query interface{}, args ...interface{}) *IChatMemberRepository_Filter_Call {
 	return &IChatMemberRepository_Filter_Call{Call: _e.mock.On("Filter",
-		append([]interface{}{query}, args...)...)}
+		append([]interface{}{Ctx, query}, args...)...)}
 }
 
-func (_c *IChatMemberRepository_Filter_Call) Run(run func(query string, args ...interface{})) *IChatMemberRepository_Filter_Call {
+func (_c *IChatMemberRepository_Filter_Call) Run(run func(Ctx context.Context, query string, args ...interface{})) *IChatMemberRepository_Filter_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]interface{}, len(args)-1)
-		for i, a := range args[1:] {
+		variadicArgs := make([]interface{}, len(args)-2)
+		for i, a := range args[2:] {
 			if a != nil {
 				variadicArgs[i] = a.(interface{})
 			}
 		}
-		run(args[0].(string), variadicArgs...)
+		run(args[0].(context.Context), args[1].(string), variadicArgs...)
 	})
 	return _c
 }
@@ -349,14 +356,14 @@ func (_c *IChatMemberRepository_Filter_Call) Return(_a0 []domain.ChatMember, _a1
 	return _c
 }
 
-func (_c *IChatMemberRepository_Filter_Call) RunAndReturn(run func(string, ...interface{}) ([]domain.ChatMember, error)) *IChatMemberRepository_Filter_Call {
+func (_c *IChatMemberRepository_Filter_Call) RunAndReturn(run func(context.Context, string, ...interface{}) ([]domain.ChatMember, error)) *IChatMemberRepository_Filter_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetAll provides a mock function with no fields
-func (_m *IChatMemberRepository) GetAll() ([]domain.ChatMember, error) {
-	ret := _m.Called()
+// GetAll provides a mock function with given fields: Ctx
+func (_m *IChatMemberRepository) GetAll(Ctx context.Context) ([]domain.ChatMember, error) {
+	ret := _m.Called(Ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetAll")
@@ -364,19 +371,19 @@ func (_m *IChatMemberRepository) GetAll() ([]domain.ChatMember, error) {
 
 	var r0 []domain.ChatMember
 	var r1 error
-	if rf, ok := ret.Get(0).(func() ([]domain.ChatMember, error)); ok {
-		return rf()
+	if rf, ok := ret.Get(0).(func(context.Context) ([]domain.ChatMember, error)); ok {
+		return rf(Ctx)
 	}
-	if rf, ok := ret.Get(0).(func() []domain.ChatMember); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context) []domain.ChatMember); ok {
+		r0 = rf(Ctx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.ChatMember)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(Ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -390,13 +397,14 @@ type IChatMemberRepository_GetAll_Call struct {
 }
 
 // GetAll is a helper method to define mock.On call
-func (_e *IChatMemberRepository_Expecter) GetAll() *IChatMemberRepository_GetAll_Call {
-	return &IChatMemberRepository_GetAll_Call{Call: _e.mock.On("GetAll")}
+//   - Ctx context.Context
+func (_e *IChatMemberRepository_Expecter) GetAll(Ctx interface{}) *IChatMemberRepository_GetAll_Call {
+	return &IChatMemberRepository_GetAll_Call{Call: _e.mock.On("GetAll", Ctx)}
 }
 
-func (_c *IChatMemberRepository_GetAll_Call) Run(run func()) *IChatMemberRepository_GetAll_Call {
+func (_c *IChatMemberRepository_GetAll_Call) Run(run func(Ctx context.Context)) *IChatMemberRepository_GetAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context))
 	})
 	return _c
 }
@@ -406,14 +414,14 @@ func (_c *IChatMemberRepository_GetAll_Call) Return(_a0 []domain.ChatMember, _a1
 	return _c
 }
 
-func (_c *IChatMemberRepository_GetAll_Call) RunAndReturn(run func() ([]domain.ChatMember, error)) *IChatMemberRepository_GetAll_Call {
+func (_c *IChatMemberRepository_GetAll_Call) RunAndReturn(run func(context.Context) ([]domain.ChatMember, error)) *IChatMemberRepository_GetAll_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetById provides a mock function with given fields: id
-func (_m *IChatMemberRepository) GetById(id int64) (domain.ChatMember, error) {
-	ret := _m.Called(id)
+// GetById provides a mock function with given fields: Ctx, id
+func (_m *IChatMemberRepository) GetById(Ctx context.Context, id int64) (domain.ChatMember, error) {
+	ret := _m.Called(Ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetById")
@@ -421,17 +429,17 @@ func (_m *IChatMemberRepository) GetById(id int64) (domain.ChatMember, error) {
 
 	var r0 domain.ChatMember
 	var r1 error
-	if rf, ok := ret.Get(0).(func(int64) (domain.ChatMember, error)); ok {
-		return rf(id)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (domain.ChatMember, error)); ok {
+		return rf(Ctx, id)
 	}
-	if rf, ok := ret.Get(0).(func(int64) domain.ChatMember); ok {
-		r0 = rf(id)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) domain.ChatMember); ok {
+		r0 = rf(Ctx, id)
 	} else {
 		r0 = ret.Get(0).(domain.ChatMember)
 	}
 
-	if rf, ok := ret.Get(1).(func(int64) error); ok {
-		r1 = rf(id)
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(Ctx, id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -445,14 +453,15 @@ type IChatMemberRepository_GetById_Call struct {
 }
 
 // GetById is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - id int64
-func (_e *IChatMemberRepository_Expecter) GetById(id interface{}) *IChatMemberRepository_GetById_Call {
-	return &IChatMemberRepository_GetById_Call{Call: _e.mock.On("GetById", id)}
+func (_e *IChatMemberRepository_Expecter) GetById(Ctx interface{}, id interface{}) *IChatMemberRepository_GetById_Call {
+	return &IChatMemberRepository_GetById_Call{Call: _e.mock.On("GetById", Ctx, id)}
 }
 
-func (_c *IChatMemberRepository_GetById_Call) Run(run func(id int64)) *IChatMemberRepository_GetById_Call {
+func (_c *IChatMemberRepository_GetById_Call) Run(run func(Ctx context.Context, id int64)) *IChatMemberRepository_GetById_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int64))
+		run(args[0].(context.Context), args[1].(int64))
 	})
 	return _c
 }
@@ -462,14 +471,14 @@ func (_c *IChatMemberRepository_GetById_Call) Return(_a0 domain.ChatMember, _a1 
 	return _c
 }
 
-func (_c *IChatMemberRepository_GetById_Call) RunAndReturn(run func(int64) (domain.ChatMember, error)) *IChatMemberRepository_GetById_Call {
+func (_c *IChatMemberRepository_GetById_Call) RunAndReturn(run func(context.Context, int64) (domain.ChatMember, error)) *IChatMemberRepository_GetById_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetMemberInfo provides a mock function with given fields: memberId, chatId
-func (_m *IChatMemberRepository) GetMemberInfo(memberId int64, chatId int64) (dto.MemberInfo, error) {
-	ret := _m.Called(memberId, chatId)
+// GetMemberInfo provides a mock function with given fields: Ctx, memberId, chatId
+func (_m *IChatMemberRepository) GetMemberInfo(Ctx context.Context, memberId int64, chatId int64) (dto.MemberInfo, error) {
+	ret := _m.Called(Ctx, memberId, chatId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetMemberInfo")
@@ -477,17 +486,17 @@ func (_m *IChatMemberRepository) GetMemberInfo(memberId int64, chatId int64) (dt
 
 	var r0 dto.MemberInfo
 	var r1 error
-	if rf, ok := ret.Get(0).(func(int64, int64) (dto.MemberInfo, error)); ok {
-		return rf(memberId, chatId)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) (dto.MemberInfo, error)); ok {
+		return rf(Ctx, memberId, chatId)
 	}
-	if rf, ok := ret.Get(0).(func(int64, int64) dto.MemberInfo); ok {
-		r0 = rf(memberId, chatId)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) dto.MemberInfo); ok {
+		r0 = rf(Ctx, memberId, chatId)
 	} else {
 		r0 = ret.Get(0).(dto.MemberInfo)
 	}
 
-	if rf, ok := ret.Get(1).(func(int64, int64) error); ok {
-		r1 = rf(memberId, chatId)
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = rf(Ctx, memberId, chatId)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -501,15 +510,16 @@ type IChatMemberRepository_GetMemberInfo_Call struct {
 }
 
 // GetMemberInfo is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - memberId int64
 //   - chatId int64
-func (_e *IChatMemberRepository_Expecter) GetMemberInfo(memberId interface{}, chatId interface{}) *IChatMemberRepository_GetMemberInfo_Call {
-	return &IChatMemberRepository_GetMemberInfo_Call{Call: _e.mock.On("GetMemberInfo", memberId, chatId)}
+func (_e *IChatMemberRepository_Expecter) GetMemberInfo(Ctx interface{}, memberId interface{}, chatId interface{}) *IChatMemberRepository_GetMemberInfo_Call {
+	return &IChatMemberRepository_GetMemberInfo_Call{Call: _e.mock.On("GetMemberInfo", Ctx, memberId, chatId)}
 }
 
-func (_c *IChatMemberRepository_GetMemberInfo_Call) Run(run func(memberId int64, chatId int64)) *IChatMemberRepository_GetMemberInfo_Call {
+func (_c *IChatMemberRepository_GetMemberInfo_Call) Run(run func(Ctx context.Context, memberId int64, chatId int64)) *IChatMemberRepository_GetMemberInfo_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int64), args[1].(int64))
+		run(args[0].(context.Context), args[1].(int64), args[2].(int64))
 	})
 	return _c
 }
@@ -519,14 +529,14 @@ func (_c *IChatMemberRepository_GetMemberInfo_Call) Return(_a0 dto.MemberInfo, _
 	return _c
 }
 
-func (_c *IChatMemberRepository_GetMemberInfo_Call) RunAndReturn(run func(int64, int64) (dto.MemberInfo, error)) *IChatMemberRepository_GetMemberInfo_Call {
+func (_c *IChatMemberRepository_GetMemberInfo_Call) RunAndReturn(run func(context.Context, int64, int64) (dto.MemberInfo, error)) *IChatMemberRepository_GetMemberInfo_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetMembersPreview provides a mock function with given fields: chatId, limit, offset, searchUsername
-func (_m *IChatMemberRepository) GetMembersPreview(chatId int64, limit int, offset int, searchUsername string) ([]dto.MemberPreview, error) {
-	ret := _m.Called(chatId, limit, offset, searchUsername)
+// GetMembersPreview provides a mock function with given fields: Ctx, chatId, limit, offset, searchUsername
+func (_m *IChatMemberRepository) GetMembersPreview(Ctx context.Context, chatId int64, limit int, offset int, searchUsername string) ([]dto.MemberPreview, error) {
+	ret := _m.Called(Ctx, chatId, limit, offset, searchUsername)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetMembersPreview")
@@ -534,19 +544,19 @@ func (_m *IChatMemberRepository) GetMembersPreview(chatId int64, limit int, offs
 
 	var r0 []dto.MemberPreview
 	var r1 error
-	if rf, ok := ret.Get(0).(func(int64, int, int, string) ([]dto.MemberPreview, error)); ok {
-		return rf(chatId, limit, offset, searchUsername)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int, int, string) ([]dto.MemberPreview, error)); ok {
+		return rf(Ctx, chatId, limit, offset, searchUsername)
 	}
-	if rf, ok := ret.Get(0).(func(int64, int, int, string) []dto.MemberPreview); ok {
-		r0 = rf(chatId, limit, offset, searchUsername)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int, int, string) []dto.MemberPreview); ok {
+		r0 = rf(Ctx, chatId, limit, offset, searchUsername)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]dto.MemberPreview)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(int64, int, int, string) error); ok {
-		r1 = rf(chatId, limit, offset, searchUsername)
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int, int, string) error); ok {
+		r1 = rf(Ctx, chatId, limit, offset, searchUsername)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -560,17 +570,18 @@ type IChatMemberRepository_GetMembersPreview_Call struct {
 }
 
 // GetMembersPreview is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - chatId int64
 //   - limit int
 //   - offset int
 //   - searchUsername string
-func (_e *IChatMemberRepository_Expecter) GetMembersPreview(chatId interface{}, limit interface{}, offset interface{}, searchUsername interface{}) *IChatMemberRepository_GetMembersPreview_Call {
-	return &IChatMemberRepository_GetMembersPreview_Call{Call: _e.mock.On("GetMembersPreview", chatId, limit, offset, searchUsername)}
+func (_e *IChatMemberRepository_Expecter) GetMembersPreview(Ctx interface{}, chatId interface{}, limit interface{}, offset interface{}, searchUsername interface{}) *IChatMemberRepository_GetMembersPreview_Call {
+	return &IChatMemberRepository_GetMembersPreview_Call{Call: _e.mock.On("GetMembersPreview", Ctx, chatId, limit, offset, searchUsername)}
 }
 
-func (_c *IChatMemberRepository_GetMembersPreview_Call) Run(run func(chatId int64, limit int, offset int, searchUsername string)) *IChatMemberRepository_GetMembersPreview_Call {
+func (_c *IChatMemberRepository_GetMembersPreview_Call) Run(run func(Ctx context.Context, chatId int64, limit int, offset int, searchUsername string)) *IChatMemberRepository_GetMembersPreview_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int64), args[1].(int), args[2].(int), args[3].(string))
+		run(args[0].(context.Context), args[1].(int64), args[2].(int), args[3].(int), args[4].(string))
 	})
 	return _c
 }
@@ -580,22 +591,22 @@ func (_c *IChatMemberRepository_GetMembersPreview_Call) Return(_a0 []dto.MemberP
 	return _c
 }
 
-func (_c *IChatMemberRepository_GetMembersPreview_Call) RunAndReturn(run func(int64, int, int, string) ([]dto.MemberPreview, error)) *IChatMemberRepository_GetMembersPreview_Call {
+func (_c *IChatMemberRepository_GetMembersPreview_Call) RunAndReturn(run func(context.Context, int64, int, int, string) ([]dto.MemberPreview, error)) *IChatMemberRepository_GetMembersPreview_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// SetNewRole provides a mock function with given fields: chatId, userId, role
-func (_m *IChatMemberRepository) SetNewRole(chatId int64, userId int64, role byte) error {
-	ret := _m.Called(chatId, userId, role)
+// SetNewRole provides a mock function with given fields: Ctx, chatId, userId, role
+func (_m *IChatMemberRepository) SetNewRole(Ctx context.Context, chatId int64, userId int64, role byte) error {
+	ret := _m.Called(Ctx, chatId, userId, role)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SetNewRole")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(int64, int64, byte) error); ok {
-		r0 = rf(chatId, userId, role)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64, byte) error); ok {
+		r0 = rf(Ctx, chatId, userId, role)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -609,16 +620,17 @@ type IChatMemberRepository_SetNewRole_Call struct {
 }
 
 // SetNewRole is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - chatId int64
 //   - userId int64
 //   - role byte
-func (_e *IChatMemberRepository_Expecter) SetNewRole(chatId interface{}, userId interface{}, role interface{}) *IChatMemberRepository_SetNewRole_Call {
-	return &IChatMemberRepository_SetNewRole_Call{Call: _e.mock.On("SetNewRole", chatId, userId, role)}
+func (_e *IChatMemberRepository_Expecter) SetNewRole(Ctx interface{}, chatId interface{}, userId interface{}, role interface{}) *IChatMemberRepository_SetNewRole_Call {
+	return &IChatMemberRepository_SetNewRole_Call{Call: _e.mock.On("SetNewRole", Ctx, chatId, userId, role)}
 }
 
-func (_c *IChatMemberRepository_SetNewRole_Call) Run(run func(chatId int64, userId int64, role byte)) *IChatMemberRepository_SetNewRole_Call {
+func (_c *IChatMemberRepository_SetNewRole_Call) Run(run func(Ctx context.Context, chatId int64, userId int64, role byte)) *IChatMemberRepository_SetNewRole_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int64), args[1].(int64), args[2].(byte))
+		run(args[0].(context.Context), args[1].(int64), args[2].(int64), args[3].(byte))
 	})
 	return _c
 }
@@ -628,22 +640,22 @@ func (_c *IChatMemberRepository_SetNewRole_Call) Return(_a0 error) *IChatMemberR
 	return _c
 }
 
-func (_c *IChatMemberRepository_SetNewRole_Call) RunAndReturn(run func(int64, int64, byte) error) *IChatMemberRepository_SetNewRole_Call {
+func (_c *IChatMemberRepository_SetNewRole_Call) RunAndReturn(run func(context.Context, int64, int64, byte) error) *IChatMemberRepository_SetNewRole_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// UpdateById provides a mock function with given fields: id, updateFields
-func (_m *IChatMemberRepository) UpdateById(id int64, updateFields map[string]interface{}) error {
-	ret := _m.Called(id, updateFields)
+// UpdateById provides a mock function with given fields: Ctx, id, updateFields
+func (_m *IChatMemberRepository) UpdateById(Ctx context.Context, id int64, updateFields map[string]interface{}) error {
+	ret := _m.Called(Ctx, id, updateFields)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateById")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(int64, map[string]interface{}) error); ok {
-		r0 = rf(id, updateFields)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, map[string]interface{}) error); ok {
+		r0 = rf(Ctx, id, updateFields)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -657,15 +669,16 @@ type IChatMemberRepository_UpdateById_Call struct {
 }
 
 // UpdateById is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - id int64
 //   - updateFields map[string]interface{}
-func (_e *IChatMemberRepository_Expecter) UpdateById(id interface{}, updateFields interface{}) *IChatMemberRepository_UpdateById_Call {
-	return &IChatMemberRepository_UpdateById_Call{Call: _e.mock.On("UpdateById", id, updateFields)}
+func (_e *IChatMemberRepository_Expecter) UpdateById(Ctx interface{}, id interface{}, updateFields interface{}) *IChatMemberRepository_UpdateById_Call {
+	return &IChatMemberRepository_UpdateById_Call{Call: _e.mock.On("UpdateById", Ctx, id, updateFields)}
 }
 
-func (_c *IChatMemberRepository_UpdateById_Call) Run(run func(id int64, updateFields map[string]interface{})) *IChatMemberRepository_UpdateById_Call {
+func (_c *IChatMemberRepository_UpdateById_Call) Run(run func(Ctx context.Context, id int64, updateFields map[string]interface{})) *IChatMemberRepository_UpdateById_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int64), args[1].(map[string]interface{}))
+		run(args[0].(context.Context), args[1].(int64), args[2].(map[string]interface{}))
 	})
 	return _c
 }
@@ -675,7 +688,7 @@ func (_c *IChatMemberRepository_UpdateById_Call) Return(_a0 error) *IChatMemberR
 	return _c
 }
 
-func (_c *IChatMemberRepository_UpdateById_Call) RunAndReturn(run func(int64, map[string]interface{}) error) *IChatMemberRepository_UpdateById_Call {
+func (_c *IChatMemberRepository_UpdateById_Call) RunAndReturn(run func(context.Context, int64, map[string]interface{}) error) *IChatMemberRepository_UpdateById_Call {
 	_c.Call.Return(run)
 	return _c
 }
