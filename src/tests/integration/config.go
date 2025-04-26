@@ -50,6 +50,23 @@ func GetTestConfig() *settings.BaseConfig {
 				ConfirmResetPassword: "confirm_reset_password:",
 			},
 		},
+		Timeout: settings.Timeout{
+			Postgres: settings.PostgresTimeout{
+				Small:  1500,
+				Medium: 2000,
+				Large:  5000,
+			},
+			Mongo: settings.MongoTimeout{
+				Small:  1000,
+				Medium: 2000,
+				Large:  3000,
+			},
+			Redis: settings.RedisTimeout{
+				Small:  100,
+				Medium: 500,
+				Large:  1500,
+			},
+		},
 		Mail: settings.Mail{},
 	}
 }

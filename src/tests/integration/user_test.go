@@ -19,10 +19,11 @@ func (suite *AppTestSuite) TestGetProfile() {
 	userService := services.NewUserService(settings.AppVar)
 	authService := services.NewAuthService(settings.AppVar)
 
-	err := userService.CreateSuperUser("testprofile1", "profiletest1@test.com", "test123")
+	err := userService.CreateSuperUser(suite.Ctx, "testprofile1", "profiletest1@test.com", "test123")
 	suite.NoError(err)
 
 	err = authService.RegisterUser(
+		suite.Ctx,
 		dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false},
 		dto.RegisterRequest{
 			Username:        "profileNonConfirm",
@@ -55,10 +56,10 @@ func (suite *AppTestSuite) TestChangeProfile() {
 	userService := services.NewUserService(settings.AppVar)
 	authService := services.NewAuthService(settings.AppVar)
 
-	err := userService.CreateSuperUser("TestProfileEdit", "profileEditTest@test.com", "test123")
+	err := userService.CreateSuperUser(suite.Ctx, "TestProfileEdit", "profileEditTest@test.com", "test123")
 	suite.NoError(err)
 
-	sess, err := authService.Login(dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false}, dto.LoginRequest{UsernameOrEmail: "TestProfileEdit", Password: "test123"})
+	sess, err := authService.Login(suite.Ctx, dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false}, dto.LoginRequest{UsernameOrEmail: "TestProfileEdit", Password: "test123"})
 	suite.NoError(err)
 
 	request, err := http.NewRequest("PATCH", url, &bytes.Buffer{})
@@ -100,7 +101,7 @@ func (suite *AppTestSuite) TestResetPassword() {
 
 	userService := services.NewUserService(settings.AppVar)
 
-	err := userService.CreateSuperUser("TestResetPassword", "TestResetPassword@test.com", "test123")
+	err := userService.CreateSuperUser(suite.Ctx, "TestResetPassword", "TestResetPassword@test.com", "test123")
 	suite.NoError(err)
 
 	changeBody := dto.ResetPasswordRequest{
