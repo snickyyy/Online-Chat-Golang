@@ -54,7 +54,7 @@ func (suite *AppTestSuite) TestLogin() {
 	url := "http://127.0.0.1:8000/accounts/auth/login"
 	contType := "application/json"
 
-	err := services.NewUserService(settings.AppVar).CreateSuperUser("testuser", "test@test.com", "test123")
+	err := services.NewUserService(settings.AppVar).CreateSuperUser(suite.Ctx, "testuser", "test@test.com", "test123")
 	if err != nil {
 		log.Fatal(err)
 	}

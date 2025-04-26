@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -62,10 +63,10 @@ func TestCreateMember(t *testing.T) {
 		service.ChatMemberRepository = mockRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockRepository.EXPECT().Count(mock.Anything, mock.Anything, mock.Anything).Return(tc.RepoCountResp, tc.RepoCountErr)
-			mockRepository.EXPECT().Create(mock.Anything).Return(tc.RepoCreateResp)
+			mockRepository.EXPECT().Count(context.Background(), mock.Anything, mock.Anything, mock.Anything).Return(tc.RepoCountResp, tc.RepoCountErr)
+			mockRepository.EXPECT().Create(context.Background(), mock.Anything).Return(tc.RepoCreateResp)
 
-			err := service.CreateMember(tc.userId, tc.chatId)
+			err := service.CreateMember(context.Background(), tc.userId, tc.chatId)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -183,14 +184,14 @@ func TestInviteToChat(t *testing.T) {
 		service.UserRepository = mockUserRepo
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockChatMemberRepo.EXPECT().GetMemberInfo(mock.Anything, mock.Anything).Return(tc.GetMemberInfoResp, tc.GetMemberInfoErr)
-			mockUserRepo.EXPECT().GetByUsername(mock.Anything).Return(tc.GetByUsernameResp, tc.GetByUsernameErr)
+			mockChatMemberRepo.EXPECT().GetMemberInfo(context.Background(), mock.Anything, mock.Anything).Return(tc.GetMemberInfoResp, tc.GetMemberInfoErr)
+			mockUserRepo.EXPECT().GetByUsername(context.Background(), mock.Anything).Return(tc.GetByUsernameResp, tc.GetByUsernameErr)
 
 			// Mocking the CreateMember method
-			mockChatMemberRepo.EXPECT().Count(mock.Anything, mock.Anything, mock.Anything).Return(0, nil)
-			mockChatMemberRepo.EXPECT().Create(mock.Anything).Return(nil)
+			mockChatMemberRepo.EXPECT().Count(context.Background(), mock.Anything, mock.Anything, mock.Anything).Return(0, nil)
+			mockChatMemberRepo.EXPECT().Create(context.Background(), mock.Anything).Return(nil)
 
-			err := service.InviteToChat(&dto.UserDTO{ID: tc.inviterId, Role: enums.USER, IsActive: true}, tc.inviteeUsername, tc.chatId)
+			err := service.InviteToChat(context.Background(), &dto.UserDTO{ID: tc.inviterId, Role: enums.USER, IsActive: true}, tc.inviteeUsername, tc.chatId)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -392,13 +393,13 @@ func TestChangeMemberRole(t *testing.T) {
 		service.UserRepository = mockUserRepo
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockChatMemberRepo.EXPECT().GetMemberInfo(tc.callerId, tc.chatId).Return(tc.GetMemberInfoCallerResp, tc.GetMemberInfoCallerErr)
-			mockUserRepo.EXPECT().GetByUsername(mock.Anything).Return(tc.GetByUsernameResp, tc.GetByUsernameErr)
-			mockChatMemberRepo.EXPECT().GetMemberInfo(mock.Anything, mock.Anything).Return(tc.GetMemberInfoTargetResp, tc.GetMemberInfoTargetErr)
+			mockChatMemberRepo.EXPECT().GetMemberInfo(context.Background(), tc.callerId, tc.chatId).Return(tc.GetMemberInfoCallerResp, tc.GetMemberInfoCallerErr)
+			mockUserRepo.EXPECT().GetByUsername(context.Background(), mock.Anything).Return(tc.GetByUsernameResp, tc.GetByUsernameErr)
+			mockChatMemberRepo.EXPECT().GetMemberInfo(context.Background(), mock.Anything, mock.Anything).Return(tc.GetMemberInfoTargetResp, tc.GetMemberInfoTargetErr)
 
-			mockChatMemberRepo.EXPECT().SetNewRole(mock.Anything, mock.Anything, mock.Anything).Return(tc.SetNewRoleResp)
+			mockChatMemberRepo.EXPECT().SetNewRole(context.Background(), mock.Anything, mock.Anything, mock.Anything).Return(tc.SetNewRoleResp)
 
-			err := service.ChangeMemberRole(dto.UserDTO{ID: tc.callerId}, tc.chatId, tc.targetName, tc.newRole)
+			err := service.ChangeMemberRole(context.Background(), dto.UserDTO{ID: tc.callerId}, tc.chatId, tc.targetName, tc.newRole)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -509,10 +510,10 @@ func TestGetMemberList(t *testing.T) {
 		service.ChatMemberRepository = mockChatMemberRepo
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockChatMemberRepo.EXPECT().Filter(mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.FilterResp, tc.FilterErr)
-			mockChatMemberRepo.EXPECT().GetMembersPreview(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.GetMemberListResp, tc.GetMemberListErr)
+			mockChatMemberRepo.EXPECT().Filter(context.Background(), mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.FilterResp, tc.FilterErr)
+			mockChatMemberRepo.EXPECT().GetMembersPreview(context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.GetMemberListResp, tc.GetMemberListErr)
 
-			resp, err := service.GetList(tc.caller, tc.chatId, tc.page, tc.searchName)
+			resp, err := service.GetList(context.Background(), tc.caller, tc.chatId, tc.page, tc.searchName)
 
 			if tc.mustErr {
 				assert.Error(t, err)

@@ -34,7 +34,7 @@ func Register(c *gin.Context) {
 
 	service := services.NewAuthService(app)
 
-	err := service.RegisterUser(user, registerData)
+	err := service.RegisterUser(c.Request.Context(), user, registerData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -58,7 +58,7 @@ func ConfirmAccount(c *gin.Context) {
 	session_id := c.Param("token")
 
 	service := services.NewAuthService(app)
-	sess, err := service.ConfirmAccount(user, session_id)
+	sess, err := service.ConfirmAccount(c.Request.Context(), user, session_id)
 	if err != nil {
 		c.Error(err)
 		return
@@ -90,7 +90,7 @@ func Login(c *gin.Context) {
 
 	service := services.NewAuthService(app)
 
-	sess, err := service.Login(user, loginData)
+	sess, err := service.Login(c.Request.Context(), user, loginData)
 	if err != nil {
 		c.Error(err)
 		return

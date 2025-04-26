@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,7 +33,7 @@ func NewAuthService(app *settings.App) *AuthService {
 	}
 }
 
-func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
+func (s *AuthService) setAuthCookie(ctx context.Context, userDto dto.UserDTO) (string, error) {
 	sess_ttl := time.Now().Add(time.Duration(s.App.Config.AuthConfig.AuthSessionTTL) * time.Second)
 
 	encoding, _ := json.Marshal(
@@ -53,7 +54,7 @@ func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
 		Payload:   encrypt,
 	}
 
-	sessionId, err := s.SessionService.SetSession(session)
+	sessionId, err := s.SessionService.SetSession(ctx, session)
 	if err != nil {
 		return "", err
 	}
@@ -61,8 +62,8 @@ func (s *AuthService) setAuthCookie(userDto dto.UserDTO) (string, error) {
 	return sessionId, nil
 }
 
-func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
-	userDto, err := s.SessionService.GetUserByEmailSession(sessionId)
+func (s *AuthService) CheckEmailToken(ctx context.Context, sessionId string) (dto.UserDTO, error) {
+	userDto, err := s.SessionService.GetUserByEmailSession(ctx, sessionId)
 	if err != nil {
 		return dto.UserDTO{}, usecase_errors.BadRequestError{Msg: "Invalid email token"}
 	}
@@ -73,11 +74,11 @@ func (s *AuthService) CheckEmailToken(sessionId string) (dto.UserDTO, error) {
 	return userDto, nil
 }
 
-func (s *AuthService) ConfirmAccount(caller dto.UserDTO, sessionId string) (string, error) {
+func (s *AuthService) ConfirmAccount(ctx context.Context, caller dto.UserDTO, sessionId string) (string, error) {
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
 		return "", usecase_errors.BadRequestError{Msg: "User is already authenticated"}
 	}
-	userDto, err := s.CheckEmailToken(sessionId)
+	userDto, err := s.CheckEmailToken(ctx, sessionId)
 	if err != nil {
 		return "", err
 	}
@@ -89,21 +90,16 @@ func (s *AuthService) ConfirmAccount(caller dto.UserDTO, sessionId string) (stri
 		"Role":     enums.USER,
 	}
 
-	err = userRepository.UpdateById(userDto.ID, changeFields)
+	err = userRepository.UpdateById(ctx, userDto.ID, changeFields)
 	if err != nil {
 		return "", err
 	}
 
-	go func() {
-		err = s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
-		if err != nil {
-			s.App.Logger.Error(fmt.Sprintf("Error delete email confirm session: %v", err))
-		}
-	}()
+	go s.SessionService.DeleteSession(s.App.Ctx, s.App.Config.RedisConfig.Prefixes.ConfirmEmail, sessionId)
 
 	userDto.Role = enums.USER
 	userDto.IsActive = true
-	session, err := s.setAuthCookie(userDto)
+	session, err := s.setAuthCookie(ctx, userDto)
 	if err != nil {
 		return "", err
 	}
@@ -111,7 +107,7 @@ func (s *AuthService) ConfirmAccount(caller dto.UserDTO, sessionId string) (stri
 	return session, nil
 }
 
-func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest) error {
+func (s *AuthService) RegisterUser(ctx context.Context, caller dto.UserDTO, data dto.RegisterRequest) error {
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
 		return usecase_errors.BadRequestError{Msg: "User is already authenticated"}
 	}
@@ -131,7 +127,7 @@ func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest)
 		IsActive: false,
 		Role:     enums.ANONYMOUS,
 	}
-	err = s.UserRepository.Create(&user)
+	err = s.UserRepository.Create(ctx, &user)
 
 	if err != nil {
 		if errors.Is(err, repositories.ErrDuplicate) {
@@ -153,25 +149,23 @@ func (s *AuthService) RegisterUser(caller dto.UserDTO, data dto.RegisterRequest)
 		Payload:   encrypt,
 	}
 
-	sessionId, err := s.SessionService.SetSession(session)
+	sessionId, err := s.SessionService.SetSession(ctx, session)
 	if err != nil {
 		return err
 	}
 
-	go func() {
-		s.EmailService.SendRegisterEmail(user.Email, sessionId)
-	}()
+	go s.EmailService.SendRegisterEmail(user.Email, sessionId)
 
 	return nil
 }
 
-func (s *AuthService) Login(caller dto.UserDTO, data dto.LoginRequest) (string, error) {
+func (s *AuthService) Login(ctx context.Context, caller dto.UserDTO, data dto.LoginRequest) (string, error) {
 	if caller.Role != enums.ANONYMOUS || caller.IsActive {
 		return "", usecase_errors.BadRequestError{Msg: "User is already authorized"}
 	}
 	userRepository := s.UserRepository
 
-	users, err := userRepository.Filter("username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
+	users, err := userRepository.Filter(ctx, "username = ? OR email = ?", data.UsernameOrEmail, data.UsernameOrEmail)
 	if err != nil {
 		return "", usecase_errors.BadRequestError{Msg: "Invalid credentials"}
 	}
@@ -185,7 +179,7 @@ func (s *AuthService) Login(caller dto.UserDTO, data dto.LoginRequest) (string, 
 		return "", usecase_errors.BadRequestError{Msg: "Invalid credentials"}
 	}
 
-	session, err := s.setAuthCookie(user.ToDTO())
+	session, err := s.setAuthCookie(ctx, user.ToDTO())
 	if err != nil {
 		return "", err
 	}
@@ -195,7 +189,7 @@ func (s *AuthService) Login(caller dto.UserDTO, data dto.LoginRequest) (string, 
 
 func (s *AuthService) Logout(sessionId string) {
 	go func() {
-		err := s.SessionService.DeleteSession(s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
+		err := s.SessionService.DeleteSession(s.App.Ctx, s.App.Config.RedisConfig.Prefixes.SessionPrefix, sessionId)
 		if err != nil {
 			s.App.Logger.Error(fmt.Sprintf("Error deleting session: %v", err))
 		}

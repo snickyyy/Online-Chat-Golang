@@ -11,8 +11,8 @@ import (
 //go:generate mockery --name=IChatRepository --dir=. --output=../mocks --with-expecter
 type IChatRepository interface {
 	IBasePostgresRepository[domain.Chat]
-	GetListForUser(userId int64, limit int, offset int) ([]domain.Chat, error)
-	SearchForUser(userId int64, name string, limit, offset int) ([]domain.Chat, error)
+	GetListForUser(Ctx context.Context, userId int64, limit int, offset int) ([]domain.Chat, error)
+	SearchForUser(Ctx context.Context, userId int64, name string, limit, offset int) ([]domain.Chat, error)
 }
 
 func NewChatRepository(app *settings.App) *ChatRepository {
@@ -28,8 +28,8 @@ type ChatRepository struct {
 	BasePostgresRepository[domain.Chat]
 }
 
-func (r *ChatRepository) Create(chat *domain.Chat) error {
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
+func (r *ChatRepository) Create(Ctx context.Context, chat *domain.Chat) error {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
 	defer cancel()
 
 	tx := r.Db.WithContext(ctx).Begin()
@@ -53,8 +53,8 @@ func (r *ChatRepository) Create(chat *domain.Chat) error {
 	return nil
 }
 
-func (r *ChatRepository) GetListForUser(userId int64, limit int, offset int) ([]domain.Chat, error) {
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+func (r *ChatRepository) GetListForUser(Ctx context.Context, userId int64, limit int, offset int) ([]domain.Chat, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
 	defer cancel()
 
 	var chats []domain.Chat
@@ -73,8 +73,8 @@ func (r *ChatRepository) GetListForUser(userId int64, limit int, offset int) ([]
 	return chats, nil
 }
 
-func (r *ChatRepository) SearchForUser(userId int64, name string, limit, offset int) ([]domain.Chat, error) {
-	ctx, cancel := context.WithTimeout(settings.Context.Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+func (r *ChatRepository) SearchForUser(Ctx context.Context, userId int64, name string, limit, offset int) ([]domain.Chat, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
 	defer cancel()
 
 	var chats []domain.Chat

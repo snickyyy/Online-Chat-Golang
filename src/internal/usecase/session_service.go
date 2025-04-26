@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
@@ -12,12 +13,12 @@ import (
 
 //go:generate mockery --name=ISessionService --dir=. --output=../mocks --with-expecter
 type ISessionService interface {
-	GetSession(prefix string, session string) (dto.SessionDTO, error)
-	SetSession(session dto.SessionDTO) (string, error)
-	DeleteSession(prefix string, session string) error
+	GetSession(ctx context.Context, prefix string, session string) (dto.SessionDTO, error)
+	SetSession(ctx context.Context, session dto.SessionDTO) (string, error)
+	DeleteSession(ctx context.Context, prefix string, session string) error
 	DecryptAndParsePayload(session dto.SessionDTO, parseTo any) error
-	GetUserByAuthSession(session string) (dto.UserDTO, error)
-	GetUserByEmailSession(session string) (dto.UserDTO, error)
+	GetUserByAuthSession(ctx context.Context, session string) (dto.UserDTO, error)
+	GetUserByEmailSession(ctx context.Context, session string) (dto.UserDTO, error)
 }
 
 type SessionService struct {
@@ -33,8 +34,8 @@ func NewSessionService(app *settings.App) *SessionService {
 	}
 }
 
-func (s *SessionService) GetSession(prefix string, session string) (dto.SessionDTO, error) {
-	res, err := s.RedisBaseRepository.GetByKey(prefix, session)
+func (s *SessionService) GetSession(ctx context.Context, prefix string, session string) (dto.SessionDTO, error) {
+	res, err := s.RedisBaseRepository.GetByKey(ctx, prefix, session)
 	if err != nil {
 		return dto.SessionDTO{}, usecase_errors.BadRequestError{Msg: "Invalid session"}
 	}
@@ -49,10 +50,11 @@ func (s *SessionService) GetSession(prefix string, session string) (dto.SessionD
 	return sessionBody, nil
 }
 
-func (s *SessionService) SetSession(session dto.SessionDTO) (string, error) {
+func (s *SessionService) SetSession(ctx context.Context, session dto.SessionDTO) (string, error) {
 	encoding, _ := json.Marshal(&session)
 
 	_, err := s.RedisBaseRepository.Create(
+		ctx,
 		session.Prefix,
 		session.SessionID,
 		string(encoding),
@@ -65,8 +67,8 @@ func (s *SessionService) SetSession(session dto.SessionDTO) (string, error) {
 	return session.SessionID, nil
 }
 
-func (s *SessionService) DeleteSession(prefix string, session string) error {
-	_, err := s.RedisBaseRepository.Delete(prefix, session)
+func (s *SessionService) DeleteSession(ctx context.Context, prefix string, session string) error {
+	_, err := s.RedisBaseRepository.Delete(ctx, prefix, session)
 	if err != nil {
 		return usecase_errors.BadRequestError{Msg: "Invalid session"}
 	}
@@ -88,8 +90,8 @@ func (s *SessionService) DecryptAndParsePayload(session dto.SessionDTO, parseTo 
 	return nil
 }
 
-func (s *SessionService) GetUserByAuthSession(session string) (dto.UserDTO, error) {
-	sessionBody, err := s.GetSession(s.App.Config.RedisConfig.Prefixes.SessionPrefix, session)
+func (s *SessionService) GetUserByAuthSession(ctx context.Context, session string) (dto.UserDTO, error) {
+	sessionBody, err := s.GetSession(ctx, s.App.Config.RedisConfig.Prefixes.SessionPrefix, session)
 	if err != nil {
 		return dto.UserDTO{}, usecase_errors.BadRequestError{Msg: "Invalid session"}
 	}
@@ -102,8 +104,8 @@ func (s *SessionService) GetUserByAuthSession(session string) (dto.UserDTO, erro
 	return authSessionBody.UserDTO, nil
 }
 
-func (s *SessionService) GetUserByEmailSession(session string) (dto.UserDTO, error) {
-	sessionBody, err := s.GetSession(s.App.Config.RedisConfig.Prefixes.ConfirmEmail, session)
+func (s *SessionService) GetUserByEmailSession(ctx context.Context, session string) (dto.UserDTO, error) {
+	sessionBody, err := s.GetSession(ctx, s.App.Config.RedisConfig.Prefixes.ConfirmEmail, session)
 	if err != nil {
 		return dto.UserDTO{}, usecase_errors.BadRequestError{Msg: "Invalid session"}
 	}

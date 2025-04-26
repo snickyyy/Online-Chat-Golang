@@ -1,20 +1,24 @@
 package main
 
 import (
+	"context"
 	"libs/src/internal/repositories"
 	"libs/src/settings"
 	"libs/src/settings/server"
 )
 
 func init() {
-	settings.InitContext()
+	settings.AppVar = &settings.App{}
+	ctx, cancel := context.WithCancel(context.Background())
+	settings.AppVar.Ctx = ctx
+	settings.AppVar.Cancel = cancel
 }
 
 func main() {
-	defer settings.Context.Cancel()
+	defer settings.AppVar.Cancel()
 
 	diCont := settings.GetDI()
-	err := diCont.Start(settings.Context.Ctx)
+	err := diCont.Start(settings.AppVar.Ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +27,7 @@ func main() {
 
 	server.RunServer()
 
-	if err := diCont.Stop(settings.Context.Ctx); err != nil {
+	if err := diCont.Stop(settings.AppVar.Ctx); err != nil {
 		panic(err)
 	}
 }

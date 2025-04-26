@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"libs/src/internal/domain/enums"
@@ -86,9 +87,9 @@ func TestCreateChat(t *testing.T) {
 		chatService.ChatRepository = MockChatRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			MockChatRepository.EXPECT().Create(mock.Anything).Return(tc.mockResp)
+			MockChatRepository.EXPECT().Create(context.Background(), mock.Anything).Return(tc.mockResp)
 
-			chat, err := chatService.CreateChat(tc.request, tc.user)
+			chat, err := chatService.CreateChat(context.Background(), tc.request, tc.user)
 			if tc.mustErr {
 				assert.Error(t, err)
 				assert.Equal(t, reflect.TypeOf(err), reflect.TypeOf(tc.respErr))
@@ -163,10 +164,10 @@ func TestDeleteChat(t *testing.T) {
 		service.ChatRepository = mockChatRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockChatRepository.EXPECT().GetById(tc.chatID).Return(tc.GetByIdResp, tc.GetByIdErr)
-			mockChatRepository.EXPECT().DeleteById(tc.chatID).Maybe().Return(tc.DeleteResp)
+			mockChatRepository.EXPECT().GetById(context.Background(), tc.chatID).Return(tc.GetByIdResp, tc.GetByIdErr)
+			mockChatRepository.EXPECT().DeleteById(context.Background(), tc.chatID).Maybe().Return(tc.DeleteResp)
 
-			err := service.DeleteChat(tc.caller, tc.chatID)
+			err := service.DeleteChat(context.Background(), tc.caller, tc.chatID)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -291,9 +292,9 @@ func TestGetChatListForUser(t *testing.T) {
 		chatService.ChatRepository = mockChatRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockChatRepository.EXPECT().GetListForUser(mock.Anything, mock.Anything, mock.Anything).Return(tc.RepoResp, tc.RepoErr)
+			mockChatRepository.EXPECT().GetListForUser(context.Background(), mock.Anything, mock.Anything, mock.Anything).Return(tc.RepoResp, tc.RepoErr)
 
-			chats, err := chatService.GetListForUser(tc.caller, tc.page)
+			chats, err := chatService.GetListForUser(context.Background(), tc.caller, tc.page)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -424,9 +425,9 @@ func TestSearchChat(t *testing.T) {
 		service.ChatRepository = mockChatRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockChatRepository.EXPECT().SearchForUser(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.RepoResp, tc.RepoErr)
+			mockChatRepository.EXPECT().SearchForUser(context.Background(), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.RepoResp, tc.RepoErr)
 
-			chats, err := service.Search(tc.caller, tc.query, tc.page)
+			chats, err := service.Search(context.Background(), tc.caller, tc.query, tc.page)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -537,10 +538,10 @@ func TestGetChatById(t *testing.T) {
 		service.ChatMemberRepository = mockChatMemberRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockChatMemberRepository.EXPECT().Filter(mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.FilterResp, tc.FilterErr)
-			mockChatRepository.EXPECT().GetById(mock.Anything).Maybe().Return(tc.GetByIdResp, tc.GetByIdErr)
+			mockChatMemberRepository.EXPECT().Filter(context.Background(), mock.Anything, mock.Anything, mock.Anything).Maybe().Return(tc.FilterResp, tc.FilterErr)
+			mockChatRepository.EXPECT().GetById(context.Background(), mock.Anything).Maybe().Return(tc.GetByIdResp, tc.GetByIdErr)
 
-			chat, err := service.GetById(tc.caller, tc.chatId)
+			chat, err := service.GetById(context.Background(), tc.caller, tc.chatId)
 
 			if tc.mustErr {
 				assert.Error(t, err)

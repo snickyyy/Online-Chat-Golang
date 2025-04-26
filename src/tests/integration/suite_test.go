@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"context"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"libs/src/settings"
@@ -15,11 +16,16 @@ import (
 
 type AppTestSuite struct {
 	suite.Suite
+	Ctx    context.Context
 	client *http.Client
 }
 
 func (suite *AppTestSuite) SetupSuite() {
-	settings.InitContext()
+	ctx, cancel := context.WithCancel(context.Background())
+	settings.AppVar = &settings.App{
+		Ctx:    ctx,
+		Cancel: cancel,
+	}
 	baseCfg := GetTestConfig()
 
 	db, err := settings.GetDb(baseCfg)
@@ -64,6 +70,7 @@ func (suite *AppTestSuite) SetupSuite() {
 	time.Sleep(500 * time.Millisecond)
 
 	suite.client = &http.Client{}
+	suite.Ctx = ctx
 }
 
 func TestAppTestSuite(t *testing.T) {
