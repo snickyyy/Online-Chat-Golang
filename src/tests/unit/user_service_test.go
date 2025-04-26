@@ -1,7 +1,6 @@
 package unit
 
 import (
-	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -91,9 +90,9 @@ func TestGetUserProfile(t *testing.T) {
 		service.UserRepository = mockUserRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().Filter(context.Background(), mock.Anything, mock.Anything).Return(tc.UserRepoResp, tc.UserRepoErr)
+			mockUserRepository.EXPECT().Filter(mockApp.Ctx, mock.Anything, mock.Anything).Return(tc.UserRepoResp, tc.UserRepoErr)
 
-			res, err := service.GetUserProfile(context.Background(), tc.username)
+			res, err := service.GetUserProfile(mockApp.Ctx, tc.username)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -182,9 +181,9 @@ func TestChangeUserProfile(t *testing.T) {
 		service.UserRepository = mockUserRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().UpdateById(context.Background(), mock.Anything, mock.Anything).Return(tc.userRepoErr)
+			mockUserRepository.EXPECT().UpdateById(mockApp.Ctx, mock.Anything, mock.Anything).Return(tc.userRepoErr)
 
-			err := service.ChangeUserProfile(context.Background(), tc.caller, tc.data)
+			err := service.ChangeUserProfile(mockApp.Ctx, tc.caller, tc.data)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -287,11 +286,11 @@ func TestResetPassword(t *testing.T) {
 		service.EmailService = mockEmailService
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().Filter(context.Background(), mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
-			mockSessionService.EXPECT().SetSession(context.Background(), mock.Anything).Return(tc.sessionServResp, tc.sessionServErr)
+			mockUserRepository.EXPECT().Filter(mockApp.Ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
+			mockSessionService.EXPECT().SetSession(mockApp.Ctx, mock.Anything).Return(tc.sessionServResp, tc.sessionServErr)
 			mockEmailService.EXPECT().SendResetPasswordEmail(mock.Anything, mock.Anything).Maybe().Return(nil)
 
-			code, err := service.ResetPassword(context.Background(), tc.request)
+			code, err := service.ResetPassword(mockApp.Ctx, tc.request)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -460,10 +459,10 @@ func TestChangePassword(t *testing.T) {
 		service.UserRepository = mockUserRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().GetById(context.Background(), mock.Anything).Return(tc.userRepoGetResp, tc.userRepoGetErr)
-			mockUserRepository.EXPECT().UpdateById(context.Background(), mock.Anything, mock.Anything).Return(tc.userRepoUpdateResp)
+			mockUserRepository.EXPECT().GetById(mockApp.Ctx, mock.Anything).Return(tc.userRepoGetResp, tc.userRepoGetErr)
+			mockUserRepository.EXPECT().UpdateById(mockApp.Ctx, mock.Anything, mock.Anything).Return(tc.userRepoUpdateResp)
 
-			err := service.ChangePassword(context.Background(), tc.caller, tc.request)
+			err := service.ChangePassword(mockApp.Ctx, tc.caller, tc.request)
 
 			if tc.mustErr {
 				assert.Error(t, err)

@@ -1,7 +1,6 @@
 package unit
 
 import (
-	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -84,9 +83,9 @@ func TestCheckEmailToken(t *testing.T) {
 		service.SessionService = mockSessionService
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockSessionService.EXPECT().GetUserByEmailSession(context.Background(), tc.sessionId).Return(tc.mockResp, tc.mockErr)
+			mockSessionService.EXPECT().GetUserByEmailSession(mockApp.Ctx, tc.sessionId).Return(tc.mockResp, tc.mockErr)
 
-			res, err := service.CheckEmailToken(context.Background(), tc.sessionId)
+			res, err := service.CheckEmailToken(mockApp.Ctx, tc.sessionId)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -194,12 +193,12 @@ func TestConfirmAccount(t *testing.T) {
 			mockSessionService := new(mocks.ISessionService)
 			service.UserRepository = mockUserRepository
 			service.SessionService = mockSessionService
-			mockSessionService.EXPECT().GetUserByEmailSession(context.Background(), mock.Anything).Return(tc.SessServGetUserByEmailSessResp, tc.SessServGetUserByEmailSessErr)
-			mockUserRepository.EXPECT().UpdateById(context.Background(), mock.Anything, mock.Anything).Maybe().Return(tc.UserRepoUpdateByIdResp)
-			mockSessionService.EXPECT().SetSession(context.Background(), mock.Anything).Maybe().Return(tc.SessServSetSessionResp, tc.SessServSetSessionErr)
-			mockSessionService.EXPECT().DeleteSession(context.Background(), mock.Anything, mock.Anything).Maybe().Return(tc.UserRepoUpdateByIdResp)
+			mockSessionService.EXPECT().GetUserByEmailSession(mockApp.Ctx, mock.Anything).Return(tc.SessServGetUserByEmailSessResp, tc.SessServGetUserByEmailSessErr)
+			mockUserRepository.EXPECT().UpdateById(mockApp.Ctx, mock.Anything, mock.Anything).Maybe().Return(tc.UserRepoUpdateByIdResp)
+			mockSessionService.EXPECT().SetSession(mockApp.Ctx, mock.Anything).Maybe().Return(tc.SessServSetSessionResp, tc.SessServSetSessionErr)
+			mockSessionService.EXPECT().DeleteSession(mockApp.Ctx, mock.Anything, mock.Anything).Maybe().Return(tc.UserRepoUpdateByIdResp)
 
-			res, err := service.ConfirmAccount(context.Background(), tc.caller, tc.Param)
+			res, err := service.ConfirmAccount(mockApp.Ctx, tc.caller, tc.Param)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -305,11 +304,11 @@ func TestRegisterUser(t *testing.T) {
 		service.EmailService = mockEmailService
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().Create(context.Background(), mock.Anything).Return(tc.UserRepoResp)
-			mockSessionService.EXPECT().SetSession(context.Background(), mock.Anything).Return(tc.SessionServResp, tc.SessionServErr)
+			mockUserRepository.EXPECT().Create(mockApp.Ctx, mock.Anything).Return(tc.UserRepoResp)
+			mockSessionService.EXPECT().SetSession(mockApp.Ctx, mock.Anything).Return(tc.SessionServResp, tc.SessionServErr)
 			mockEmailService.EXPECT().SendRegisterEmail(mock.Anything, mock.Anything).Maybe().Return(tc.respError)
 
-			err := service.RegisterUser(context.Background(), tc.caller, tc.data)
+			err := service.RegisterUser(mockApp.Ctx, tc.caller, tc.data)
 
 			if tc.mustErr {
 				assert.Error(t, err)
@@ -480,10 +479,10 @@ func TestLogin(t *testing.T) {
 		service.SessionService = mockSessionService
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().Filter(context.Background(), mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
-			mockSessionService.EXPECT().SetSession(context.Background(), mock.Anything).Return(tc.sessServResp, tc.sessServErr)
+			mockUserRepository.EXPECT().Filter(mockApp.Ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
+			mockSessionService.EXPECT().SetSession(mockApp.Ctx, mock.Anything).Return(tc.sessServResp, tc.sessServErr)
 
-			res, err := service.Login(context.Background(), tc.caller, tc.data)
+			res, err := service.Login(mockApp.Ctx, tc.caller, tc.data)
 			if tc.mustErr {
 				assert.Error(t, err)
 				assert.Equal(t, reflect.TypeOf(tc.expectedError), reflect.TypeOf(err))
