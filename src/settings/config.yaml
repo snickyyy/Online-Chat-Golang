@@ -20,6 +20,7 @@ auth:
   session_auth_ttl: 86400
   confirm_email_ttl: 3600
   reset_password_ttl: 600
+  is_online_ttl: 90
   time_to_change_password: 86400
 
 mongo:
@@ -34,6 +35,7 @@ redis:
     message: "message:"
     confirm_email: "confirm_email:"
     confirm_reset_password: "confirm_reset_password:"
+    in_online: "in_online:"
 
 pagination:
   chat_list: 25

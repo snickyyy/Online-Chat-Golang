@@ -15,6 +15,7 @@ import (
 	"libs/src/settings"
 	"mime/multipart"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -251,4 +252,16 @@ func (s *UserService) ChangePassword(ctx context.Context, caller dto.UserDTO, re
 		}
 	}
 	return nil
+}
+
+func (s *UserService) SetOnline(ctx context.Context, userId int64) error {
+	session := dto.SessionDTO{
+		SessionID: strconv.Itoa(int(userId)),
+		Expire:    time.Now().Add(time.Duration(s.App.Config.AuthConfig.IsOnlineTTL) * time.Second),
+		Prefix:    s.App.Config.RedisConfig.Prefixes.InOnline,
+		Payload:   "",
+	}
+
+	_, err := s.SessionService.SetSession(ctx, session)
+	return err
 }

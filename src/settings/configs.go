@@ -56,6 +56,7 @@ type RedisPrefixes struct {
 	Message              string `mapstructure:"message"`
 	ResetPassword        string `mapstructure:"reset_password"`
 	ConfirmResetPassword string `mapstructure:"confirm_reset_password"`
+	InOnline             string `mapstructure:"in_online"`
 }
 
 type RedisConfig struct {
@@ -82,6 +83,7 @@ type AuthConfig struct {
 	AuthSessionTTL       int64 `mapstructure:"session_auth_ttl"`
 	EmailConfirmTTL      int64 `mapstructure:"confirm_email_ttl"`
 	ResetPasswordTTL     int64 `mapstructure:"reset_password_ttl"`
+	IsOnlineTTL          int64 `mapstructure:"is_online_ttl"`
 	TimeToChangePassword int64 `mapstructure:"time_to_change_password"`
 }
 
