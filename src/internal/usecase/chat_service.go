@@ -1,12 +1,13 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"libs/src/internal/domain/enums"
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 )
 
@@ -26,9 +27,9 @@ func NewChatService(app *settings.App) *ChatService {
 	}
 }
 
-func (s *ChatService) CreateChat(request dto.CreateChatRequest, user dto.UserDTO) (dto.ChatDTO, error) {
+func (s *ChatService) CreateChat(ctx context.Context, request dto.CreateChatRequest, user dto.UserDTO) (dto.ChatDTO, error) {
 	if user.Role == enums.ANONYMOUS || !user.IsActive {
-		return dto.ChatDTO{}, api_errors.ErrUnauthorized
+		return dto.ChatDTO{}, usecase_errors.UnauthorizedError{Msg: "You must be logged in to create members"}
 	}
 
 	newChat := domain.Chat{
@@ -37,56 +38,56 @@ func (s *ChatService) CreateChat(request dto.CreateChatRequest, user dto.UserDTO
 		OwnerID:     user.ID,
 	}
 
-	err := s.ChatRepository.Create(&newChat)
+	err := s.ChatRepository.Create(ctx, &newChat)
 	if err != nil {
 		if errors.Is(err, repositories.ErrDuplicate) {
-			return dto.ChatDTO{}, api_errors.ErrChatAlreadyExists
+			return dto.ChatDTO{}, usecase_errors.AlreadyExistsError{Msg: "Chat with this name already exists"}
 		}
 		return dto.ChatDTO{}, err
 	}
 	return newChat.ToDTO(), nil
 }
 
-func (s *ChatService) DeleteChat(caller dto.UserDTO, chatID int64) error {
+func (s *ChatService) DeleteChat(ctx context.Context, caller dto.UserDTO, chatID int64) error {
 	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
-		return api_errors.ErrUnauthorized
+		return usecase_errors.UnauthorizedError{Msg: "You must be logged in to delete members"}
 	}
 
-	chat, err := s.ChatRepository.GetById(chatID)
+	chat, err := s.ChatRepository.GetById(ctx, chatID)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrChatNotFound
+			return usecase_errors.NotFoundError{Msg: "Chat with this ID not found"}
 		}
 		return err
 	}
 
 	if chat.OwnerID != caller.ID {
-		return api_errors.ErrNotEnoughPermissionsForDelete
+		return usecase_errors.PermissionError{Msg: "You have no permission to delete this chat"}
 	}
-	err = s.ChatRepository.DeleteById(chatID)
+	err = s.ChatRepository.DeleteById(ctx, chatID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {
-			return api_errors.ErrChatNotFound
+			return usecase_errors.NotFoundError{Msg: "Chat with this ID not found"}
 		}
 		return err
 	}
 	return nil
 }
 
-func (s *ChatService) ChangeChat(caller dto.UserDTO, chatId int64, request dto.ChangeChatRequest) error {
+func (s *ChatService) ChangeChat(ctx context.Context, caller dto.UserDTO, chatId int64, request dto.ChangeChatRequest) error {
 	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
-		return api_errors.ErrUnauthorized
+		return usecase_errors.UnauthorizedError{Msg: "You must be logged in to change members"}
 	}
 
-	chat, err := s.ChatRepository.GetById(chatId)
+	chat, err := s.ChatRepository.GetById(ctx, chatId)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrChatNotFound
+			return usecase_errors.NotFoundError{Msg: "Chat with this ID not found"}
 		}
 		return err
 	}
 	if chat.OwnerID != caller.ID {
-		return api_errors.ErrNotEnoughPermissionsForChangeChat
+		return usecase_errors.PermissionError{Msg: "You have no permission to change this chat"}
 	}
 
 	filterData := map[string]*string{
@@ -102,28 +103,28 @@ func (s *ChatService) ChangeChat(caller dto.UserDTO, chatId int64, request dto.C
 		}
 	}
 
-	err = s.ChatRepository.UpdateById(chatId, updateData)
+	err = s.ChatRepository.UpdateById(ctx, chatId, updateData)
 	if err != nil {
 		if errors.As(err, &repositories.ErrDuplicate) {
-			return api_errors.ErrChatAlreadyExists
+			return usecase_errors.AlreadyExistsError{Msg: "Chat with this name already exists"}
 		}
 	}
 	return nil
 }
 
-func (s *ChatService) GetListForUser(caller dto.UserDTO, page int) ([]dto.ChatDTO, error) {
+func (s *ChatService) GetListForUser(ctx context.Context, caller dto.UserDTO, page int) ([]dto.ChatDTO, error) {
 	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
 		return []dto.ChatDTO{}, nil
 	}
 
 	if page < 1 {
-		return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+		return []dto.ChatDTO{}, usecase_errors.BadRequestError{Msg: "Invalid page"}
 	}
 
-	list, err := s.ChatRepository.GetListForUser(caller.ID, s.App.Config.Pagination.ChatList, (page-1)*s.App.Config.Pagination.ChatList)
+	list, err := s.ChatRepository.GetListForUser(ctx, caller.ID, s.App.Config.Pagination.ChatList, (page-1)*s.App.Config.Pagination.ChatList)
 	if err != nil {
 		if errors.As(err, &repositories.ErrLimitMustBePositive) || errors.As(err, &repositories.ErrOffsetMustBePositive) {
-			return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+			return []dto.ChatDTO{}, usecase_errors.BadRequestError{Msg: "Invalid page"}
 		}
 		return []dto.ChatDTO{}, err
 	}
@@ -136,19 +137,19 @@ func (s *ChatService) GetListForUser(caller dto.UserDTO, page int) ([]dto.ChatDT
 	return result, nil
 }
 
-func (s *ChatService) Search(caller dto.UserDTO, name string, page int) ([]dto.ChatDTO, error) {
+func (s *ChatService) Search(ctx context.Context, caller dto.UserDTO, name string, page int) ([]dto.ChatDTO, error) {
 	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
 		return []dto.ChatDTO{}, nil
 	}
 
 	if page < 1 {
-		return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+		return []dto.ChatDTO{}, usecase_errors.BadRequestError{Msg: "Invalid page"}
 	}
 
-	list, err := s.ChatRepository.SearchForUser(caller.ID, name, s.App.Config.Pagination.ChatList, (page-1)*s.App.Config.Pagination.ChatList)
+	list, err := s.ChatRepository.SearchForUser(ctx, caller.ID, name, s.App.Config.Pagination.ChatList, (page-1)*s.App.Config.Pagination.ChatList)
 	if err != nil {
 		if errors.As(err, &repositories.ErrLimitMustBePositive) || errors.As(err, &repositories.ErrOffsetMustBePositive) {
-			return []dto.ChatDTO{}, api_errors.ErrInvalidPage
+			return []dto.ChatDTO{}, usecase_errors.BadRequestError{Msg: "Invalid page"}
 		}
 		return []dto.ChatDTO{}, err
 	}
@@ -161,23 +162,23 @@ func (s *ChatService) Search(caller dto.UserDTO, name string, page int) ([]dto.C
 	return result, nil
 }
 
-func (s *ChatService) GetById(caller dto.UserDTO, chatId int64) (dto.ChatDTO, error) {
+func (s *ChatService) GetById(ctx context.Context, caller dto.UserDTO, chatId int64) (dto.ChatDTO, error) {
 	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
-		return dto.ChatDTO{}, api_errors.ErrUnauthorized
+		return dto.ChatDTO{}, usecase_errors.UnauthorizedError{Msg: "You must be logged in to get members"}
 	}
 
-	member, err := s.ChatMemberRepository.Filter("user_id = ? AND chat_id = ?", caller.ID, chatId)
+	member, err := s.ChatMemberRepository.Filter(ctx, "user_id = ? AND chat_id = ?", caller.ID, chatId)
 	if err != nil {
 		return dto.ChatDTO{}, err
 	}
 	if len(member) < 1 {
-		return dto.ChatDTO{}, api_errors.ErrChatNotFound
+		return dto.ChatDTO{}, usecase_errors.NotFoundError{Msg: "Chat with this ID not found"}
 	}
 
-	chat, err := s.ChatRepository.GetById(chatId)
+	chat, err := s.ChatRepository.GetById(ctx, chatId)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return dto.ChatDTO{}, api_errors.ErrChatNotFound
+			return dto.ChatDTO{}, usecase_errors.NotFoundError{Msg: "Chat with this ID not found"}
 		}
 		return dto.ChatDTO{}, err
 	}

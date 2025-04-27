@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"fmt"
 	"libs/src/internal/domain/enums"
 	domain "libs/src/internal/domain/models"
@@ -12,10 +13,10 @@ import (
 //go:generate mockery --name=IChatMemberRepository --dir=. --output=../mocks --with-expecter
 type IChatMemberRepository interface {
 	IBasePostgresRepository[domain.ChatMember]
-	SetNewRole(chatId, userId int64, role byte) error
-	GetMemberInfo(memberId, chatId int64) (dto.MemberInfo, error)
-	DeleteMember(memberId, chatId int64) error
-	GetMembersPreview(chatId int64, limit, offset int, searchUsername string) ([]dto.MemberPreview, error)
+	SetNewRole(Ctx context.Context, chatId, userId int64, role byte) error
+	GetMemberInfo(Ctx context.Context, memberId, chatId int64) (dto.MemberInfo, error)
+	DeleteMember(Ctx context.Context, memberId, chatId int64) error
+	GetMembersPreview(Ctx context.Context, chatId int64, limit, offset int, searchUsername string) ([]dto.MemberPreview, error)
 }
 
 func NewChatMemberRepository(app *settings.App) *ChatMemberRepository {
@@ -31,8 +32,11 @@ type ChatMemberRepository struct {
 	BasePostgresRepository[domain.ChatMember]
 }
 
-func (r *ChatMemberRepository) SetNewRole(chatId, userId int64, role byte) error {
-	res := r.Db.Model(&r.Model).
+func (r *ChatMemberRepository) SetNewRole(Ctx context.Context, chatId, userId int64, role byte) error {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Small)*time.Millisecond)
+	defer cancel()
+
+	res := r.Db.WithContext(ctx).Model(&r.Model).
 		Where("chat_id = ? AND user_id = ?", chatId, userId).
 		Update("member_role", role)
 
@@ -45,9 +49,12 @@ func (r *ChatMemberRepository) SetNewRole(chatId, userId int64, role byte) error
 	return nil
 }
 
-func (r *ChatMemberRepository) GetMemberInfo(memberId, chatId int64) (dto.MemberInfo, error) {
+func (r *ChatMemberRepository) GetMemberInfo(Ctx context.Context, memberId, chatId int64) (dto.MemberInfo, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	defer cancel()
+
 	var memberInfo dto.MemberInfo
-	res := r.Db.Raw(`
+	res := r.Db.WithContext(ctx).Raw(`
 				SELECT chats.id AS chat_id,
 					   chats.title AS chat_title,
 					   user_id AS member_id,
@@ -68,8 +75,11 @@ func (r *ChatMemberRepository) GetMemberInfo(memberId, chatId int64) (dto.Member
 	return memberInfo, nil
 }
 
-func (r *ChatMemberRepository) DeleteMember(memberId, chatId int64) error {
-	res := r.Db.Where("user_id = ? AND chat_id = ?", memberId, chatId).Delete(&r.Model)
+func (r *ChatMemberRepository) DeleteMember(Ctx context.Context, memberId, chatId int64) error {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Small)*time.Millisecond)
+	defer cancel()
+
+	res := r.Db.WithContext(ctx).Where("user_id = ? AND chat_id = ?", memberId, chatId).Delete(&r.Model)
 	if res.Error != nil {
 		return parsePgError(res.Error)
 	}
@@ -79,7 +89,7 @@ func (r *ChatMemberRepository) DeleteMember(memberId, chatId int64) error {
 	return nil
 }
 
-func (r *ChatMemberRepository) GetMembersPreview(chatId int64, limit, offset int, searchUsername string) ([]dto.MemberPreview, error) {
+func (r *ChatMemberRepository) GetMembersPreview(Ctx context.Context, chatId int64, limit, offset int, searchUsername string) ([]dto.MemberPreview, error) {
 	members := []struct {
 		Username string    `gorm:"column:username"`
 		Avatar   string    `gorm:"column:avatar"`
@@ -114,7 +124,10 @@ func (r *ChatMemberRepository) GetMembersPreview(chatId int64, limit, offset int
 	baseQuery += ` LIMIT ? OFFSET ? `  // Add limit and offset to the query
 	args = append(args, limit, offset) // Add limit and offset to the arguments
 
-	res := r.Db.Raw(baseQuery, args...).Scan(&members) // коментарии - колхоз, добавил чисто что бы через неделю понять что тут происходит
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	defer cancel()
+
+	res := r.Db.WithContext(ctx).Raw(baseQuery, args...).Scan(&members) // коментарии - колхоз, добавил чисто что бы через неделю понять что тут происходит
 	if res.Error != nil {
 		return nil, parsePgError(res.Error)
 	}

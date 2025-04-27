@@ -3,6 +3,7 @@
 package mocks
 
 import (
+	context "context"
 	dto "libs/src/internal/dto"
 
 	mock "github.com/stretchr/testify/mock"
@@ -23,9 +24,9 @@ func (_m *IBaseRedisRepository) EXPECT() *IBaseRedisRepository_Expecter {
 	return &IBaseRedisRepository_Expecter{mock: &_m.Mock}
 }
 
-// CountAll provides a mock function with no fields
-func (_m *IBaseRedisRepository) CountAll() (int64, error) {
-	ret := _m.Called()
+// CountAll provides a mock function with given fields: Ctx
+func (_m *IBaseRedisRepository) CountAll(Ctx context.Context) (int64, error) {
+	ret := _m.Called(Ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CountAll")
@@ -33,17 +34,17 @@ func (_m *IBaseRedisRepository) CountAll() (int64, error) {
 
 	var r0 int64
 	var r1 error
-	if rf, ok := ret.Get(0).(func() (int64, error)); ok {
-		return rf()
+	if rf, ok := ret.Get(0).(func(context.Context) (int64, error)); ok {
+		return rf(Ctx)
 	}
-	if rf, ok := ret.Get(0).(func() int64); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context) int64); ok {
+		r0 = rf(Ctx)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(Ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -57,13 +58,14 @@ type IBaseRedisRepository_CountAll_Call struct {
 }
 
 // CountAll is a helper method to define mock.On call
-func (_e *IBaseRedisRepository_Expecter) CountAll() *IBaseRedisRepository_CountAll_Call {
-	return &IBaseRedisRepository_CountAll_Call{Call: _e.mock.On("CountAll")}
+//   - Ctx context.Context
+func (_e *IBaseRedisRepository_Expecter) CountAll(Ctx interface{}) *IBaseRedisRepository_CountAll_Call {
+	return &IBaseRedisRepository_CountAll_Call{Call: _e.mock.On("CountAll", Ctx)}
 }
 
-func (_c *IBaseRedisRepository_CountAll_Call) Run(run func()) *IBaseRedisRepository_CountAll_Call {
+func (_c *IBaseRedisRepository_CountAll_Call) Run(run func(Ctx context.Context)) *IBaseRedisRepository_CountAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context))
 	})
 	return _c
 }
@@ -73,14 +75,14 @@ func (_c *IBaseRedisRepository_CountAll_Call) Return(_a0 int64, _a1 error) *IBas
 	return _c
 }
 
-func (_c *IBaseRedisRepository_CountAll_Call) RunAndReturn(run func() (int64, error)) *IBaseRedisRepository_CountAll_Call {
+func (_c *IBaseRedisRepository_CountAll_Call) RunAndReturn(run func(context.Context) (int64, error)) *IBaseRedisRepository_CountAll_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Create provides a mock function with given fields: prefix, key, value, expiration
-func (_m *IBaseRedisRepository) Create(prefix string, key string, value interface{}, expiration time.Duration) (string, error) {
-	ret := _m.Called(prefix, key, value, expiration)
+// Create provides a mock function with given fields: Ctx, prefix, key, value, expiration
+func (_m *IBaseRedisRepository) Create(Ctx context.Context, prefix string, key string, value interface{}, expiration time.Duration) (string, error) {
+	ret := _m.Called(Ctx, prefix, key, value, expiration)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
@@ -88,17 +90,17 @@ func (_m *IBaseRedisRepository) Create(prefix string, key string, value interfac
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string, interface{}, time.Duration) (string, error)); ok {
-		return rf(prefix, key, value, expiration)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, interface{}, time.Duration) (string, error)); ok {
+		return rf(Ctx, prefix, key, value, expiration)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, interface{}, time.Duration) string); ok {
-		r0 = rf(prefix, key, value, expiration)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, interface{}, time.Duration) string); ok {
+		r0 = rf(Ctx, prefix, key, value, expiration)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, interface{}, time.Duration) error); ok {
-		r1 = rf(prefix, key, value, expiration)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, interface{}, time.Duration) error); ok {
+		r1 = rf(Ctx, prefix, key, value, expiration)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -112,17 +114,18 @@ type IBaseRedisRepository_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - prefix string
 //   - key string
 //   - value interface{}
 //   - expiration time.Duration
-func (_e *IBaseRedisRepository_Expecter) Create(prefix interface{}, key interface{}, value interface{}, expiration interface{}) *IBaseRedisRepository_Create_Call {
-	return &IBaseRedisRepository_Create_Call{Call: _e.mock.On("Create", prefix, key, value, expiration)}
+func (_e *IBaseRedisRepository_Expecter) Create(Ctx interface{}, prefix interface{}, key interface{}, value interface{}, expiration interface{}) *IBaseRedisRepository_Create_Call {
+	return &IBaseRedisRepository_Create_Call{Call: _e.mock.On("Create", Ctx, prefix, key, value, expiration)}
 }
 
-func (_c *IBaseRedisRepository_Create_Call) Run(run func(prefix string, key string, value interface{}, expiration time.Duration)) *IBaseRedisRepository_Create_Call {
+func (_c *IBaseRedisRepository_Create_Call) Run(run func(Ctx context.Context, prefix string, key string, value interface{}, expiration time.Duration)) *IBaseRedisRepository_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string), args[2].(interface{}), args[3].(time.Duration))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(interface{}), args[4].(time.Duration))
 	})
 	return _c
 }
@@ -132,14 +135,14 @@ func (_c *IBaseRedisRepository_Create_Call) Return(_a0 string, _a1 error) *IBase
 	return _c
 }
 
-func (_c *IBaseRedisRepository_Create_Call) RunAndReturn(run func(string, string, interface{}, time.Duration) (string, error)) *IBaseRedisRepository_Create_Call {
+func (_c *IBaseRedisRepository_Create_Call) RunAndReturn(run func(context.Context, string, string, interface{}, time.Duration) (string, error)) *IBaseRedisRepository_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Delete provides a mock function with given fields: prefix, key
-func (_m *IBaseRedisRepository) Delete(prefix string, key string) (int64, error) {
-	ret := _m.Called(prefix, key)
+// Delete provides a mock function with given fields: Ctx, prefix, key
+func (_m *IBaseRedisRepository) Delete(Ctx context.Context, prefix string, key string) (int64, error) {
+	ret := _m.Called(Ctx, prefix, key)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Delete")
@@ -147,17 +150,17 @@ func (_m *IBaseRedisRepository) Delete(prefix string, key string) (int64, error)
 
 	var r0 int64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string) (int64, error)); ok {
-		return rf(prefix, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (int64, error)); ok {
+		return rf(Ctx, prefix, key)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) int64); ok {
-		r0 = rf(prefix, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) int64); ok {
+		r0 = rf(Ctx, prefix, key)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(prefix, key)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(Ctx, prefix, key)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -171,15 +174,16 @@ type IBaseRedisRepository_Delete_Call struct {
 }
 
 // Delete is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - prefix string
 //   - key string
-func (_e *IBaseRedisRepository_Expecter) Delete(prefix interface{}, key interface{}) *IBaseRedisRepository_Delete_Call {
-	return &IBaseRedisRepository_Delete_Call{Call: _e.mock.On("Delete", prefix, key)}
+func (_e *IBaseRedisRepository_Expecter) Delete(Ctx interface{}, prefix interface{}, key interface{}) *IBaseRedisRepository_Delete_Call {
+	return &IBaseRedisRepository_Delete_Call{Call: _e.mock.On("Delete", Ctx, prefix, key)}
 }
 
-func (_c *IBaseRedisRepository_Delete_Call) Run(run func(prefix string, key string)) *IBaseRedisRepository_Delete_Call {
+func (_c *IBaseRedisRepository_Delete_Call) Run(run func(Ctx context.Context, prefix string, key string)) *IBaseRedisRepository_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -189,14 +193,14 @@ func (_c *IBaseRedisRepository_Delete_Call) Return(_a0 int64, _a1 error) *IBaseR
 	return _c
 }
 
-func (_c *IBaseRedisRepository_Delete_Call) RunAndReturn(run func(string, string) (int64, error)) *IBaseRedisRepository_Delete_Call {
+func (_c *IBaseRedisRepository_Delete_Call) RunAndReturn(run func(context.Context, string, string) (int64, error)) *IBaseRedisRepository_Delete_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetByKey provides a mock function with given fields: prefix, key
-func (_m *IBaseRedisRepository) GetByKey(prefix string, key string) (string, error) {
-	ret := _m.Called(prefix, key)
+// GetByKey provides a mock function with given fields: Ctx, prefix, key
+func (_m *IBaseRedisRepository) GetByKey(Ctx context.Context, prefix string, key string) (string, error) {
+	ret := _m.Called(Ctx, prefix, key)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetByKey")
@@ -204,17 +208,17 @@ func (_m *IBaseRedisRepository) GetByKey(prefix string, key string) (string, err
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string) (string, error)); ok {
-		return rf(prefix, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (string, error)); ok {
+		return rf(Ctx, prefix, key)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) string); ok {
-		r0 = rf(prefix, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
+		r0 = rf(Ctx, prefix, key)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(prefix, key)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(Ctx, prefix, key)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -228,15 +232,16 @@ type IBaseRedisRepository_GetByKey_Call struct {
 }
 
 // GetByKey is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - prefix string
 //   - key string
-func (_e *IBaseRedisRepository_Expecter) GetByKey(prefix interface{}, key interface{}) *IBaseRedisRepository_GetByKey_Call {
-	return &IBaseRedisRepository_GetByKey_Call{Call: _e.mock.On("GetByKey", prefix, key)}
+func (_e *IBaseRedisRepository_Expecter) GetByKey(Ctx interface{}, prefix interface{}, key interface{}) *IBaseRedisRepository_GetByKey_Call {
+	return &IBaseRedisRepository_GetByKey_Call{Call: _e.mock.On("GetByKey", Ctx, prefix, key)}
 }
 
-func (_c *IBaseRedisRepository_GetByKey_Call) Run(run func(prefix string, key string)) *IBaseRedisRepository_GetByKey_Call {
+func (_c *IBaseRedisRepository_GetByKey_Call) Run(run func(Ctx context.Context, prefix string, key string)) *IBaseRedisRepository_GetByKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -246,14 +251,14 @@ func (_c *IBaseRedisRepository_GetByKey_Call) Return(_a0 string, _a1 error) *IBa
 	return _c
 }
 
-func (_c *IBaseRedisRepository_GetByKey_Call) RunAndReturn(run func(string, string) (string, error)) *IBaseRedisRepository_GetByKey_Call {
+func (_c *IBaseRedisRepository_GetByKey_Call) RunAndReturn(run func(context.Context, string, string) (string, error)) *IBaseRedisRepository_GetByKey_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// IsExist provides a mock function with given fields: prefix, key
-func (_m *IBaseRedisRepository) IsExist(prefix string, key string) (bool, error) {
-	ret := _m.Called(prefix, key)
+// IsExist provides a mock function with given fields: Ctx, prefix, key
+func (_m *IBaseRedisRepository) IsExist(Ctx context.Context, prefix string, key string) (bool, error) {
+	ret := _m.Called(Ctx, prefix, key)
 
 	if len(ret) == 0 {
 		panic("no return value specified for IsExist")
@@ -261,17 +266,17 @@ func (_m *IBaseRedisRepository) IsExist(prefix string, key string) (bool, error)
 
 	var r0 bool
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string) (bool, error)); ok {
-		return rf(prefix, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (bool, error)); ok {
+		return rf(Ctx, prefix, key)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) bool); ok {
-		r0 = rf(prefix, key)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) bool); ok {
+		r0 = rf(Ctx, prefix, key)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(prefix, key)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(Ctx, prefix, key)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -285,15 +290,16 @@ type IBaseRedisRepository_IsExist_Call struct {
 }
 
 // IsExist is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - prefix string
 //   - key string
-func (_e *IBaseRedisRepository_Expecter) IsExist(prefix interface{}, key interface{}) *IBaseRedisRepository_IsExist_Call {
-	return &IBaseRedisRepository_IsExist_Call{Call: _e.mock.On("IsExist", prefix, key)}
+func (_e *IBaseRedisRepository_Expecter) IsExist(Ctx interface{}, prefix interface{}, key interface{}) *IBaseRedisRepository_IsExist_Call {
+	return &IBaseRedisRepository_IsExist_Call{Call: _e.mock.On("IsExist", Ctx, prefix, key)}
 }
 
-func (_c *IBaseRedisRepository_IsExist_Call) Run(run func(prefix string, key string)) *IBaseRedisRepository_IsExist_Call {
+func (_c *IBaseRedisRepository_IsExist_Call) Run(run func(Ctx context.Context, prefix string, key string)) *IBaseRedisRepository_IsExist_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -303,14 +309,14 @@ func (_c *IBaseRedisRepository_IsExist_Call) Return(_a0 bool, _a1 error) *IBaseR
 	return _c
 }
 
-func (_c *IBaseRedisRepository_IsExist_Call) RunAndReturn(run func(string, string) (bool, error)) *IBaseRedisRepository_IsExist_Call {
+func (_c *IBaseRedisRepository_IsExist_Call) RunAndReturn(run func(context.Context, string, string) (bool, error)) *IBaseRedisRepository_IsExist_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// SetDTO provides a mock function with given fields: prefix, obj
-func (_m *IBaseRedisRepository) SetDTO(prefix string, obj dto.SessionDTO) (string, error) {
-	ret := _m.Called(prefix, obj)
+// SetDTO provides a mock function with given fields: Ctx, prefix, obj
+func (_m *IBaseRedisRepository) SetDTO(Ctx context.Context, prefix string, obj dto.SessionDTO) (string, error) {
+	ret := _m.Called(Ctx, prefix, obj)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SetDTO")
@@ -318,17 +324,17 @@ func (_m *IBaseRedisRepository) SetDTO(prefix string, obj dto.SessionDTO) (strin
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, dto.SessionDTO) (string, error)); ok {
-		return rf(prefix, obj)
+	if rf, ok := ret.Get(0).(func(context.Context, string, dto.SessionDTO) (string, error)); ok {
+		return rf(Ctx, prefix, obj)
 	}
-	if rf, ok := ret.Get(0).(func(string, dto.SessionDTO) string); ok {
-		r0 = rf(prefix, obj)
+	if rf, ok := ret.Get(0).(func(context.Context, string, dto.SessionDTO) string); ok {
+		r0 = rf(Ctx, prefix, obj)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, dto.SessionDTO) error); ok {
-		r1 = rf(prefix, obj)
+	if rf, ok := ret.Get(1).(func(context.Context, string, dto.SessionDTO) error); ok {
+		r1 = rf(Ctx, prefix, obj)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -342,15 +348,16 @@ type IBaseRedisRepository_SetDTO_Call struct {
 }
 
 // SetDTO is a helper method to define mock.On call
+//   - Ctx context.Context
 //   - prefix string
 //   - obj dto.SessionDTO
-func (_e *IBaseRedisRepository_Expecter) SetDTO(prefix interface{}, obj interface{}) *IBaseRedisRepository_SetDTO_Call {
-	return &IBaseRedisRepository_SetDTO_Call{Call: _e.mock.On("SetDTO", prefix, obj)}
+func (_e *IBaseRedisRepository_Expecter) SetDTO(Ctx interface{}, prefix interface{}, obj interface{}) *IBaseRedisRepository_SetDTO_Call {
+	return &IBaseRedisRepository_SetDTO_Call{Call: _e.mock.On("SetDTO", Ctx, prefix, obj)}
 }
 
-func (_c *IBaseRedisRepository_SetDTO_Call) Run(run func(prefix string, obj dto.SessionDTO)) *IBaseRedisRepository_SetDTO_Call {
+func (_c *IBaseRedisRepository_SetDTO_Call) Run(run func(Ctx context.Context, prefix string, obj dto.SessionDTO)) *IBaseRedisRepository_SetDTO_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(dto.SessionDTO))
+		run(args[0].(context.Context), args[1].(string), args[2].(dto.SessionDTO))
 	})
 	return _c
 }
@@ -360,7 +367,7 @@ func (_c *IBaseRedisRepository_SetDTO_Call) Return(_a0 string, _a1 error) *IBase
 	return _c
 }
 
-func (_c *IBaseRedisRepository_SetDTO_Call) RunAndReturn(run func(string, dto.SessionDTO) (string, error)) *IBaseRedisRepository_SetDTO_Call {
+func (_c *IBaseRedisRepository_SetDTO_Call) RunAndReturn(run func(context.Context, string, dto.SessionDTO) (string, error)) *IBaseRedisRepository_SetDTO_Call {
 	_c.Call.Return(run)
 	return _c
 }

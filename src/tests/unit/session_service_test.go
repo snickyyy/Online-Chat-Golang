@@ -8,8 +8,9 @@ import (
 	"libs/src/internal/dto"
 	"libs/src/internal/mocks"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/pkg/utils"
+	"reflect"
 	"testing"
 )
 
@@ -30,7 +31,7 @@ func TestGetSession(t *testing.T) {
 		mustRespErr error
 		mustErr     bool
 	}{
-		{"TestGetSessionInvalidSession", "test", "test", "", errors.New("Invalid session"), dto.SessionDTO{}, api_errors.ErrInvalidSession, true},
+		{"TestGetSessionInvalidSession", "test", "test", "", errors.New("Invalid session"), dto.SessionDTO{}, usecase_errors.BadRequestError{}, true},
 		{"TestGetSessionValidSession", "test", "test", `{"id":"test","prefix":"test","payload":"test"}`, nil, dto.SessionDTO{SessionID: "test", Prefix: "test"}, nil, false},
 	}
 	for _, tc := range testCases {
@@ -38,12 +39,12 @@ func TestGetSession(t *testing.T) {
 		sessionService.RedisBaseRepository = mockRedisRepo
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockRedisRepo.EXPECT().GetByKey(tc.Prefix, tc.Session).Return(tc.mockResp, tc.mockErr)
+			mockRedisRepo.EXPECT().GetByKey(mockApp.Ctx, tc.Prefix, tc.Session).Return(tc.mockResp, tc.mockErr)
 
-			resp, err := sessionService.GetSession(tc.Prefix, tc.Session)
+			resp, err := sessionService.GetSession(mockApp.Ctx, tc.Prefix, tc.Session)
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.mustRespErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.mustRespErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.mustResp.SessionID, resp.SessionID)
@@ -69,7 +70,7 @@ func TestDeleteSession(t *testing.T) {
 		mustErr     bool
 	}{
 		{
-			"TestDeleteSessionInvalidSession", "test", "test", 0, errors.New("Invalid session"), api_errors.ErrInvalidSession, true,
+			"TestDeleteSessionInvalidSession", "test", "test", 0, errors.New("Invalid session"), usecase_errors.BadRequestError{}, true,
 		},
 		{
 			"TestDeleteSessionValidSession", "test", "test", 1, nil, nil, false,
@@ -80,12 +81,12 @@ func TestDeleteSession(t *testing.T) {
 		sessionService.RedisBaseRepository = mockRedisRepo
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockRedisRepo.EXPECT().Delete(tc.Prefix, tc.Session).Return(tc.mockResp, tc.mockErr)
+			mockRedisRepo.EXPECT().Delete(mockApp.Ctx, tc.Prefix, tc.Session).Return(tc.mockResp, tc.mockErr)
 
-			err := sessionService.DeleteSession(tc.Prefix, tc.Session)
+			err := sessionService.DeleteSession(mockApp.Ctx, tc.Prefix, tc.Session)
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.mustRespErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.mustRespErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 			}
@@ -112,7 +113,7 @@ func TestGetUserByAuthSession(t *testing.T) {
 			"",
 			errors.New("Invalid session"),
 			dto.UserDTO{},
-			api_errors.ErrInvalidSession,
+			usecase_errors.BadRequestError{},
 			true,
 		},
 		{
@@ -160,12 +161,12 @@ func TestGetUserByAuthSession(t *testing.T) {
 		sessionService.RedisBaseRepository = mockRepo
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockRepo.EXPECT().GetByKey(mockApp.Config.RedisConfig.Prefixes.SessionPrefix, tc.Session).Return(tc.mockResp, tc.mockErr)
+			mockRepo.EXPECT().GetByKey(mockApp.Ctx, mockApp.Config.RedisConfig.Prefixes.SessionPrefix, tc.Session).Return(tc.mockResp, tc.mockErr)
 
-			res, err := sessionService.GetUserByAuthSession(tc.Session)
+			res, err := sessionService.GetUserByAuthSession(mockApp.Ctx, tc.Session)
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.mustRespErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.mustRespErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.mustResp.ID, res.ID)
@@ -196,7 +197,7 @@ func TestGetUserByEmailSession(t *testing.T) {
 			"",
 			errors.New("Invalid session"),
 			dto.UserDTO{},
-			api_errors.ErrInvalidSession,
+			usecase_errors.BadRequestError{},
 			true,
 		},
 		{
@@ -244,12 +245,12 @@ func TestGetUserByEmailSession(t *testing.T) {
 		sessionService.RedisBaseRepository = mockRepo
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockRepo.EXPECT().GetByKey(mockApp.Config.RedisConfig.Prefixes.SessionPrefix, tc.Session).Return(tc.mockResp, tc.mockErr)
+			mockRepo.EXPECT().GetByKey(mockApp.Ctx, mockApp.Config.RedisConfig.Prefixes.SessionPrefix, tc.Session).Return(tc.mockResp, tc.mockErr)
 
-			res, err := sessionService.GetUserByAuthSession(tc.Session)
+			res, err := sessionService.GetUserByAuthSession(mockApp.Ctx, tc.Session)
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.mustRespErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.mustRespErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.mustResp.ID, res.ID)

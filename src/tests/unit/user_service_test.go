@@ -10,8 +10,9 @@ import (
 	"libs/src/internal/mocks"
 	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/pkg/utils"
+	"reflect"
 	"testing"
 )
 
@@ -34,7 +35,7 @@ func TestGetUserProfile(t *testing.T) {
 			testName:     "GetUserProfileNotFound",
 			username:     "testuser",
 			UserRepoResp: []domain.User{},
-			expectedErr:  api_errors.ErrProfileNotFound,
+			expectedErr:  usecase_errors.NotFoundError{},
 			mustErr:      true,
 		},
 		{
@@ -47,7 +48,7 @@ func TestGetUserProfile(t *testing.T) {
 					Role:     enums.ANONYMOUS,
 				},
 			},
-			expectedErr: api_errors.ErrProfileNotFound,
+			expectedErr: usecase_errors.NotFoundError{},
 			mustErr:     true,
 		},
 		{
@@ -60,7 +61,7 @@ func TestGetUserProfile(t *testing.T) {
 					Role:     enums.USER,
 				},
 			},
-			expectedErr: api_errors.ErrProfileNotFound,
+			expectedErr: usecase_errors.NotFoundError{},
 			mustErr:     true,
 		},
 		{
@@ -89,13 +90,13 @@ func TestGetUserProfile(t *testing.T) {
 		service.UserRepository = mockUserRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().Filter(mock.Anything, mock.Anything).Return(tc.UserRepoResp, tc.UserRepoErr)
+			mockUserRepository.EXPECT().Filter(mockApp.Ctx, mock.Anything, mock.Anything).Return(tc.UserRepoResp, tc.UserRepoErr)
 
-			res, err := service.GetUserProfile(tc.username)
+			res, err := service.GetUserProfile(mockApp.Ctx, tc.username)
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expectedResp.Username, res.Username)
@@ -134,7 +135,7 @@ func TestChangeUserProfile(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			expectedErr: api_errors.ErrNeedLoginForChangeProfile,
+			expectedErr: usecase_errors.UnauthorizedError{},
 			mustErr:     true,
 		},
 		{
@@ -145,7 +146,7 @@ func TestChangeUserProfile(t *testing.T) {
 				Role:     enums.USER,
 				IsActive: false,
 			},
-			expectedErr: api_errors.ErrNeedLoginForChangeProfile,
+			expectedErr: usecase_errors.UnauthorizedError{},
 			mustErr:     true,
 		},
 		{
@@ -158,7 +159,7 @@ func TestChangeUserProfile(t *testing.T) {
 				Email:    "testuser@example.com",
 			},
 			userRepoErr: repositories.ErrDuplicate,
-			expectedErr: api_errors.ErrUserAlreadyExists,
+			expectedErr: usecase_errors.AlreadyExistsError{},
 			mustErr:     true,
 		},
 		{
@@ -180,13 +181,13 @@ func TestChangeUserProfile(t *testing.T) {
 		service.UserRepository = mockUserRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().UpdateById(mock.Anything, mock.Anything).Return(tc.userRepoErr)
+			mockUserRepository.EXPECT().UpdateById(mockApp.Ctx, mock.Anything, mock.Anything).Return(tc.userRepoErr)
 
-			err := service.ChangeUserProfile(tc.caller, tc.data)
+			err := service.ChangeUserProfile(mockApp.Ctx, tc.caller, tc.data)
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 			}
@@ -219,7 +220,7 @@ func TestResetPassword(t *testing.T) {
 			testName:     "ResetPasswordUserNotFound",
 			request:      request,
 			userRepoResp: []domain.User{},
-			expectedErr:  api_errors.ErrUserNotFound,
+			expectedErr:  usecase_errors.NotFoundError{},
 			mustErr:      true,
 		},
 		{
@@ -232,7 +233,7 @@ func TestResetPassword(t *testing.T) {
 					IsActive: false,
 				},
 			},
-			expectedErr: api_errors.ErrUserNotFound,
+			expectedErr: usecase_errors.NotFoundError{},
 			mustErr:     true,
 		},
 		{
@@ -245,7 +246,7 @@ func TestResetPassword(t *testing.T) {
 					IsActive: true,
 				},
 			},
-			expectedErr: api_errors.ErrUserNotFound,
+			expectedErr: usecase_errors.NotFoundError{},
 			mustErr:     true,
 		},
 		{
@@ -285,15 +286,15 @@ func TestResetPassword(t *testing.T) {
 		service.EmailService = mockEmailService
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().Filter(mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
-			mockSessionService.EXPECT().SetSession(mock.Anything).Return(tc.sessionServResp, tc.sessionServErr)
+			mockUserRepository.EXPECT().Filter(mockApp.Ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
+			mockSessionService.EXPECT().SetSession(mockApp.Ctx, mock.Anything).Return(tc.sessionServResp, tc.sessionServErr)
 			mockEmailService.EXPECT().SendResetPasswordEmail(mock.Anything, mock.Anything).Maybe().Return(nil)
 
-			code, err := service.ResetPassword(tc.request)
+			code, err := service.ResetPassword(mockApp.Ctx, tc.request)
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.NotEqual(t, 0, code)
@@ -340,7 +341,7 @@ func TestChangePassword(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			expectedErr: api_errors.ErrUnauthorized,
+			expectedErr: usecase_errors.UnauthorizedError{},
 			mustErr:     true,
 		},
 		{
@@ -356,7 +357,7 @@ func TestChangePassword(t *testing.T) {
 				Role:     enums.USER,
 				IsActive: false,
 			},
-			expectedErr: api_errors.ErrUnauthorized,
+			expectedErr: usecase_errors.UnauthorizedError{},
 			mustErr:     true,
 		},
 		{
@@ -377,7 +378,7 @@ func TestChangePassword(t *testing.T) {
 					return pass
 				}(),
 			},
-			expectedErr: api_errors.ErrInvalidPassword,
+			expectedErr: usecase_errors.BadRequestError{},
 			mustErr:     true,
 		},
 		{
@@ -402,7 +403,7 @@ func TestChangePassword(t *testing.T) {
 					return pass
 				}(),
 			},
-			expectedErr: api_errors.ErrSamePassword,
+			expectedErr: usecase_errors.BadRequestError{},
 			mustErr:     true,
 		},
 		{
@@ -427,7 +428,7 @@ func TestChangePassword(t *testing.T) {
 					return pass
 				}(),
 			},
-			expectedErr: api_errors.ErrPasswordsDontMatch,
+			expectedErr: usecase_errors.BadRequestError{},
 			mustErr:     true,
 		},
 		{
@@ -458,14 +459,14 @@ func TestChangePassword(t *testing.T) {
 		service.UserRepository = mockUserRepository
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().GetById(mock.Anything).Return(tc.userRepoGetResp, tc.userRepoGetErr)
-			mockUserRepository.EXPECT().UpdateById(mock.Anything, mock.Anything).Return(tc.userRepoUpdateResp)
+			mockUserRepository.EXPECT().GetById(mockApp.Ctx, mock.Anything).Return(tc.userRepoGetResp, tc.userRepoGetErr)
+			mockUserRepository.EXPECT().UpdateById(mockApp.Ctx, mock.Anything, mock.Anything).Return(tc.userRepoUpdateResp)
 
-			err := service.ChangePassword(tc.caller, tc.request)
+			err := service.ChangePassword(mockApp.Ctx, tc.caller, tc.request)
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedErr), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 			}

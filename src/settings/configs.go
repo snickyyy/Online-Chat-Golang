@@ -1,15 +1,12 @@
 package settings
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
 )
-
-var Context *Ctx
 
 type AppConfig struct {
 	SecretKey  string `mapstructure:"secret_key"`
@@ -21,17 +18,36 @@ type AppConfig struct {
 	UploadDir  string `mapstructure:"upload_dir"`
 }
 
+type PostgresTimeout struct {
+	Small  int `mapstructure:"small"`
+	Medium int `mapstructure:"medium"`
+	Large  int `mapstructure:"large"`
+}
+
+type MongoTimeout struct {
+	Small  int `mapstructure:"small"`
+	Medium int `mapstructure:"medium"`
+	Large  int `mapstructure:"large"`
+}
+
+type RedisTimeout struct {
+	Small  int `mapstructure:"small"`
+	Medium int `mapstructure:"medium"`
+	Large  int `mapstructure:"large"`
+}
+
+type Timeout struct {
+	Postgres PostgresTimeout `mapstructure:"postgres"`
+	Mongo    MongoTimeout    `mapstructure:"mongo"`
+	Redis    RedisTimeout    `mapstructure:"redis"`
+}
+
 type Mail struct {
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	From     string `mapstructure:"from"`
 	Port     int    `mapstructure:"port"`
 	Server   string `mapstructure:"server"`
-}
-
-type Ctx struct {
-	Ctx    context.Context
-	Cancel context.CancelFunc
 }
 
 type RedisPrefixes struct {
@@ -79,6 +95,7 @@ type Pagination struct {
 
 type BaseConfig struct {
 	AppConfig      AppConfig      `mapstructure:"app"`
+	Timeout        Timeout        `mapstructure:"context_timeout_ms"`
 	Pagination     Pagination     `mapstructure:"pagination"`
 	PostgresConfig PostgresConfig `mapstructure:"db"`
 	AuthConfig     AuthConfig     `mapstructure:"auth"`
@@ -133,12 +150,4 @@ func GetBaseConfig() (*BaseConfig, error) {
 	cfg.AppConfig.UploadDir = filepath.Join(basePath, "assets")
 
 	return cfg, nil
-}
-
-func InitContext() {
-	ctx, cancel := context.WithCancel(context.Background())
-	Context = &Ctx{
-		Ctx:    ctx,
-		Cancel: cancel,
-	}
 }

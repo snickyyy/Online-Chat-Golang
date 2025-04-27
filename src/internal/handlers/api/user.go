@@ -3,7 +3,7 @@ package handler_api
 import (
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"net/http"
 
@@ -26,7 +26,7 @@ func UserProfile(c *gin.Context) {
 
 	username := c.Param("username")
 
-	profile, err := service.GetUserProfile(username)
+	profile, err := service.GetUserProfile(c.Request.Context(), username)
 	if err != nil {
 		c.Error(err)
 		return
@@ -53,12 +53,12 @@ func ChangeUserProfile(c *gin.Context) {
 	var requestData dto.ChangeUserProfileRequest
 
 	if err := c.ShouldBind(&requestData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
 	service := services.NewUserService(app)
-	err := service.ChangeUserProfile(user, requestData)
+	err := service.ChangeUserProfile(c.Request.Context(), user, requestData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -80,12 +80,12 @@ func ResetPassword(c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
 	var requestData dto.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&requestData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
 	service := services.NewUserService(app)
-	code, err := service.ResetPassword(requestData)
+	code, err := service.ResetPassword(c.Request.Context(), requestData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -109,12 +109,12 @@ func ConfirmResetPassword(c *gin.Context) {
 	token := c.Param("token")
 	var requestData dto.ConfirmResetPasswordRequest
 	if err := c.ShouldBindJSON(&requestData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
 	service := services.NewUserService(app)
-	err := service.ConfirmResetPassword(token, requestData)
+	err := service.ConfirmResetPassword(c.Request.Context(), token, requestData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -139,12 +139,12 @@ func ChangePassword(c *gin.Context) {
 
 	var requestData dto.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&requestData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
 	service := services.NewUserService(app)
-	err := service.ChangePassword(user, requestData)
+	err := service.ChangePassword(c.Request.Context(), user, requestData)
 	if err != nil {
 		c.Error(err)
 		return

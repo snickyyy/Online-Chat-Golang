@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"libs/src/internal/dto"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"net/http"
 	"strconv"
@@ -27,13 +27,13 @@ func CreateChat(c *gin.Context) {
 	var chatData dto.CreateChatRequest
 
 	if err := c.ShouldBindJSON(&chatData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
 	service := services.NewChatService(app)
 
-	chat, err := service.CreateChat(chatData, user)
+	chat, err := service.CreateChat(c.Request.Context(), chatData, user)
 	if err != nil {
 		c.Error(err)
 		return
@@ -57,7 +57,7 @@ func DeleteChat(c *gin.Context) {
 
 	chatID := c.Param("chat_id")
 	if chatID == "" {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: "chat_id is empty"})
 		return
 	}
 
@@ -65,7 +65,7 @@ func DeleteChat(c *gin.Context) {
 
 	chatIDInt, _ := strconv.Atoi(chatID)
 
-	err := service.DeleteChat(user, int64(chatIDInt))
+	err := service.DeleteChat(c.Request.Context(), user, int64(chatIDInt))
 	if err != nil {
 		c.Error(err)
 		return
@@ -90,14 +90,14 @@ func ChangeChat(c *gin.Context) {
 
 	chatID := c.Param("chat_id")
 	if chatID == "" {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: "chat_id is empty"})
 		return
 	}
 
 	var chatData dto.ChangeChatRequest
 
 	if err := c.ShouldBindJSON(&chatData); err != nil {
-		c.Error(api_errors.ErrInvalidData)
+		c.Error(usecase_errors.BadRequestError{Msg: err.Error()})
 		return
 	}
 
@@ -105,7 +105,7 @@ func ChangeChat(c *gin.Context) {
 
 	chatIDInt, _ := strconv.Atoi(chatID)
 
-	err := service.ChangeChat(user, int64(chatIDInt), chatData)
+	err := service.ChangeChat(c.Request.Context(), user, int64(chatIDInt), chatData)
 	if err != nil {
 		c.Error(err)
 		return
@@ -144,9 +144,9 @@ func GetChatsForUser(c *gin.Context) {
 	)
 
 	if search != "" {
-		chats, err = service.Search(user, search, pageInt)
+		chats, err = service.Search(c.Request.Context(), user, search, pageInt)
 	} else {
-		chats, err = service.GetListForUser(user, pageInt)
+		chats, err = service.GetListForUser(c.Request.Context(), user, pageInt)
 	}
 
 	if err != nil {
@@ -172,13 +172,13 @@ func GetChatInfo(c *gin.Context) {
 
 	chatID := c.Param("chat_id")
 	if chatID == "" {
-		c.Error(api_errors.ErrChatNotFound)
+		c.Error(usecase_errors.BadRequestError{Msg: "chat_id is empty"})
 		return
 	}
 
 	service := services.NewChatService(app)
 	chatIDInt, _ := strconv.Atoi(chatID)
-	chat, err := service.GetById(user, int64(chatIDInt))
+	chat, err := service.GetById(c.Request.Context(), user, int64(chatIDInt))
 
 	if err != nil {
 		c.Error(err)

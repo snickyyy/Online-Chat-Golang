@@ -42,6 +42,20 @@ pagination:
   users_in_chat: 20
   search_users_list: 20
 
+context_timeout_ms:
+  postgres:
+    small: 1000
+    medium: 2000
+    large: 5000
+  mongo:
+    small: 1000
+    medium: 2000
+    large: 4000
+  redis:
+    small: 100
+    medium: 500
+    large: 1500
+
 mail:
   username: "${MAIL_USERNAME}"
   password: "${MAIL_PASSWORD}"

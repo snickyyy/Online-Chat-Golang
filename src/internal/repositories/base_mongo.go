@@ -20,16 +20,19 @@ type BaseMongoRepository[T models.Message] struct {
 	CollectionName string
 }
 
-func (repo *BaseMongoRepository[T]) Create(obj T) (*mongo.InsertOneResult, error) {
+func (repo *BaseMongoRepository[T]) Create(Ctx context.Context, obj T) (*mongo.InsertOneResult, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Large)*time.Millisecond)
+	defer cancel()
+
 	con := repo.Db.Collection(repo.CollectionName)
-	return con.InsertOne(settings.Context.Ctx, obj)
+	return con.InsertOne(ctx, obj)
 }
 
-func (repo *BaseMongoRepository[T]) GetOne(filters interface{}) (T, error) {
-	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (repo *BaseMongoRepository[T]) GetOne(Ctx context.Context, filters interface{}) (T, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Small)*time.Millisecond)
 	defer cancel()
+
+	con := repo.Db.Collection(repo.CollectionName)
 
 	var chat T
 	err := con.FindOne(ctx, filters).Decode(&chat)
@@ -37,13 +40,13 @@ func (repo *BaseMongoRepository[T]) GetOne(filters interface{}) (T, error) {
 	return chat, err
 }
 
-func (repo *BaseMongoRepository[T]) GetAll(filter interface{}, offset int64, limit int64, sortOption ...bson.D) ([]T, error) {
+func (repo *BaseMongoRepository[T]) GetAll(Ctx context.Context, filter interface{}, offset int64, limit int64, sortOption ...bson.D) ([]T, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Medium)*time.Millisecond)
+	defer cancel()
+
 	result := []T{}
 
 	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
 
 	options := options.Find().SetSkip(offset).SetLimit(limit)
 
@@ -64,11 +67,11 @@ func (repo *BaseMongoRepository[T]) GetAll(filter interface{}, offset int64, lim
 	return result, err
 }
 
-func (repo *BaseMongoRepository[T]) UpdateById(id string, updateFields bson.M) (*mongo.UpdateResult, error) {
-	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+func (repo *BaseMongoRepository[T]) UpdateById(Ctx context.Context, id string, updateFields bson.M) (*mongo.UpdateResult, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Large)*time.Millisecond)
 	defer cancel()
+
+	con := repo.Db.Collection(repo.CollectionName)
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -79,11 +82,11 @@ func (repo *BaseMongoRepository[T]) UpdateById(id string, updateFields bson.M) (
 	return res, err
 }
 
-func (repo *BaseMongoRepository[T]) DeleteById(id string) (*mongo.DeleteResult, error) {
-	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+func (repo *BaseMongoRepository[T]) DeleteById(Ctx context.Context, id string) (*mongo.DeleteResult, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Large)*time.Millisecond)
 	defer cancel()
+
+	con := repo.Db.Collection(repo.CollectionName)
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -94,11 +97,11 @@ func (repo *BaseMongoRepository[T]) DeleteById(id string) (*mongo.DeleteResult, 
 	return res, err
 }
 
-func (repo *BaseMongoRepository[T]) Count(filters interface{}) (int64, error) {
-	con := repo.Db.Collection(repo.CollectionName)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+func (repo *BaseMongoRepository[T]) Count(Ctx context.Context, filters interface{}) (int64, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Small)*time.Millisecond)
 	defer cancel()
+
+	con := repo.Db.Collection(repo.CollectionName)
 
 	count, err := con.CountDocuments(ctx, filters)
 	return count, err

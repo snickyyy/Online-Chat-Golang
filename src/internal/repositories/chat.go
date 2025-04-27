@@ -1,16 +1,18 @@
 package repositories
 
 import (
+	"context"
 	"libs/src/internal/domain/enums"
 	domain "libs/src/internal/domain/models"
 	"libs/src/settings"
+	"time"
 )
 
 //go:generate mockery --name=IChatRepository --dir=. --output=../mocks --with-expecter
 type IChatRepository interface {
 	IBasePostgresRepository[domain.Chat]
-	GetListForUser(userId int64, limit int, offset int) ([]domain.Chat, error)
-	SearchForUser(userId int64, name string, limit, offset int) ([]domain.Chat, error)
+	GetListForUser(Ctx context.Context, userId int64, limit int, offset int) ([]domain.Chat, error)
+	SearchForUser(Ctx context.Context, userId int64, name string, limit, offset int) ([]domain.Chat, error)
 }
 
 func NewChatRepository(app *settings.App) *ChatRepository {
@@ -26,8 +28,11 @@ type ChatRepository struct {
 	BasePostgresRepository[domain.Chat]
 }
 
-func (r *ChatRepository) Create(chat *domain.Chat) error {
-	tx := r.Db.Begin()
+func (r *ChatRepository) Create(Ctx context.Context, chat *domain.Chat) error {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
+	defer cancel()
+
+	tx := r.Db.WithContext(ctx).Begin()
 	defer tx.Commit()
 
 	if err := tx.Create(chat).Error; err != nil {
@@ -48,9 +53,12 @@ func (r *ChatRepository) Create(chat *domain.Chat) error {
 	return nil
 }
 
-func (r *ChatRepository) GetListForUser(userId int64, limit int, offset int) ([]domain.Chat, error) {
+func (r *ChatRepository) GetListForUser(Ctx context.Context, userId int64, limit int, offset int) ([]domain.Chat, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	defer cancel()
+
 	var chats []domain.Chat
-	err := r.Db.Table("chats").
+	err := r.Db.WithContext(ctx).Table("chats").
 		Select("chats.*").
 		Joins("JOIN chat_members ON chat_members.chat_id = chats.id").
 		Where("chat_members.user_id = ?", userId).
@@ -65,9 +73,12 @@ func (r *ChatRepository) GetListForUser(userId int64, limit int, offset int) ([]
 	return chats, nil
 }
 
-func (r *ChatRepository) SearchForUser(userId int64, name string, limit, offset int) ([]domain.Chat, error) {
+func (r *ChatRepository) SearchForUser(Ctx context.Context, userId int64, name string, limit, offset int) ([]domain.Chat, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
+	defer cancel()
+
 	var chats []domain.Chat
-	err := r.Db.Table("chats").
+	err := r.Db.WithContext(ctx).Table("chats").
 		Select("chats.*").
 		Joins("JOIN chat_members ON chat_members.chat_id = chats.id").
 		Where("chat_members.user_id = ? AND chats.title LIKE ?", userId, "%"+name+"%").

@@ -18,9 +18,9 @@ func (suite *AppTestSuite) TestCreateChat() {
 	userService := services.NewUserService(settings.AppVar)
 	authService := services.NewAuthService(settings.AppVar)
 
-	err := userService.CreateSuperUser("TestCreateChat", "TestCreateChat@test.com", "test123")
+	err := userService.CreateSuperUser(suite.Ctx, "TestCreateChat", "TestCreateChat@test.com", "test123")
 	suite.NoError(err)
-	sess, err := authService.Login(dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false}, dto.LoginRequest{UsernameOrEmail: "TestCreateChat", Password: "test123"})
+	sess, err := authService.Login(suite.Ctx, dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false}, dto.LoginRequest{UsernameOrEmail: "TestCreateChat", Password: "test123"})
 	suite.NoError(err)
 
 	dataCreateChat, _ := json.Marshal(dto.CreateChatRequest{
@@ -49,13 +49,13 @@ func (suite *AppTestSuite) TestInviteToChat() {
 	authService := services.NewAuthService(settings.AppVar)
 
 	// Create test users
-	err := userService.CreateSuperUser("TestInviter", "TestInviter@test.com", "test123")
+	err := userService.CreateSuperUser(suite.Ctx, "TestInviter", "TestInviter@test.com", "test123")
 	suite.NoError(err)
-	err = userService.CreateSuperUser("TestInvitee", "TestInvitee@test.com", "test123")
+	err = userService.CreateSuperUser(suite.Ctx, "TestInvitee", "TestInvitee@test.com", "test123")
 	suite.NoError(err)
 
 	// Create session for the inviter
-	sess, err := authService.Login(dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false}, dto.LoginRequest{UsernameOrEmail: "TestInviter", Password: "test123"})
+	sess, err := authService.Login(suite.Ctx, dto.UserDTO{ID: 1, Role: enums.ANONYMOUS, IsActive: false}, dto.LoginRequest{UsernameOrEmail: "TestInviter", Password: "test123"})
 	suite.NoError(err)
 
 	// Create a chat
@@ -82,10 +82,10 @@ func (suite *AppTestSuite) TestInviteToChat() {
 
 	// Check if the invitee is now a member of the chat
 	userRepo := repositories.NewUserRepository(settings.AppVar)
-	invitee, err := userRepo.GetByUsername("TestInvitee")
+	invitee, err := userRepo.GetByUsername(suite.Ctx, "TestInvitee")
 	suite.NoError(err)
 
-	inviteeInfo, err := chatService.ChatMemberRepository.GetMemberInfo(invitee.ID, chatID)
+	inviteeInfo, err := chatService.ChatMemberRepository.GetMemberInfo(suite.Ctx, invitee.ID, chatID)
 	suite.NoError(err)
 	suite.Equal(inviteeInfo.MemberRole, dto.ChatMemberDTO{MemberRole: 0}.MemberRole)
 }

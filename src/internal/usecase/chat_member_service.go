@@ -1,12 +1,13 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"libs/src/internal/domain/enums"
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/settings"
 	"strings"
 )
@@ -27,13 +28,13 @@ func NewChatMemberService(app *settings.App) *ChatMemberService {
 	}
 }
 
-func (s *ChatMemberService) CreateMember(userId int64, chatId int64) error {
-	memberCount, err := s.ChatMemberRepository.Count("chat_id = ? AND user_id = ?", chatId, userId)
+func (s *ChatMemberService) CreateMember(ctx context.Context, userId int64, chatId int64) error {
+	memberCount, err := s.ChatMemberRepository.Count(ctx, "chat_id = ? AND user_id = ?", chatId, userId)
 	if err != nil {
 		return err
 	}
 	if memberCount > 0 {
-		return api_errors.ErrUserAlreadyInChat
+		return usecase_errors.AlreadyExistsError{Msg: "User already exists in chat"}
 	}
 
 	member := domain.ChatMember{
@@ -41,78 +42,78 @@ func (s *ChatMemberService) CreateMember(userId int64, chatId int64) error {
 		ChatID:     chatId,
 		MemberRole: enums.MEMBER,
 	}
-	err = s.ChatMemberRepository.Create(&member)
+	err = s.ChatMemberRepository.Create(ctx, &member)
 	return err
 }
 
-func (s *ChatMemberService) InviteToChat(inviter *dto.UserDTO, inviteeUsername string, chatId int64) error {
+func (s *ChatMemberService) InviteToChat(ctx context.Context, inviter *dto.UserDTO, inviteeUsername string, chatId int64) error {
 	if inviter.Role == enums.ANONYMOUS || !inviter.IsActive {
-		return api_errors.ErrUnauthorized
+		return usecase_errors.UnauthorizedError{Msg: "You must be logged in to invite someone"}
 	}
-	inviterInfo, err := s.ChatMemberRepository.GetMemberInfo(inviter.ID, chatId)
+	inviterInfo, err := s.ChatMemberRepository.GetMemberInfo(ctx, inviter.ID, chatId)
 	if err != nil {
 		if errors.Is(err, repositories.ErrRecordNotFound) {
-			return api_errors.ErrInviterNotInChat
+			return usecase_errors.BadRequestError{Msg: "Inviter is not a member of the chat"}
 		}
 		return err
 	}
 	if inviterInfo.MemberRole < enums.CHAT_ADMIN {
-		return api_errors.ErrNotEnoughPermissionsForInviting
+		return usecase_errors.PermissionError{Msg: "You have no permission to invite someone to the chat"}
 	}
 
-	invitee, err := s.UserRepository.GetByUsername(inviteeUsername)
+	invitee, err := s.UserRepository.GetByUsername(ctx, inviteeUsername)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrUserNotFound
+			return usecase_errors.NotFoundError{Msg: "Invitee not found"}
 		}
 		return err
 	}
 	if invitee.Role == enums.ANONYMOUS || !invitee.IsActive {
-		return api_errors.ErrUserNotFound
+		return usecase_errors.NotFoundError{Msg: "Invitee not found"}
 	}
 
-	err = s.CreateMember(invitee.ID, chatId)
+	err = s.CreateMember(ctx, invitee.ID, chatId)
 
 	return err
 }
 
-func (s *ChatMemberService) ChangeMemberRole(caller dto.UserDTO, chatId int64, targetUsername string, newRole string) error {
+func (s *ChatMemberService) ChangeMemberRole(ctx context.Context, caller dto.UserDTO, chatId int64, targetUsername string, newRole string) error {
 	role, ex := enums.ChatLabelsToRoles[strings.ToLower(newRole)]
 	if !ex {
-		return api_errors.ErrInvalidData
+		return usecase_errors.BadRequestError{Msg: "Invalid role"}
 	}
 	if role >= enums.OWNER {
-		return api_errors.ErrNotEnoughPermissionsForChangeRole
+		return usecase_errors.PermissionError{Msg: "You do not have permission to change role"}
 	}
 
-	callerInfo, err := s.ChatMemberRepository.GetMemberInfo(caller.ID, chatId)
+	callerInfo, err := s.ChatMemberRepository.GetMemberInfo(ctx, caller.ID, chatId)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrUserNotInChat
+			return usecase_errors.NotFoundError{Msg: "You are not a member of the chat"}
 		}
 		return err
 	}
 
 	if callerInfo.MemberRole < enums.OWNER {
-		return api_errors.ErrNotEnoughPermissionsForChangeRole
+		return usecase_errors.PermissionError{Msg: "You do not have permission to change role"}
 	}
 
-	target, err := s.UserRepository.GetByUsername(targetUsername)
+	target, err := s.UserRepository.GetByUsername(ctx, targetUsername)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrUserNotFound
+			return usecase_errors.NotFoundError{Msg: "Target user not found"}
 		}
 		return err
 	}
 
 	if target.Role == enums.ANONYMOUS || !target.IsActive {
-		return api_errors.ErrUserNotFound
+		return usecase_errors.NotFoundError{Msg: "Target user not found"}
 	}
 
-	targetInfo, err := s.ChatMemberRepository.GetMemberInfo(target.ID, chatId)
+	targetInfo, err := s.ChatMemberRepository.GetMemberInfo(ctx, target.ID, chatId)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrUserNotInChat
+			return usecase_errors.BadRequestError{Msg: "Target user not in chat"}
 		}
 		return err
 	}
@@ -121,85 +122,85 @@ func (s *ChatMemberService) ChangeMemberRole(caller dto.UserDTO, chatId int64, t
 		return nil
 	}
 
-	err = s.ChatMemberRepository.SetNewRole(chatId, targetInfo.MemberID, byte(role))
+	err = s.ChatMemberRepository.SetNewRole(ctx, chatId, targetInfo.MemberID, byte(role))
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrUserNotFound
+			return usecase_errors.BadRequestError{Msg: "Target user not in chat"}
 		}
 		return err
 	}
 	return nil
 }
 
-func (s *ChatMemberService) DeleteMember(caller dto.UserDTO, chatId int64, targetUsername string) error {
+func (s *ChatMemberService) DeleteMember(ctx context.Context, caller dto.UserDTO, chatId int64, targetUsername string) error {
 	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
-		return api_errors.ErrUnauthorized
+		return usecase_errors.UnauthorizedError{Msg: "You must be logged in to delete someone"}
 	}
 
-	callerInfo, err := s.ChatMemberRepository.GetMemberInfo(caller.ID, chatId)
+	callerInfo, err := s.ChatMemberRepository.GetMemberInfo(ctx, caller.ID, chatId)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrUserNotInChat
+			return usecase_errors.BadRequestError{Msg: "You are not a member of the chat"}
 		}
 		return err
 	}
 
 	if callerInfo.MemberRole < enums.CHAT_ADMIN {
-		return api_errors.ErrNotEnoughPermissions
+		return usecase_errors.PermissionError{Msg: "You do not have permission to delete someone"}
 	}
 
-	target, err := s.UserRepository.GetByUsername(targetUsername)
+	target, err := s.UserRepository.GetByUsername(ctx, targetUsername)
 	if err != nil {
 		if target.Role == enums.ANONYMOUS || !target.IsActive {
-			return api_errors.ErrUserNotFound
+			return usecase_errors.NotFoundError{Msg: "Target user not found"}
 		}
 		return err
 	}
 
-	targetInfo, err := s.ChatMemberRepository.GetMemberInfo(target.ID, chatId)
+	targetInfo, err := s.ChatMemberRepository.GetMemberInfo(ctx, target.ID, chatId)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrUserNotInChat
+			return usecase_errors.BadRequestError{Msg: "Target user not in chat"}
 		}
 		return err
 	}
 
 	if targetInfo.MemberRole >= callerInfo.MemberRole {
-		return api_errors.ErrNotEnoughPermissions
+		return usecase_errors.PermissionError{Msg: "You do not have permission to delete target"}
 	}
 
-	err = s.ChatMemberRepository.DeleteMember(targetInfo.MemberID, chatId)
+	err = s.ChatMemberRepository.DeleteMember(ctx, targetInfo.MemberID, chatId)
 	if err != nil {
 		if errors.As(err, &repositories.ErrRecordNotFound) {
-			return api_errors.ErrUserNotInChat
+			return usecase_errors.BadRequestError{Msg: "Target user not in chat"}
 		}
 		return err
 	}
 	return nil
 }
 
-func (s *ChatMemberService) GetList(caller dto.UserDTO, chatId int64, page int, searchName string) (dto.MemberListPreview, error) {
+func (s *ChatMemberService) GetList(ctx context.Context, caller dto.UserDTO, chatId int64, page int, searchName string) (dto.MemberListPreview, error) {
 	if caller.Role == enums.ANONYMOUS || !caller.IsActive {
-		return dto.MemberListPreview{}, api_errors.ErrUnauthorized
+		return dto.MemberListPreview{}, usecase_errors.UnauthorizedError{Msg: "You must be logged in to get members"}
 	}
 
 	if page < 1 {
-		return dto.MemberListPreview{}, api_errors.ErrInvalidPage
+		return dto.MemberListPreview{}, usecase_errors.BadRequestError{Msg: "Invalid page"}
 	}
 
-	callerMember, err := s.ChatMemberRepository.Filter("chat_id = ? AND user_id = ?", chatId, caller.ID)
+	callerMember, err := s.ChatMemberRepository.Filter(ctx, "chat_id = ? AND user_id = ?", chatId, caller.ID)
 	if err != nil {
 		return dto.MemberListPreview{}, err
 	}
 
 	if len(callerMember) != 1 {
-		return dto.MemberListPreview{}, api_errors.ErrUserNotInChat
+		return dto.MemberListPreview{}, usecase_errors.BadRequestError{Msg: "You are not a member of the chat"}
 	}
 
-	res, err := s.ChatMemberRepository.GetMembersPreview(chatId, 25, (page-1)*25, searchName)
+	res, err := s.ChatMemberRepository.GetMembersPreview(ctx, chatId, 25, (page-1)*25, searchName)
 	if err != nil {
 		if errors.As(err, &repositories.ErrLimitMustBePositive) || errors.As(err, &repositories.ErrOffsetMustBePositive) {
-			return dto.MemberListPreview{}, api_errors.ErrInvalidPage
+			return dto.MemberListPreview{}, usecase_errors.BadRequestError{Msg: "Invalid page"}
 		}
 		return dto.MemberListPreview{}, err
 	}

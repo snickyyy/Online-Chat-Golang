@@ -10,8 +10,9 @@ import (
 	"libs/src/internal/mocks"
 	"libs/src/internal/repositories"
 	services "libs/src/internal/usecase"
-	api_errors "libs/src/internal/usecase/errors"
+	usecase_errors "libs/src/internal/usecase/errors"
 	"libs/src/pkg/utils"
+	"reflect"
 	"testing"
 )
 
@@ -34,8 +35,8 @@ func TestCheckEmailToken(t *testing.T) {
 			testName:  "CheckEmailTokenInvalidSession",
 			sessionId: "invalidSession",
 			mockResp:  dto.UserDTO{},
-			mockErr:   api_errors.ErrInvalidToken,
-			respError: api_errors.ErrInvalidToken,
+			mockErr:   usecase_errors.BadRequestError{Msg: "Invalid token"},
+			respError: usecase_errors.BadRequestError{},
 			Resp:      dto.UserDTO{},
 			mustErr:   true,
 		},
@@ -50,7 +51,7 @@ func TestCheckEmailToken(t *testing.T) {
 				Role:     enums.USER,
 			},
 			mockErr:   nil,
-			respError: api_errors.ErrInvalidToken,
+			respError: usecase_errors.BadRequestError{},
 			Resp:      dto.UserDTO{},
 			mustErr:   true,
 		},
@@ -82,13 +83,13 @@ func TestCheckEmailToken(t *testing.T) {
 		service.SessionService = mockSessionService
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockSessionService.EXPECT().GetUserByEmailSession(tc.sessionId).Return(tc.mockResp, tc.mockErr)
+			mockSessionService.EXPECT().GetUserByEmailSession(mockApp.Ctx, tc.sessionId).Return(tc.mockResp, tc.mockErr)
 
-			res, err := service.CheckEmailToken(tc.sessionId)
+			res, err := service.CheckEmailToken(mockApp.Ctx, tc.sessionId)
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.respError, err)
+				assert.Equal(t, reflect.TypeOf(tc.respError), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.Resp, res)
@@ -122,7 +123,7 @@ func TestConfirmAccount(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			ExpectedError: api_errors.ErrAlreadyLoggedIn,
+			ExpectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -134,12 +135,12 @@ func TestConfirmAccount(t *testing.T) {
 			},
 			Param:                          "invalidSession",
 			SessServGetUserByEmailSessResp: dto.UserDTO{},
-			SessServGetUserByEmailSessErr:  api_errors.ErrInvalidSession,
+			SessServGetUserByEmailSessErr:  usecase_errors.BadRequestError{},
 			UserRepoUpdateByIdResp:         nil,
 			SessServSetSessionResp:         "",
 			SessServSetSessionErr:          nil,
 			ExpectedResp:                   "",
-			ExpectedError:                  api_errors.ErrInvalidToken,
+			ExpectedError:                  usecase_errors.BadRequestError{},
 			mustErr:                        true,
 		},
 		{
@@ -160,7 +161,7 @@ func TestConfirmAccount(t *testing.T) {
 			SessServSetSessionResp:        "",
 			SessServSetSessionErr:         nil,
 			ExpectedResp:                  "",
-			ExpectedError:                 api_errors.ErrInvalidToken,
+			ExpectedError:                 usecase_errors.BadRequestError{},
 			mustErr:                       true,
 		},
 		{
@@ -192,16 +193,16 @@ func TestConfirmAccount(t *testing.T) {
 			mockSessionService := new(mocks.ISessionService)
 			service.UserRepository = mockUserRepository
 			service.SessionService = mockSessionService
-			mockSessionService.EXPECT().GetUserByEmailSession(mock.Anything).Return(tc.SessServGetUserByEmailSessResp, tc.SessServGetUserByEmailSessErr)
-			mockUserRepository.EXPECT().UpdateById(mock.Anything, mock.Anything).Maybe().Return(tc.UserRepoUpdateByIdResp)
-			mockSessionService.EXPECT().SetSession(mock.Anything).Maybe().Return(tc.SessServSetSessionResp, tc.SessServSetSessionErr)
-			mockSessionService.EXPECT().DeleteSession(mock.Anything, mock.Anything).Maybe().Return(tc.UserRepoUpdateByIdResp)
+			mockSessionService.EXPECT().GetUserByEmailSession(mockApp.Ctx, mock.Anything).Return(tc.SessServGetUserByEmailSessResp, tc.SessServGetUserByEmailSessErr)
+			mockUserRepository.EXPECT().UpdateById(mockApp.Ctx, mock.Anything, mock.Anything).Maybe().Return(tc.UserRepoUpdateByIdResp)
+			mockSessionService.EXPECT().SetSession(mockApp.Ctx, mock.Anything).Maybe().Return(tc.SessServSetSessionResp, tc.SessServSetSessionErr)
+			mockSessionService.EXPECT().DeleteSession(mockApp.Ctx, mock.Anything, mock.Anything).Maybe().Return(tc.UserRepoUpdateByIdResp)
 
-			res, err := service.ConfirmAccount(tc.caller, tc.Param)
+			res, err := service.ConfirmAccount(mockApp.Ctx, tc.caller, tc.Param)
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.ExpectedError, err)
+				assert.Equal(t, reflect.TypeOf(tc.ExpectedError), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.ExpectedResp, res)
@@ -232,7 +233,7 @@ func TestRegisterUser(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			respError: api_errors.ErrAlreadyLoggedIn,
+			respError: usecase_errors.BadRequestError{},
 			mustErr:   true,
 		},
 		{
@@ -251,7 +252,7 @@ func TestRegisterUser(t *testing.T) {
 			UserRepoResp:    nil,
 			SessionServResp: "",
 			SessionServErr:  nil,
-			respError:       api_errors.ErrPasswordsDontMatch,
+			respError:       usecase_errors.BadRequestError{},
 			mustErr:         true,
 		},
 		{
@@ -270,7 +271,7 @@ func TestRegisterUser(t *testing.T) {
 			UserRepoResp:    repositories.ErrDuplicate,
 			SessionServResp: "",
 			SessionServErr:  nil,
-			respError:       api_errors.ErrUserAlreadyExists,
+			respError:       usecase_errors.AlreadyExistsError{},
 			mustErr:         true,
 		},
 		{
@@ -303,15 +304,15 @@ func TestRegisterUser(t *testing.T) {
 		service.EmailService = mockEmailService
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().Create(mock.Anything).Return(tc.UserRepoResp)
-			mockSessionService.EXPECT().SetSession(mock.Anything).Return(tc.SessionServResp, tc.SessionServErr)
+			mockUserRepository.EXPECT().Create(mockApp.Ctx, mock.Anything).Return(tc.UserRepoResp)
+			mockSessionService.EXPECT().SetSession(mockApp.Ctx, mock.Anything).Return(tc.SessionServResp, tc.SessionServErr)
 			mockEmailService.EXPECT().SendRegisterEmail(mock.Anything, mock.Anything).Maybe().Return(tc.respError)
 
-			err := service.RegisterUser(tc.caller, tc.data)
+			err := service.RegisterUser(mockApp.Ctx, tc.caller, tc.data)
 
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.respError, err)
+				assert.Equal(t, reflect.TypeOf(tc.respError), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 			}
@@ -343,7 +344,7 @@ func TestLogin(t *testing.T) {
 				Role:     enums.ANONYMOUS,
 				IsActive: true,
 			},
-			expectedError: api_errors.ErrAlreadyLoggedIn,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -358,7 +359,7 @@ func TestLogin(t *testing.T) {
 				Password:        "test",
 			},
 			userRepoResp:  []domain.User{},
-			expectedError: api_errors.ErrInvalidCredentials,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -374,7 +375,7 @@ func TestLogin(t *testing.T) {
 			},
 			userRepoResp:  []domain.User{},
 			userRepoErr:   errors.New("internal db error"),
-			expectedError: api_errors.ErrInvalidCredentials,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -402,7 +403,7 @@ func TestLogin(t *testing.T) {
 					Role:     enums.USER,
 				},
 			},
-			expectedError: api_errors.ErrInvalidCredentials,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -436,7 +437,7 @@ func TestLogin(t *testing.T) {
 					Role:     enums.ANONYMOUS,
 				},
 			},
-			expectedError: api_errors.ErrInvalidCredentials,
+			expectedError: usecase_errors.BadRequestError{},
 			mustErr:       true,
 		},
 		{
@@ -478,13 +479,13 @@ func TestLogin(t *testing.T) {
 		service.SessionService = mockSessionService
 
 		t.Run(tc.testName, func(t *testing.T) {
-			mockUserRepository.EXPECT().Filter(mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
-			mockSessionService.EXPECT().SetSession(mock.Anything).Return(tc.sessServResp, tc.sessServErr)
+			mockUserRepository.EXPECT().Filter(mockApp.Ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.userRepoResp, tc.userRepoErr)
+			mockSessionService.EXPECT().SetSession(mockApp.Ctx, mock.Anything).Return(tc.sessServResp, tc.sessServErr)
 
-			res, err := service.Login(tc.caller, tc.data)
+			res, err := service.Login(mockApp.Ctx, tc.caller, tc.data)
 			if tc.mustErr {
 				assert.Error(t, err)
-				assert.Equal(t, tc.expectedError, err)
+				assert.Equal(t, reflect.TypeOf(tc.expectedError), reflect.TypeOf(err))
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expectedResp, res)
