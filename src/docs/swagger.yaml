@@ -773,4 +773,27 @@ paths:
       summary: Invite to chat
       tags:
       - ChatMembers
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: setting user online
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ping
+      tags:
+      - Base
 swagger: "2.0"

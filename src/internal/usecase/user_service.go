@@ -254,9 +254,13 @@ func (s *UserService) ChangePassword(ctx context.Context, caller dto.UserDTO, re
 	return nil
 }
 
-func (s *UserService) SetOnline(ctx context.Context, userId int64) error {
+func (s *UserService) SetOnline(ctx context.Context, user dto.UserDTO) error {
+	if user.Role == enums.ANONYMOUS || !user.IsActive {
+		return usecase_errors.UnauthorizedError{Msg: "You must be logged"}
+	}
+
 	session := dto.SessionDTO{
-		SessionID: strconv.Itoa(int(userId)),
+		SessionID: strconv.Itoa(int(user.ID)),
 		Expire:    time.Now().Add(time.Duration(s.App.Config.AuthConfig.IsOnlineTTL) * time.Second),
 		Prefix:    s.App.Config.RedisConfig.Prefixes.InOnline,
 		Payload:   "",
