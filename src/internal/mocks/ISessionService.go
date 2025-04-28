@@ -289,6 +289,54 @@ func (_c *ISessionService_GetUserByEmailSession_Call) RunAndReturn(run func(cont
 	return _c
 }
 
+// IsExist provides a mock function with given fields: ctx, prefix, session
+func (_m *ISessionService) IsExist(ctx context.Context, prefix string, session string) bool {
+	ret := _m.Called(ctx, prefix, session)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsExist")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) bool); ok {
+		r0 = rf(ctx, prefix, session)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// ISessionService_IsExist_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsExist'
+type ISessionService_IsExist_Call struct {
+	*mock.Call
+}
+
+// IsExist is a helper method to define mock.On call
+//   - ctx context.Context
+//   - prefix string
+//   - session string
+func (_e *ISessionService_Expecter) IsExist(ctx interface{}, prefix interface{}, session interface{}) *ISessionService_IsExist_Call {
+	return &ISessionService_IsExist_Call{Call: _e.mock.On("IsExist", ctx, prefix, session)}
+}
+
+func (_c *ISessionService_IsExist_Call) Run(run func(ctx context.Context, prefix string, session string)) *ISessionService_IsExist_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *ISessionService_IsExist_Call) Return(_a0 bool) *ISessionService_IsExist_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ISessionService_IsExist_Call) RunAndReturn(run func(context.Context, string, string) bool) *ISessionService_IsExist_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetSession provides a mock function with given fields: ctx, session
 func (_m *ISessionService) SetSession(ctx context.Context, session dto.SessionDTO) (string, error) {
 	ret := _m.Called(ctx, session)
