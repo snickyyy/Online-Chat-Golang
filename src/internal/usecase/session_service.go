@@ -19,6 +19,7 @@ type ISessionService interface {
 	DecryptAndParsePayload(session dto.SessionDTO, parseTo any) error
 	GetUserByAuthSession(ctx context.Context, session string) (dto.UserDTO, error)
 	GetUserByEmailSession(ctx context.Context, session string) (dto.UserDTO, error)
+	IsExist(ctx context.Context, prefix, session string) bool
 }
 
 type SessionService struct {
@@ -117,4 +118,9 @@ func (s *SessionService) GetUserByEmailSession(ctx context.Context, session stri
 	}
 
 	return emailSessionBody.UserDTO, nil
+}
+
+func (s *SessionService) IsExist(ctx context.Context, prefix, session string) bool {
+	result, _ := s.RedisBaseRepository.IsExist(ctx, prefix, session)
+	return result
 }

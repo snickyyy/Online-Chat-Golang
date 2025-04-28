@@ -269,3 +269,10 @@ func (s *UserService) SetOnline(ctx context.Context, user dto.UserDTO) error {
 	_, err := s.SessionService.SetSession(ctx, session)
 	return err
 }
+
+func (s *UserService) InOnline(ctx context.Context, userId int64) bool {
+	if userId < 1 {
+		return false
+	}
+	return s.SessionService.IsExist(ctx, s.App.Config.RedisConfig.Prefixes.InOnline, strconv.Itoa(int(userId)))
+}
