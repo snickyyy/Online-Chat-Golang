@@ -18,13 +18,14 @@ type IBaseRedisRepository interface {
 	Delete(Ctx context.Context, prefix string, key string) (int64, error)
 	CountAll(Ctx context.Context) (int64, error)
 	IsExist(Ctx context.Context, prefix string, key string) (bool, error)
+	ManyToGet(Ctx context.Context, keys []string) ([]interface{}, error)
 }
 
 type BaseRedisRepository struct {
 	Client *redis.Client
 }
 
-func NewBaseRedisRepository(app *settings.App) *BaseRedisRepository {
+func NewBaseRedisRepository(app *settings.App) IBaseRedisRepository {
 	return &BaseRedisRepository{
 		Client: app.RedisClient,
 	}
