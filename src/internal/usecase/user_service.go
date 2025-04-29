@@ -88,6 +88,7 @@ func (s *UserService) GetUserProfile(ctx context.Context, username string) (*dto
 		Username:    oneUser.Username,
 		Description: oneUser.Description,
 		Role:        enums.RolesToLabels[int(oneUser.Role)],
+		IsOnline:    s.IsOnline(ctx, oneUser.ID),
 		Image:       oneUser.Image,
 		CreatedAt:   oneUser.CreatedAt,
 	}
