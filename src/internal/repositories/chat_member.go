@@ -99,38 +99,28 @@ func (r *ChatMemberRepository) GetMembersPreview(Ctx context.Context, chatId int
 		Role     string    `gorm:"column:role"`
 	}{}
 
-	buildRoleCase := "" //TODO: вынести в отдельную функцию парсинг ролей
-	for k, v := range enums.ChatRolesToLabels {
-		buildRoleCase += fmt.Sprintf("WHEN member_role = %d THEN '%s'\n", k, v) // Create cases for a string display of roles
-	}
-
-	baseQuery := fmt.Sprintf( // Create a base query with a case statement for roles
-		`SELECT
-    	users.id AS user_id,
-	   	users.username AS username,
-	   	users.image AS avatar,
-	   	chat_members.created_at AS joined_at,
-	   	CASE
-	            %s
-	   	END AS role
-		FROM chat_members
-		JOIN users ON chat_members.user_id = users.id
-		WHERE chat_members.chat_id = ?`, buildRoleCase) //TODO: переделать на orm syntax
-
-	args := []interface{}{chatId} // Add chatId to the arguments
-
-	if searchUsername != "" { // If a username is provided, add it to the query
-		baseQuery += " AND users.username LIKE ? "
-		args = append(args, "%"+searchUsername+"%")
-	}
-
-	baseQuery += ` LIMIT ? OFFSET ? `  // Add limit and offset to the query
-	args = append(args, limit, offset) // Add limit and offset to the arguments
-
 	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Medium)*time.Millisecond)
 	defer cancel()
 
-	res := r.Db.WithContext(ctx).Raw(baseQuery, args...).Scan(&members) // коментарии - колхоз, добавил чисто что бы через неделю понять что тут происходит
+	query := r.Db.WithContext(ctx).Table("chat_members").
+		Select(fmt.Sprintf(`
+		users.id AS user_id,
+		users.username AS username,
+		users.image AS avatar,
+		chat_members.created_at AS joined_at,
+		CASE
+			%s
+		END AS role
+		`, r.buildCaseByRole(enums.ChatRolesToLabels))).
+		Joins("JOIN users ON chat_members.user_id = users.id").
+		Where("chat_members.chat_id = ?", chatId)
+
+	if searchUsername != "" {
+		query.Where("users.username LIKE ?", "%"+searchUsername+"%")
+	}
+
+	res := query.Limit(limit).Offset(offset).Scan(&members)
+
 	if res.Error != nil {
 		return nil, parsePgError(res.Error)
 	}
