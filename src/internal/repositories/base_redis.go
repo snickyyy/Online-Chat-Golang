@@ -98,3 +98,11 @@ func (repo *BaseRedisRepository) IsExist(Ctx context.Context, prefix string, key
 	}
 	return res > 0, nil
 }
+
+func (repo *BaseRedisRepository) ManyToGet(Ctx context.Context, keys []string) ([]interface{}, error) {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Redis.Large)*time.Millisecond)
+	defer cancel()
+
+	result, err := repo.Client.MGet(ctx, keys...).Result()
+	return result, err
+}

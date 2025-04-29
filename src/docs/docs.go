@@ -1098,6 +1098,9 @@ const docTemplate = `{
                 "avatar": {
                     "type": "string"
                 },
+                "is_online": {
+                    "type": "boolean"
+                },
                 "joined_at": {
                     "type": "string"
                 },
@@ -1188,6 +1191,9 @@ const docTemplate = `{
                 },
                 "image": {
                     "type": "string"
+                },
+                "is_online": {
+                    "type": "boolean"
                 },
                 "role": {
                     "type": "string"

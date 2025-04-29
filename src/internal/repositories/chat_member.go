@@ -7,6 +7,7 @@ import (
 	domain "libs/src/internal/domain/models"
 	"libs/src/internal/dto"
 	"libs/src/settings"
+	"strconv"
 	"time"
 )
 
@@ -91,19 +92,21 @@ func (r *ChatMemberRepository) DeleteMember(Ctx context.Context, memberId, chatI
 
 func (r *ChatMemberRepository) GetMembersPreview(Ctx context.Context, chatId int64, limit, offset int, searchUsername string) ([]dto.MemberPreview, error) {
 	members := []struct {
+		Id       int64     `gorm:"column:user_id"`
 		Username string    `gorm:"column:username"`
 		Avatar   string    `gorm:"column:avatar"`
 		JoinedAt time.Time `gorm:"column:joined_at"`
 		Role     string    `gorm:"column:role"`
 	}{}
 
-	buildRoleCase := ""
+	buildRoleCase := "" //TODO: вынести в отдельную функцию парсинг ролей
 	for k, v := range enums.ChatRolesToLabels {
 		buildRoleCase += fmt.Sprintf("WHEN member_role = %d THEN '%s'\n", k, v) // Create cases for a string display of roles
 	}
 
 	baseQuery := fmt.Sprintf( // Create a base query with a case statement for roles
 		`SELECT
+    	users.id AS user_id,
 	   	users.username AS username,
 	   	users.image AS avatar,
 	   	chat_members.created_at AS joined_at,
@@ -112,7 +115,7 @@ func (r *ChatMemberRepository) GetMembersPreview(Ctx context.Context, chatId int
 	   	END AS role
 		FROM chat_members
 		JOIN users ON chat_members.user_id = users.id
-		WHERE chat_members.chat_id = ?`, buildRoleCase)
+		WHERE chat_members.chat_id = ?`, buildRoleCase) //TODO: переделать на orm syntax
 
 	args := []interface{}{chatId} // Add chatId to the arguments
 
@@ -132,11 +135,24 @@ func (r *ChatMemberRepository) GetMembersPreview(Ctx context.Context, chatId int
 		return nil, parsePgError(res.Error)
 	}
 
+	ids := make([]string, len(members))
+
+	for i, member := range members {
+		ids[i] = settings.AppVar.Config.RedisConfig.Prefixes.InOnline + strconv.Itoa(int(member.Id))
+	}
+
+	redisRepository := NewBaseRedisRepository(settings.AppVar)
+	usersOnline, err := redisRepository.ManyToGet(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
 	result := make([]dto.MemberPreview, len(members))
 	for i, member := range members {
 		result[i] = dto.MemberPreview{
 			Username: member.Username,
 			Avatar:   member.Avatar,
+			IsOnline: usersOnline[i] != nil,
 			JoinedAt: member.JoinedAt,
 			Role:     member.Role,
 		}

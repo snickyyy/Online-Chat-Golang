@@ -270,7 +270,7 @@ func (s *UserService) SetOnline(ctx context.Context, user dto.UserDTO) error {
 	return err
 }
 
-func (s *UserService) InOnline(ctx context.Context, userId int64) bool {
+func (s *UserService) IsOnline(ctx context.Context, userId int64) bool {
 	if userId < 1 {
 		return false
 	}

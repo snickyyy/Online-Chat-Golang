@@ -118,6 +118,8 @@ definitions:
     properties:
       avatar:
         type: string
+      is_online:
+        type: boolean
       joined_at:
         type: string
       role:
@@ -178,6 +180,8 @@ definitions:
         type: string
       image:
         type: string
+      is_online:
+        type: boolean
       role:
         type: string
       username:

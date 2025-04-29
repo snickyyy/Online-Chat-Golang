@@ -21,6 +21,7 @@ type UserProfile struct {
 	Description string    `json:"description"`
 	Role        string    `json:"role"`
 	Image       string    `json:"image"`
+	IsOnline    bool      `json:"is_online"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 
