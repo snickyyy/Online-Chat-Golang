@@ -14,6 +14,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type IBaseMongoRepository[T models.Message] interface {
+	Create(Ctx context.Context, obj T) (*mongo.InsertOneResult, error)
+	GetOne(Ctx context.Context, filters interface{}) (T, error)
+	GetAll(Ctx context.Context, filter interface{}, offset int64, limit int64, sortOption ...bson.D) ([]T, error)
+	UpdateById(Ctx context.Context, id string, updateFields bson.M) (*mongo.UpdateResult, error)
+	DeleteById(Ctx context.Context, id string) (*mongo.DeleteResult, error)
+	Count(Ctx context.Context, filters interface{}) (int64, error)
+}
+
 type BaseMongoRepository[T models.Message] struct {
 	Db             *mongo.Database
 	Schema         T
