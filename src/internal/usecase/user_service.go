@@ -15,6 +15,7 @@ import (
 	"libs/src/settings"
 	"mime/multipart"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -87,6 +88,7 @@ func (s *UserService) GetUserProfile(ctx context.Context, username string) (*dto
 		Username:    oneUser.Username,
 		Description: oneUser.Description,
 		Role:        enums.RolesToLabels[int(oneUser.Role)],
+		IsOnline:    s.IsOnline(ctx, oneUser.ID),
 		Image:       oneUser.Image,
 		CreatedAt:   oneUser.CreatedAt,
 	}
@@ -251,4 +253,27 @@ func (s *UserService) ChangePassword(ctx context.Context, caller dto.UserDTO, re
 		}
 	}
 	return nil
+}
+
+func (s *UserService) SetOnline(ctx context.Context, user dto.UserDTO) error {
+	if user.Role == enums.ANONYMOUS || !user.IsActive {
+		return usecase_errors.UnauthorizedError{Msg: "You must be logged"}
+	}
+
+	session := dto.SessionDTO{
+		SessionID: strconv.Itoa(int(user.ID)),
+		Expire:    time.Now().Add(time.Duration(s.App.Config.AuthConfig.IsOnlineTTL) * time.Second),
+		Prefix:    s.App.Config.RedisConfig.Prefixes.InOnline,
+		Payload:   "",
+	}
+
+	_, err := s.SessionService.SetSession(ctx, session)
+	return err
+}
+
+func (s *UserService) IsOnline(ctx context.Context, userId int64) bool {
+	if userId < 1 {
+		return false
+	}
+	return s.SessionService.IsExist(ctx, s.App.Config.RedisConfig.Prefixes.InOnline, strconv.Itoa(int(userId)))
 }

@@ -314,6 +314,65 @@ func (_c *IBaseRedisRepository_IsExist_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
+// ManyToGet provides a mock function with given fields: Ctx, keys
+func (_m *IBaseRedisRepository) ManyToGet(Ctx context.Context, keys []string) ([]interface{}, error) {
+	ret := _m.Called(Ctx, keys)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ManyToGet")
+	}
+
+	var r0 []interface{}
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []string) ([]interface{}, error)); ok {
+		return rf(Ctx, keys)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []string) []interface{}); ok {
+		r0 = rf(Ctx, keys)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]interface{})
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []string) error); ok {
+		r1 = rf(Ctx, keys)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IBaseRedisRepository_ManyToGet_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ManyToGet'
+type IBaseRedisRepository_ManyToGet_Call struct {
+	*mock.Call
+}
+
+// ManyToGet is a helper method to define mock.On call
+//   - Ctx context.Context
+//   - keys []string
+func (_e *IBaseRedisRepository_Expecter) ManyToGet(Ctx interface{}, keys interface{}) *IBaseRedisRepository_ManyToGet_Call {
+	return &IBaseRedisRepository_ManyToGet_Call{Call: _e.mock.On("ManyToGet", Ctx, keys)}
+}
+
+func (_c *IBaseRedisRepository_ManyToGet_Call) Run(run func(Ctx context.Context, keys []string)) *IBaseRedisRepository_ManyToGet_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]string))
+	})
+	return _c
+}
+
+func (_c *IBaseRedisRepository_ManyToGet_Call) Return(_a0 []interface{}, _a1 error) *IBaseRedisRepository_ManyToGet_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *IBaseRedisRepository_ManyToGet_Call) RunAndReturn(run func(context.Context, []string) ([]interface{}, error)) *IBaseRedisRepository_ManyToGet_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetDTO provides a mock function with given fields: Ctx, prefix, obj
 func (_m *IBaseRedisRepository) SetDTO(Ctx context.Context, prefix string, obj dto.SessionDTO) (string, error) {
 	ret := _m.Called(Ctx, prefix, obj)

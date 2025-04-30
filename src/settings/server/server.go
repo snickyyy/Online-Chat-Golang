@@ -57,7 +57,11 @@ func RunServer() {
 
 	router.GET("/docs/*any", swagger.WrapHandler(files.Handler))
 
-	router.GET("/", handler_api.Index)
+	base := router.Group("")
+	{
+		base.GET("/", handler_api.Index)
+		base.GET("/ping", handler_api.Ping)
+	}
 
 	accounts := router.Group("/accounts")
 	{

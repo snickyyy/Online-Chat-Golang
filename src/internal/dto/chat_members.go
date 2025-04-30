@@ -22,10 +22,11 @@ type MemberInfo struct {
 	UpdateAt   time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
 
-type MemberPreview struct { //TODO: добавить isOnline и сделать систему IsOnline
+type MemberPreview struct {
 	Username string    `json:"username"`
 	Avatar   string    `json:"avatar"`
 	Role     string    `json:"role"`
+	IsOnline bool      `json:"is_online"`
 	JoinedAt time.Time `json:"joined_at"`
 }
 

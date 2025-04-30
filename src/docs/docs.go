@@ -883,6 +883,41 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/ping": {
+            "get": {
+                "description": "setting user online",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "Ping",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1063,6 +1098,9 @@ const docTemplate = `{
                 "avatar": {
                     "type": "string"
                 },
+                "is_online": {
+                    "type": "boolean"
+                },
                 "joined_at": {
                     "type": "string"
                 },
@@ -1153,6 +1191,9 @@ const docTemplate = `{
                 },
                 "image": {
                     "type": "string"
+                },
+                "is_online": {
+                    "type": "boolean"
                 },
                 "role": {
                     "type": "string"

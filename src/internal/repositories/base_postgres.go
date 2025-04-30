@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	models "libs/src/internal/domain/models"
 	"libs/src/settings"
 	"maps"
@@ -158,4 +159,12 @@ func (repo *BasePostgresRepository[T]) ExecuteQuery(Ctx context.Context, query s
 		return parsePgError(stmt.Error)
 	}
 	return nil
+}
+
+func (repo *BasePostgresRepository[T]) buildCaseByRole(roleMap map[int]string) string {
+	buildRoleCase := ""
+	for k, v := range roleMap {
+		buildRoleCase += fmt.Sprintf("WHEN member_role = %d THEN '%s'\n", k, v)
+	}
+	return buildRoleCase
 }
