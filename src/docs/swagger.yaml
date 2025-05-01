@@ -172,6 +172,11 @@ definitions:
       message:
         type: string
     type: object
+  dto.SendMessageRequest:
+    properties:
+      message:
+        type: string
+    type: object
   dto.UserProfile:
     properties:
       created_at:
@@ -506,6 +511,41 @@ paths:
       summary: Get chat info
       tags:
       - Chat
+  /messenger/chat/{ChatId}/message/send:
+    post:
+      consumes:
+      - application/json
+      description: Send a message to a chat
+      parameters:
+      - description: Chat ID
+        in: path
+        name: ChatId
+        required: true
+        type: integer
+      - description: Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Send message
+      tags:
+      - Messages
   /messenger/chat/{chat_id}/members/{member_username}/change-role:
     patch:
       consumes:
