@@ -42,6 +42,23 @@ func (r *BasePostgresRepository[T]) Create(Ctx context.Context, obj *T) error {
 	return nil
 }
 
+func (repo *BasePostgresRepository[T]) ManyToCreate(Ctx context.Context, objects []T) error {
+	if len(objects) < 1 {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
+	defer cancel()
+
+	result := repo.Db.WithContext(ctx).CreateInBatches(objects, 500)
+
+	if result.Error != nil {
+		return parsePgError(result.Error)
+	}
+
+	return nil
+}
+
 func (r *BasePostgresRepository[T]) GetById(Ctx context.Context, id int64) (T, error) {
 	var obj T
 
