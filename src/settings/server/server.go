@@ -102,6 +102,7 @@ func RunServer() {
 	admin := router.Group("/admin")
 	{
 		admin.POST("/generate/user", admin_api.GenerateUsers)
+		admin.POST("/generate/chat", admin_api.GenerateChats)
 	}
 
 	server := newServer(router)
