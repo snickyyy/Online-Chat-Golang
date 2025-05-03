@@ -1,6 +1,11 @@
 package utils
 
-import "github.com/brianvoe/gofakeit/v7"
+import (
+	"github.com/brianvoe/gofakeit/v7"
+	"math/rand"
+	"runtime"
+	"sync"
+)
 
 type FakeUser struct {
 	Username    string
@@ -13,13 +18,35 @@ type FakeUser struct {
 }
 
 func NewFakeUser() *FakeUser {
+	fake := gofakeit.New(uint64(rand.Int63()))
 	return &FakeUser{
-		Username:    gofakeit.Username(),
-		Email:       gofakeit.Email(),
-		Password:    gofakeit.Password(true, true, true, false, false, 10),
-		Description: gofakeit.Sentence(10),
-		IsActive:    gofakeit.Bool(),
-		Role:        byte(gofakeit.Number(0, 2)),
-		Image:       gofakeit.Sentence(50),
+		Username:    fake.Username(),
+		Email:       fake.Email(),
+		Password:    fake.Password(true, true, true, false, false, 10),
+		Description: fake.Sentence(10),
+		IsActive:    fake.Bool(),
+		Role:        byte(fake.Number(0, 2)),
+		Image:       fake.Sentence(50),
 	}
+}
+
+func GenerateInParallel[T any](totalCount int, action func(count int) []T) []T {
+	result := []T{}
+	countPerWorker := int(totalCount / runtime.NumCPU())
+
+	var mutex sync.Mutex
+	var wg sync.WaitGroup
+
+	for i := 0; i < runtime.NumCPU(); i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			data := action(countPerWorker)
+			mutex.Lock()
+			result = append(result, data...)
+			mutex.Unlock()
+		}()
+	}
+	wg.Wait()
+	return result
 }

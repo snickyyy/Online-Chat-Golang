@@ -10,6 +10,7 @@ import (
 	"libs/src/pkg/utils"
 	"libs/src/settings"
 	"strconv"
+	"time"
 )
 
 type DataGenerator struct {
@@ -30,21 +31,29 @@ func (dg *DataGenerator) GenerateUsers(caller dto.UserDTO, count int) error {
 	}
 
 	go func() {
-		users := make([]domain.User, count)
-		for i := 0; i < count; i++ {
-			user := utils.NewFakeUser()
-			users[i] = domain.User{
-				Username:    user.Username + strconv.Itoa(i),
-				Email:       user.Email + strconv.Itoa(i),
-				Password:    user.Password,
-				Description: user.Description,
-				IsActive:    user.IsActive,
-				Role:        user.Role,
-				Image:       user.Image,
+		start := time.Now()
+		funcForGenerateAndParseUser := func(count int) []domain.User {
+			users := make([]domain.User, count)
+			for i := 0; i < count; i++ {
+				user := utils.NewFakeUser()
+				users[i] = domain.User{
+					Username:    user.Username + strconv.Itoa(i),
+					Email:       user.Email + strconv.Itoa(i),
+					Password:    user.Password,
+					Description: user.Description,
+					IsActive:    user.IsActive,
+					Role:        user.Role,
+					Image:       user.Image,
+				}
 			}
+			return users
 		}
+		users := utils.GenerateInParallel[domain.User](count, funcForGenerateAndParseUser)
+		fmt.Printf("Generated %d users in %dms", count, int(time.Since(start).Milliseconds()))
 
+		start = time.Now()
 		err := dg.UserRepository.ManyToCreate(dg.App.Ctx, users)
+		fmt.Printf("Saved %d users in %dms", count, int(time.Since(start).Milliseconds()))
 		if err != nil {
 			dg.App.Logger.Error(fmt.Sprintf("Error generating users: %v", err))
 		}
