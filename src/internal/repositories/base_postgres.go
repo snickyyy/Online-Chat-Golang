@@ -21,6 +21,7 @@ type IBasePostgresRepository[T models.User | models.Chat | models.ChatMember] in
 	UpdateById(Ctx context.Context, id int64, updateFields map[string]interface{}) error
 	Count(Ctx context.Context, filter string, args ...interface{}) (int64, error)
 	ExecuteQuery(Ctx context.Context, query string, args ...interface{}) error
+	ManyToCreate(Ctx context.Context, objects []T) error
 }
 
 type BasePostgresRepository[T models.User | models.Chat | models.ChatMember] struct {
@@ -47,7 +48,7 @@ func (repo *BasePostgresRepository[T]) ManyToCreate(Ctx context.Context, objects
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Postgres.Large*4)*time.Millisecond)
 	defer cancel()
 
 	result := repo.Db.WithContext(ctx).CreateInBatches(objects, 500)
