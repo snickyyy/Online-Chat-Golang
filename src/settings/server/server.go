@@ -3,6 +3,7 @@ package server
 import (
 	_ "libs/src/docs"
 	handler_api "libs/src/internal/handlers/api"
+	admin_api "libs/src/internal/handlers/api/admin"
 	handler_middlewares "libs/src/internal/handlers/middlewares"
 	"libs/src/pkg/validators"
 
@@ -96,6 +97,11 @@ func RunServer() {
 			chat.PATCH("/:chat_id/members/:member_username/change-role", handler_api.ChangeMemberRole)
 			chat.DELETE("/:chat_id/members/:member_username/delete", handler_api.DeleteMember)
 		}
+	}
+
+	admin := router.Group("/admin")
+	{
+		admin.POST("/generate/user", admin_api.GenerateUsers)
 	}
 
 	server := newServer(router)

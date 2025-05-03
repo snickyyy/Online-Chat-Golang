@@ -477,6 +477,34 @@ paths:
       summary: confirm reset password
       tags:
       - profile
+  /admin/generate/user:
+    post:
+      consumes:
+      - application/json
+      description: generate users
+      parameters:
+      - description: count of users to generate
+        in: query
+        name: count
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Generate users
+      tags:
+      - Admin
   /messenger/chat/{ChatId}:
     get:
       consumes:
