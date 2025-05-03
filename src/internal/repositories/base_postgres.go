@@ -83,7 +83,7 @@ func (repo *BasePostgresRepository[T]) GetAll(Ctx context.Context) ([]T, error) 
 
 	stmt := repo.Db.
 		WithContext(ctx).
-		Find(&result)
+		Find(&result).Limit(501)
 	if stmt.Error != nil {
 		return result, parsePgError(stmt.Error)
 	}

@@ -17,6 +17,12 @@ type FakeUser struct {
 	Image       string
 }
 
+type FakeChat struct {
+	Title       string
+	Description string
+	OwnerID     int64
+}
+
 func NewFakeUser() *FakeUser {
 	fake := gofakeit.New(uint64(rand.Int63()))
 	return &FakeUser{
@@ -27,6 +33,14 @@ func NewFakeUser() *FakeUser {
 		IsActive:    fake.Bool(),
 		Role:        byte(fake.Number(0, 2)),
 		Image:       fake.Sentence(50),
+	}
+}
+
+func NewFakeChat(ownerId int64) *FakeChat {
+	return &FakeChat{
+		Title:       gofakeit.Username(),
+		Description: gofakeit.Sentence(8),
+		OwnerID:     ownerId,
 	}
 }
 
