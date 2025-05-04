@@ -103,6 +103,7 @@ func RunServer() {
 	{
 		admin.POST("/generate/user", admin_api.GenerateUsers)
 		admin.POST("/generate/chat", admin_api.GenerateChats)
+		admin.POST("/generate/members", admin_api.GenerateChatMembers)
 	}
 
 	server := newServer(router)
