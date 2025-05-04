@@ -15,16 +15,18 @@ import (
 )
 
 type DataGenerator struct {
-	App            *settings.App
-	UserRepository repositories.IUserRepository
-	ChatRepository repositories.IChatRepository
+	App                  *settings.App
+	UserRepository       repositories.IUserRepository
+	ChatRepository       repositories.IChatRepository
+	ChatMemberRepository repositories.IChatMemberRepository
 }
 
 func NewDataGenerator(app *settings.App) *DataGenerator {
 	return &DataGenerator{
-		App:            app,
-		UserRepository: repositories.NewUserRepository(app),
-		ChatRepository: repositories.NewChatRepository(app),
+		App:                  app,
+		UserRepository:       repositories.NewUserRepository(app),
+		ChatRepository:       repositories.NewChatRepository(app),
+		ChatMemberRepository: repositories.NewChatMemberRepository(app),
 	}
 }
 
@@ -101,6 +103,55 @@ func (dg *DataGenerator) GenerateChats(caller dto.UserDTO, count int) error {
 		fmt.Printf("Saved %d chats in %dms", count, int(time.Since(start).Milliseconds()))
 		if err != nil {
 			dg.App.Logger.Error(fmt.Sprintf("Error generating chats: %v", err))
+		}
+	}()
+
+	return nil
+}
+
+func (dg *DataGenerator) GenerateChatMembers(caller dto.UserDTO, count int) error {
+	if caller.Role < enums.ADMIN || !caller.IsActive {
+		return usecase_errors.PermissionError{Msg: "You are not allowed to perform this action"}
+	}
+
+	chats, err := dg.ChatRepository.GetAll(dg.App.Ctx)
+	if err != nil {
+		return err
+	}
+	if len(chats) < 1 {
+		return usecase_errors.NotFoundError{Msg: "No chats found"}
+	}
+
+	users, err := dg.UserRepository.GetAll(dg.App.Ctx)
+	if err != nil {
+		return err
+	}
+	if len(users) < 1 {
+		return usecase_errors.NotFoundError{Msg: "No users found"}
+	}
+
+	go func() {
+		start := time.Now()
+		members := make([]domain.ChatMember, count)
+
+		for i := 0; i < count; i++ {
+			chatId := chats[rand.IntN(len(chats))].ID
+			userId := users[rand.IntN(len(users))].ID
+			memberRole := rand.IntN(3)
+			members[i] = domain.ChatMember{
+				ChatID:     chatId,
+				UserID:     userId,
+				MemberRole: byte(memberRole),
+			}
+		}
+
+		fmt.Printf("Generated %d chat members in %dms", count, int(time.Since(start).Milliseconds()))
+
+		start = time.Now()
+		err := dg.ChatMemberRepository.ManyToCreate(dg.App.Ctx, members)
+		fmt.Printf("Saved %d chat members in %dms", count, int(time.Since(start).Milliseconds()))
+		if err != nil {
+			dg.App.Logger.Error(fmt.Sprintf("Error generating chat members: %v", err))
 		}
 	}()
 
