@@ -8,6 +8,11 @@ import (
 	"libs/src/settings"
 )
 
+type IMessageRepository interface {
+	IBaseMongoRepository[domain.Message]
+	CreateIndex() error
+}
+
 type MessageRepository struct {
 	BaseMongoRepository[domain.Message]
 }

@@ -14,18 +14,30 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type IBaseMongoRepository[T models.Message] interface {
+	Create(Ctx context.Context, obj *T) error
+	GetOne(Ctx context.Context, filters interface{}) (T, error)
+	GetAll(Ctx context.Context, filter interface{}, offset int64, limit int64, sortOption ...bson.D) ([]T, error)
+	UpdateById(Ctx context.Context, id string, updateFields bson.M) (*mongo.UpdateResult, error)
+	DeleteById(Ctx context.Context, id string) (*mongo.DeleteResult, error)
+	Count(Ctx context.Context, filters interface{}) (int64, error)
+}
+
 type BaseMongoRepository[T models.Message] struct {
 	Db             *mongo.Database
 	Schema         T
 	CollectionName string
 }
 
-func (repo *BaseMongoRepository[T]) Create(Ctx context.Context, obj T) (*mongo.InsertOneResult, error) {
+func (repo *BaseMongoRepository[T]) Create(Ctx context.Context, obj *T) error {
 	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Large)*time.Millisecond)
 	defer cancel()
 
 	con := repo.Db.Collection(repo.CollectionName)
-	return con.InsertOne(ctx, obj)
+
+	_, err := con.InsertOne(ctx, obj)
+
+	return err
 }
 
 func (repo *BaseMongoRepository[T]) GetOne(Ctx context.Context, filters interface{}) (T, error) {
