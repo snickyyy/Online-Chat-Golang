@@ -11,6 +11,7 @@ import (
 	"libs/src/settings"
 	"math/rand/v2"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -19,6 +20,7 @@ type DataGenerator struct {
 	UserRepository       repositories.IUserRepository
 	ChatRepository       repositories.IChatRepository
 	ChatMemberRepository repositories.IChatMemberRepository
+	MessageRepository    repositories.IMessageRepository
 }
 
 func NewDataGenerator(app *settings.App) *DataGenerator {
@@ -27,6 +29,7 @@ func NewDataGenerator(app *settings.App) *DataGenerator {
 		UserRepository:       repositories.NewUserRepository(app),
 		ChatRepository:       repositories.NewChatRepository(app),
 		ChatMemberRepository: repositories.NewChatMemberRepository(app),
+		MessageRepository:    repositories.NewMessageRepository(app),
 	}
 }
 
@@ -152,6 +155,82 @@ func (dg *DataGenerator) GenerateChatMembers(caller dto.UserDTO, count int) erro
 		fmt.Printf("Saved %d chat members in %dms", count, int(time.Since(start).Milliseconds()))
 		if err != nil {
 			dg.App.Logger.Error(fmt.Sprintf("Error generating chat members: %v", err))
+		}
+	}()
+
+	return nil
+}
+
+func (dg *DataGenerator) GenerateMessages(caller dto.UserDTO, count int) error {
+	if caller.Role < enums.ADMIN || !caller.IsActive {
+		return usecase_errors.PermissionError{Msg: "You are not allowed to perform this action"}
+	}
+
+	wg := &sync.WaitGroup{}
+
+	var chats []domain.Chat
+	var errFromChat error
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		chats, errFromChat = dg.ChatRepository.GetAll(dg.App.Ctx)
+	}()
+
+	var users []domain.User
+	var errFromUser error
+
+	go func() {
+		defer wg.Done()
+		users, errFromUser = dg.UserRepository.GetAll(dg.App.Ctx)
+	}()
+
+	wg.Wait()
+
+	if errFromUser != nil {
+		return errFromUser
+	}
+	if len(users) < 1 {
+		return usecase_errors.NotFoundError{Msg: "No users found"}
+	}
+
+	if errFromChat != nil {
+		return errFromChat
+	}
+	if len(chats) < 1 {
+		return usecase_errors.NotFoundError{Msg: "No chats found"}
+	}
+
+	go func() {
+		action := func(count int) []domain.Message {
+			messages := make([]domain.Message, count)
+			for i := 0; i < count; i++ {
+				chatId := chats[rand.IntN(len(chats))].ID
+				senderId := users[rand.IntN(len(users))].ID
+				message := utils.NewFakeMessage(chatId, senderId)
+				messages[i] = domain.Message{
+					BaseMongo: domain.BaseMongo{
+						Id:        message.ID,
+						CreatedAt: message.CreatedAt,
+						UpdatedAt: message.UpdatedAt,
+					},
+					SenderId:  senderId,
+					ChatId:    chatId,
+					Content:   message.Content,
+					IsRead:    message.IsRead,
+					IsUpdated: message.IsUpdated,
+					IsDeleted: message.IsDeleted,
+				}
+			}
+			return messages
+		}
+		start := time.Now()
+		messages := utils.GenerateInParallel[domain.Message](count, action)
+		fmt.Printf("Generated %d messages in %dms", count, int(time.Since(start).Milliseconds()))
+		start = time.Now()
+		err := dg.MessageRepository.CreateMany(dg.App.Ctx, messages)
+		fmt.Printf("Saved %d messages in %dms", count, int(time.Since(start).Milliseconds()))
+		if err != nil {
+			dg.App.Logger.Error(fmt.Sprintf("Error generating messages: %v", err))
 		}
 	}()
 

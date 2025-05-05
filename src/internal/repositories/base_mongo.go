@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"fmt"
 	models "libs/src/internal/domain/models"
 
 	"context"
@@ -16,6 +17,7 @@ import (
 
 type IBaseMongoRepository[T models.Message] interface {
 	Create(Ctx context.Context, obj *T) error
+	CreateMany(Ctx context.Context, obj []T) error
 	GetOne(Ctx context.Context, filters interface{}) (T, error)
 	GetAll(Ctx context.Context, filter interface{}, offset int64, limit int64, sortOption ...bson.D) ([]T, error)
 	UpdateById(Ctx context.Context, id string, updateFields bson.M) (*mongo.UpdateResult, error)
@@ -36,6 +38,25 @@ func (repo *BaseMongoRepository[T]) Create(Ctx context.Context, obj *T) error {
 	con := repo.Db.Collection(repo.CollectionName)
 
 	_, err := con.InsertOne(ctx, obj)
+
+	return err
+}
+
+func (repo *BaseMongoRepository[T]) CreateMany(Ctx context.Context, obj []T) error {
+	ctx, cancel := context.WithTimeout(Ctx, time.Duration(settings.AppVar.Config.Timeout.Mongo.Large*4)*time.Millisecond)
+	defer cancel()
+
+	con := repo.Db.Collection(repo.CollectionName)
+
+	parse := make([]interface{}, len(obj))
+	for i := 0; i < len(obj); i++ {
+		parse[i] = obj[i]
+	}
+
+	r, err := con.InsertMany(ctx, parse)
+	if r != nil {
+		fmt.Println(r.InsertedIDs)
+	}
 
 	return err
 }
