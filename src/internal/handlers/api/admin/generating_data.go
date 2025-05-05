@@ -91,3 +91,31 @@ func GenerateChatMembers(c *gin.Context) {
 	}
 	c.JSON(200, dto.MessageResponse{Message: "success"})
 }
+
+// @Summary Generate messages
+// @Description generate messages
+// @Tags Admin
+// @Accept json
+// @Produce json
+// @Param count query int false "count of messages to generate"
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /admin/generate/message [post]
+func GenerateMessages(c *gin.Context) {
+	app := c.MustGet("app").(*settings.App)
+	user := c.MustGet("user").(dto.UserDTO)
+
+	count, _ := strconv.Atoi(c.Query("count"))
+	if count == 0 {
+		count = 50
+	}
+
+	generator := services.NewDataGenerator(app)
+	err := generator.GenerateMessages(user, count)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(200, dto.MessageResponse{Message: "success"})
+}
