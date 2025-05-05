@@ -3,6 +3,7 @@ package server
 import (
 	_ "libs/src/docs"
 	handler_api "libs/src/internal/handlers/api"
+	admin_api "libs/src/internal/handlers/api/admin"
 	handler_middlewares "libs/src/internal/handlers/middlewares"
 	"libs/src/pkg/validators"
 
@@ -95,7 +96,17 @@ func RunServer() {
 			chat.GET("/:chat_id/members/all", handler_api.GetMemberList)
 			chat.PATCH("/:chat_id/members/:member_username/change-role", handler_api.ChangeMemberRole)
 			chat.DELETE("/:chat_id/members/:member_username/delete", handler_api.DeleteMember)
+
+			chat.POST("/:chat_id/message/send", handler_api.SendMessage)
 		}
+	}
+
+	admin := router.Group("/admin")
+	{
+		admin.POST("/generate/user", admin_api.GenerateUsers)
+		admin.POST("/generate/chat", admin_api.GenerateChats)
+		admin.POST("/generate/members", admin_api.GenerateChatMembers)
+		admin.POST("/generate/message", admin_api.GenerateMessages)
 	}
 
 	server := newServer(router)

@@ -596,6 +596,53 @@ func (_c *IChatMemberRepository_GetMembersPreview_Call) RunAndReturn(run func(co
 	return _c
 }
 
+// ManyToCreate provides a mock function with given fields: Ctx, objects
+func (_m *IChatMemberRepository) ManyToCreate(Ctx context.Context, objects []domain.ChatMember) error {
+	ret := _m.Called(Ctx, objects)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ManyToCreate")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []domain.ChatMember) error); ok {
+		r0 = rf(Ctx, objects)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// IChatMemberRepository_ManyToCreate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ManyToCreate'
+type IChatMemberRepository_ManyToCreate_Call struct {
+	*mock.Call
+}
+
+// ManyToCreate is a helper method to define mock.On call
+//   - Ctx context.Context
+//   - objects []domain.ChatMember
+func (_e *IChatMemberRepository_Expecter) ManyToCreate(Ctx interface{}, objects interface{}) *IChatMemberRepository_ManyToCreate_Call {
+	return &IChatMemberRepository_ManyToCreate_Call{Call: _e.mock.On("ManyToCreate", Ctx, objects)}
+}
+
+func (_c *IChatMemberRepository_ManyToCreate_Call) Run(run func(Ctx context.Context, objects []domain.ChatMember)) *IChatMemberRepository_ManyToCreate_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]domain.ChatMember))
+	})
+	return _c
+}
+
+func (_c *IChatMemberRepository_ManyToCreate_Call) Return(_a0 error) *IChatMemberRepository_ManyToCreate_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *IChatMemberRepository_ManyToCreate_Call) RunAndReturn(run func(context.Context, []domain.ChatMember) error) *IChatMemberRepository_ManyToCreate_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetNewRole provides a mock function with given fields: Ctx, chatId, userId, role
 func (_m *IChatMemberRepository) SetNewRole(Ctx context.Context, chatId int64, userId int64, role byte) error {
 	ret := _m.Called(Ctx, chatId, userId, role)
