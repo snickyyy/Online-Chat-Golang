@@ -125,7 +125,7 @@ func (dg *DataGenerator) GenerateChatMembers(caller dto.UserDTO, count int) erro
 		return usecase_errors.NotFoundError{Msg: "No chats found"}
 	}
 
-	users, err := dg.UserRepository.GetAll(dg.App.Ctx)
+	users, err := dg.UserRepository.GetAll(dg.App.Ctx) //todo сделать параллельно
 	if err != nil {
 		return err
 	}
