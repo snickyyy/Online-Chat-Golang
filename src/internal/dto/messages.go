@@ -24,6 +24,8 @@ type MessagePreviewDTO struct {
 	CreatedAt      time.Time `json:"created_at"`
 }
 
-type SendMessageRequest struct {
+type ChatCommunication struct {
+	Action  string `json:"action"`
+	ChatId  int64  `json:"chat_id"`
 	Message string `json:"message"`
 }

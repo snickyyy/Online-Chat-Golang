@@ -26,7 +26,7 @@ func NewMessageService(app *settings.App) *MessageService {
 	}
 }
 
-func (s *MessageService) SendMessage(ctx context.Context, sender dto.UserDTO, messageRequest dto.SendMessageRequest, chatId int64) (*dto.MessagePreviewDTO, error) {
+func (s *MessageService) NewMessage(ctx context.Context, sender *dto.UserDTO, messageR string, chatId int64) (*dto.MessagePreviewDTO, error) {
 	if sender.Role == enums.ANONYMOUS || !sender.IsActive {
 		return &dto.MessagePreviewDTO{}, usecase_errors.UnauthorizedError{Msg: "You must be logged in to send a message"}
 	}
@@ -43,7 +43,7 @@ func (s *MessageService) SendMessage(ctx context.Context, sender dto.UserDTO, me
 		return &dto.MessagePreviewDTO{}, usecase_errors.BadRequestError{Msg: "You cannot send a message to this chat"}
 	}
 
-	message := domain.NewMessageObject(sender.ID, chatId, messageRequest.Message)
+	message := domain.NewMessageObject(sender.ID, chatId, messageR)
 	err = s.MessageRepository.Create(ctx, message)
 	if err != nil {
 		return &dto.MessagePreviewDTO{}, err
