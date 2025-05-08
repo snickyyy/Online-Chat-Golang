@@ -9,6 +9,7 @@ import (
 
 func RunProcessHub(hub *infrastructure.WebSocketHub) {
 	msgService := services.NewMessageService(hub.App)
+	chatMembersService := services.NewChatMemberService(hub.App)
 
 	for {
 		select {
@@ -24,9 +25,11 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 			hub.Mx.Unlock()
 
 		case subscribe := <-hub.Subscribe:
-			subscribe.Client.Mx.Lock()
-			subscribe.Client.Subscriptions[subscribe.ChatId] = true
-			subscribe.Client.Mx.Unlock()
+			if chatMembersService.IsInChat(hub.App.Ctx, subscribe.Client.UserDto.ID, subscribe.ChatId) {
+				subscribe.Client.Mx.Lock()
+				subscribe.Client.Subscriptions[subscribe.ChatId] = true
+				subscribe.Client.Mx.Unlock()
+			}
 
 		case unsubscribe := <-hub.Unsubscribe:
 			unsubscribe.Client.Mx.Lock()
@@ -45,7 +48,7 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 
 				for k, _ := range hub.Clients {
 					if k.Subscriptions[msg.ToChat] {
-						k.Send(messagePreviewToJson)
+						k.Messagebox <- messagePreviewToJson
 					}
 				}
 			}

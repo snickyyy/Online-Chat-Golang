@@ -18,9 +18,11 @@ type WebSocketClient struct {
 
 func NewWebSocketClient(conn *websocket.Conn, user *dto.UserDTO) *WebSocketClient {
 	return &WebSocketClient{
-		UserDto:    user,
-		Conn:       conn,
-		Messagebox: make(chan []byte),
+		Mx:            &sync.RWMutex{},
+		UserDto:       user,
+		Conn:          conn,
+		Messagebox:    make(chan []byte),
+		Subscriptions: make(map[int64]bool),
 	}
 }
 
