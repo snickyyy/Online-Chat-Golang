@@ -42,6 +42,7 @@ func GetDI() *fx.App {
 				return db, nil
 			},
 			NewRedisClient,
+			NewUpgrader,
 			NewMail,
 			NewApp,
 		),
