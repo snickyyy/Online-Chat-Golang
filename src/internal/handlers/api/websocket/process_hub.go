@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"go.uber.org/zap"
+	"libs/src/internal/dto"
 	"libs/src/internal/infrastructure"
 	services "libs/src/internal/usecase"
 )
@@ -13,7 +14,6 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 
 	for {
 		select {
-
 		case client := <-hub.Add:
 			hub.Mx.Lock()
 			hub.Clients[client] = true
@@ -36,20 +36,25 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 			delete(unsubscribe.Client.Subscriptions, unsubscribe.ChatId)
 			unsubscribe.Client.Mx.Unlock()
 
-		case messages := <-hub.Messagebox:
-			for _, msg := range messages {
-				messagePreview, err := msgService.NewMessage(hub.App.Ctx, msg.From.UserDto, string(msg.Data), msg.ToChat)
-				if err != nil {
-					hub.App.Logger.Error("new message failed", zap.Error(err))
-					continue
-				}
+		case msg := <-hub.Messagebox:
+			messagePreview, err := msgService.NewMessage(hub.App.Ctx, msg.From.UserDto, msg.Data, msg.ToChat)
 
-				messagePreviewToJson, _ := json.Marshal(messagePreview)
+			if err != nil {
+				hub.App.Logger.Error("new message failed", zap.Error(err))
+				errorMessageBody, _ := json.Marshal(dto.ErrorMessage{Error: err.Error()})
+				preparedMsg := dto.ChatCommunication{Action: hub.App.Config.WsConfig.Actions.SendMessage, Body: errorMessageBody}
+				msg.From.Messagebox <- &preparedMsg
+				continue
+			}
 
-				for k, _ := range hub.Clients {
-					if k.Subscriptions[msg.ToChat] {
-						k.Messagebox <- messagePreviewToJson
-					}
+			for k := range hub.Clients {
+				k.Mx.RLock()
+				_, isSubscribed := k.Subscriptions[msg.ToChat]
+				k.Mx.RUnlock()
+				if isSubscribed {
+					messageBody, _ := json.Marshal(dto.SendMessage{ChatId: msg.ToChat, MessageBody: messagePreview})
+					preparedMsg := dto.ChatCommunication{Action: hub.App.Config.WsConfig.Actions.SendMessage, Body: messageBody}
+					k.Messagebox <- &preparedMsg
 				}
 			}
 		}
