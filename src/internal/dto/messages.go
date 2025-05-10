@@ -1,6 +1,8 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type BaseMessageDTO struct {
 	Id        string    `json:"id"`
@@ -22,10 +24,4 @@ type MessagePreviewDTO struct {
 	IsRead         bool      `json:"is_read"`
 	UpdatedAt      time.Time `json:"updated_at"`
 	CreatedAt      time.Time `json:"created_at"`
-}
-
-type ChatCommunication struct {
-	Action  string `json:"action"`
-	ChatId  int64  `json:"chat_id"`
-	Message string `json:"message"`
 }
