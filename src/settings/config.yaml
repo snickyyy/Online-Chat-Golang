@@ -23,6 +23,14 @@ auth:
   is_online_ttl: 90
   time_to_change_password: 86400
 
+ws:
+  actions:
+    - "subscribe"
+    - "unsubscribe"
+    - "send_message"
+    - "typing"
+    - "read"
+
 mongo:
   uri: "${MONGO_URI}"
 

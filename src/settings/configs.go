@@ -95,8 +95,21 @@ type Pagination struct {
 	SearchUsersList int `mapstructure:"search_users_list"`
 }
 
+type WsActions struct {
+	Subscribe     string `mapstructure:"subscribe"`
+	Unsubscribe   string `mapstructure:"unsubscribe"`
+	SendMessage   string `mapstructure:"send_message"`
+	EditMessage   string `mapstructure:"edit_message"`
+	DeleteMessage string `mapstructure:"delete_message"`
+}
+
+type WsConfig struct {
+	Actions WsActions `mapstructure:"actions"`
+}
+
 type BaseConfig struct {
 	AppConfig      AppConfig      `mapstructure:"app"`
+	WsConfig       WsConfig       `mapstructure:"ws"`
 	Timeout        Timeout        `mapstructure:"context_timeout_ms"`
 	Pagination     Pagination     `mapstructure:"pagination"`
 	PostgresConfig PostgresConfig `mapstructure:"db"`
