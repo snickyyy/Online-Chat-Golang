@@ -207,3 +207,8 @@ func (s *ChatMemberService) GetList(ctx context.Context, caller dto.UserDTO, cha
 
 	return dto.MemberListPreview{Members: res}, nil
 }
+
+func (s *ChatMemberService) IsInChat(ctx context.Context, userId int64, chatId int64) bool {
+	memberCount, err := s.ChatMemberRepository.Count(ctx, "chat_id = ? AND user_id = ?", chatId, userId)
+	return memberCount > 0 && err == nil
+}
