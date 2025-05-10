@@ -7,6 +7,7 @@ import (
 	"libs/src/internal/dto"
 	"libs/src/settings"
 	"sync"
+	"time"
 )
 
 func NewWebSocketClient(conn *websocket.Conn, user *dto.UserDTO) *WebSocketClient {
@@ -29,9 +30,17 @@ type WebSocketClient struct {
 
 func (c *WebSocketClient) ReadPump(hub *WebSocketHub) {
 	for {
+
+		c.Conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+		c.Conn.SetPongHandler(func(string) error {
+			c.Conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+			return nil
+		})
+
 		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
 			hub.App.Logger.Error(fmt.Sprintf("websocket read message error %v", err))
+			hub.Delete <- c
 			break
 		}
 		if len(message) == 0 {
@@ -86,12 +95,39 @@ func (c *WebSocketClient) ReadPump(hub *WebSocketHub) {
 	}
 }
 
-func (c *WebSocketClient) send(message dto.ChatCommunication) {
+func (c *WebSocketClient) WritePump() {
+	ticker := time.NewTicker(10 * time.Second)
+	defer func() {
+		ticker.Stop()
+		c.Conn.Close()
+	}()
+	for {
+		select {
+		case message, ok := <-c.Messagebox:
+			if !ok {
+				c.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			c.send(message)
+		case <-ticker.C:
+			c.Mx.Lock()
+			c.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+			err := c.Conn.WriteMessage(websocket.PingMessage, []byte{})
+			c.Mx.Unlock()
+			if err != nil {
+				return
+			}
+		}
+	}
+}
+
+func (c *WebSocketClient) send(message *dto.ChatCommunication) {
 	messageBytes, _ := json.Marshal(message)
 
 	c.Mx.Lock()
 	if err := c.Conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
 		settings.AppVar.Logger.Error(fmt.Sprintf("websocket send message error %v", err))
 	}
-	defer c.Mx.Unlock()
+	c.Mx.Unlock()
 }

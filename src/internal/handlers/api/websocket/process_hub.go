@@ -20,6 +20,10 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 			hub.Mx.Unlock()
 
 		case client := <-hub.Delete:
+			client.Mx.Lock()
+			close(client.Messagebox)
+			client.Mx.Unlock()
+			client.Conn.Close()
 			hub.Mx.Lock()
 			delete(hub.Clients, client)
 			hub.Mx.Unlock()

@@ -18,7 +18,7 @@ type SendMessageRequest struct {
 
 type SendMessage struct {
 	ChatId      int64              `json:"chat_id" binding:"required"`
-	MessageBody *MessagePreviewDTO `json:"Body"`
+	MessageBody *MessagePreviewDTO `json:"body"`
 }
 
 type Subscribe struct {
