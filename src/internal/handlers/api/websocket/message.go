@@ -9,7 +9,7 @@ import (
 
 func Chat(hub *infrastructure.WebSocketHub, c *gin.Context) {
 	app := c.MustGet("app").(*settings.App)
-	user := c.MustGet("user").(*dto.UserDTO)
+	user := c.MustGet("user").(dto.UserDTO)
 
 	conn, err := app.WsUpgrader.Upgrade(c.Writer, c.Request, nil)
 	defer conn.Close()
@@ -18,7 +18,7 @@ func Chat(hub *infrastructure.WebSocketHub, c *gin.Context) {
 		return
 	}
 
-	client := infrastructure.NewWebSocketClient(conn, user)
+	client := infrastructure.NewWebSocketClient(conn, &user)
 
 	hub.Add <- client
 	go client.WritePump()

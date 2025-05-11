@@ -4,8 +4,11 @@ import (
 	_ "libs/src/docs"
 	handler_api "libs/src/internal/handlers/api"
 	admin_api "libs/src/internal/handlers/api/admin"
+	"libs/src/internal/handlers/api/websocket"
 	handler_middlewares "libs/src/internal/handlers/middlewares"
+	"libs/src/internal/infrastructure"
 	"libs/src/pkg/validators"
+	"libs/src/settings"
 
 	files "github.com/swaggo/files"
 	swagger "github.com/swaggo/gin-swagger"
@@ -55,6 +58,8 @@ func RunServer() {
 	validators.InitValidators()
 
 	router.Use(middlewares...)
+	hub := infrastructure.NewWebSocketHub(settings.AppVar)
+	go websocket.RunProcessHub(hub)
 
 	router.GET("/docs/*any", swagger.WrapHandler(files.Handler))
 
@@ -84,6 +89,9 @@ func RunServer() {
 	}
 	messenger := router.Group("/messenger")
 	{
+		messenger.GET("/ws", func(c *gin.Context) {
+			websocket.Chat(hub, c)
+		})
 		chat := messenger.Group("/chat")
 		{
 			chat.GET("/all", handler_api.GetChatsForUser)
@@ -96,8 +104,6 @@ func RunServer() {
 			chat.GET("/:chat_id/members/all", handler_api.GetMemberList)
 			chat.PATCH("/:chat_id/members/:member_username/change-role", handler_api.ChangeMemberRole)
 			chat.DELETE("/:chat_id/members/:member_username/delete", handler_api.DeleteMember)
-
-			chat.POST("/:chat_id/message/send", handler_api.SendMessage)
 		}
 	}
 

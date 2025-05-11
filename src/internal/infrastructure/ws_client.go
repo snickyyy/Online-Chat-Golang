@@ -29,14 +29,10 @@ type WebSocketClient struct {
 }
 
 func (c *WebSocketClient) ReadPump(hub *WebSocketHub) {
+	c.Conn.SetReadLimit(300)
+	c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(60 * time.Second)); return nil })
 	for {
-
-		c.Conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-		c.Conn.SetPongHandler(func(string) error {
-			c.Conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-			return nil
-		})
-
 		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
 			hub.App.Logger.Error(fmt.Sprintf("websocket read message error %v", err))
@@ -105,14 +101,13 @@ func (c *WebSocketClient) WritePump() {
 		select {
 		case message, ok := <-c.Messagebox:
 			if !ok {
-				c.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
 				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 			c.send(message)
 		case <-ticker.C:
 			c.Mx.Lock()
-			c.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+			c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			err := c.Conn.WriteMessage(websocket.PingMessage, []byte{})
 			c.Mx.Unlock()
 			if err != nil {
@@ -126,6 +121,7 @@ func (c *WebSocketClient) send(message *dto.ChatCommunication) {
 	messageBytes, _ := json.Marshal(message)
 
 	c.Mx.Lock()
+	c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	if err := c.Conn.WriteMessage(websocket.TextMessage, messageBytes); err != nil {
 		settings.AppVar.Logger.Error(fmt.Sprintf("websocket send message error %v", err))
 	}

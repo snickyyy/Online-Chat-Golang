@@ -25,11 +25,11 @@ auth:
 
 ws:
   actions:
-    - "subscribe"
-    - "unsubscribe"
-    - "send_message"
-    - "typing"
-    - "read"
+    subscribe: "subscribe"
+    unsubscribe: "unsubscribe"
+    send_message: "send_message"
+    typing: "typing"
+    read: "read"
 
 mongo:
   uri: "${MONGO_URI}"
