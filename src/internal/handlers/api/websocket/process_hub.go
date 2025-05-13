@@ -30,15 +30,32 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 
 		case subscribe := <-hub.Subscribe:
 			if chatMembersService.IsInChat(hub.App.Ctx, subscribe.Client.UserDto.ID, subscribe.ChatId) {
+
 				subscribe.Client.Mx.Lock()
 				subscribe.Client.Subscriptions[subscribe.ChatId] = true
 				subscribe.Client.Mx.Unlock()
+
+				response, _ := json.Marshal(dto.MessageInfo{Message: "successfully subscribed"})
+				subscribe.Client.Messagebox <- &dto.ChatCommunication{
+					Action: hub.App.Config.WsConfig.Actions.Subscribe,
+					Body:   response,
+				}
+			} else {
+				errorMessageBody, _ := json.Marshal(dto.ErrorMessage{Error: "you are not in this chat"})
+				preparedMsg := dto.ChatCommunication{Action: hub.App.Config.WsConfig.Actions.Subscribe, Body: errorMessageBody}
+				subscribe.Client.Messagebox <- &preparedMsg
 			}
 
 		case unsubscribe := <-hub.Unsubscribe:
 			unsubscribe.Client.Mx.Lock()
 			delete(unsubscribe.Client.Subscriptions, unsubscribe.ChatId)
 			unsubscribe.Client.Mx.Unlock()
+
+			response, _ := json.Marshal(dto.MessageInfo{Message: "successfully unsubscribed"})
+			unsubscribe.Client.Messagebox <- &dto.ChatCommunication{
+				Action: hub.App.Config.WsConfig.Actions.Unsubscribe,
+				Body:   response,
+			}
 
 		case msg := <-hub.Messagebox:
 			messagePreview, err := msgService.NewMessage(hub.App.Ctx, msg.From.UserDto, msg.Data, msg.ToChat)

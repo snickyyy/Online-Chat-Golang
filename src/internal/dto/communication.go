@@ -4,11 +4,15 @@ import "encoding/json"
 
 type ChatCommunication struct {
 	Action string          `json:"action" binding:"required"`
-	Body   json.RawMessage `json:"Body"`
+	Body   json.RawMessage `json:"body"`
 }
 
 type ErrorMessage struct {
 	Error string `json:"error"`
+}
+
+type MessageInfo struct {
+	Message string `json:"message"`
 }
 
 type SendMessageRequest struct {
