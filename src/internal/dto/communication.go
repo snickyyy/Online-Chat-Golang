@@ -20,7 +20,7 @@ type SendMessageRequest struct {
 	Message string `json:"message" binding:"required, min=1,max=200"`
 }
 
-type SendMessage struct {
+type MessagePreview struct {
 	ChatId      int64              `json:"chat_id" binding:"required"`
 	MessageBody *MessagePreviewDTO `json:"body"`
 }

@@ -8,6 +8,19 @@ import (
 	services "libs/src/internal/usecase"
 )
 
+func sendMessageToClients(clients map[*infrastructure.WebSocketClient]bool, withChat int64, msg *dto.ChatCommunication) {
+	for client := range clients {
+		client.Mx.RLock()
+		_, isSubscribed := client.Subscriptions[withChat]
+		client.Mx.RUnlock()
+		if isSubscribed {
+			client.Mx.Lock()
+			client.Messagebox <- msg
+			client.Mx.Unlock()
+		}
+	}
+}
+
 func RunProcessHub(hub *infrastructure.WebSocketHub) {
 	msgService := services.NewMessageService(hub.App)
 	chatMembersService := services.NewChatMemberService(hub.App)
@@ -22,8 +35,8 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 		case client := <-hub.Delete:
 			client.Mx.Lock()
 			close(client.Messagebox)
-			client.Mx.Unlock()
 			client.Conn.Close()
+			client.Mx.Unlock()
 			hub.Mx.Lock()
 			delete(hub.Clients, client)
 			hub.Mx.Unlock()
@@ -68,16 +81,17 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 				continue
 			}
 
-			for k := range hub.Clients {
-				k.Mx.RLock()
-				_, isSubscribed := k.Subscriptions[msg.ToChat]
-				k.Mx.RUnlock()
-				if isSubscribed {
-					messageBody, _ := json.Marshal(dto.SendMessage{ChatId: msg.ToChat, MessageBody: messagePreview})
-					preparedMsg := dto.ChatCommunication{Action: hub.App.Config.WsConfig.Actions.SendMessage, Body: messageBody}
-					k.Messagebox <- &preparedMsg
-				}
+			messageBody, _ := json.Marshal(
+				dto.MessagePreview{
+					ChatId:      msg.ToChat,
+					MessageBody: messagePreview,
+				},
+			)
+			preparedMsg := dto.ChatCommunication{
+				Action: hub.App.Config.WsConfig.Actions.SendMessage,
+				Body:   messageBody,
 			}
+			go sendMessageToClients(hub.Clients, msg.ToChat, &preparedMsg)
 		}
 	}
 }
