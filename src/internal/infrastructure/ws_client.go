@@ -91,11 +91,11 @@ func (c *WebSocketClient) ReadPump(hub *WebSocketHub) {
 	}
 }
 
-func (c *WebSocketClient) WritePump() {
+func (c *WebSocketClient) WritePump(hub *WebSocketHub) {
 	ticker := time.NewTicker(10 * time.Second)
 	defer func() {
 		ticker.Stop()
-		c.Conn.Close()
+		hub.Delete <- c
 	}()
 	for {
 		select {

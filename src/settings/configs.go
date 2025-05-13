@@ -101,6 +101,7 @@ type WsActions struct {
 	SendMessage   string `mapstructure:"send_message"`
 	EditMessage   string `mapstructure:"edit_message"`
 	DeleteMessage string `mapstructure:"delete_message"`
+	ErrorMessage  string `mapstructure:"error"`
 }
 
 type WsConfig struct {

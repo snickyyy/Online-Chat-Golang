@@ -30,6 +30,7 @@ ws:
     send_message: "send_message"
     typing: "typing"
     read: "read"
+    error: "error"
 
 mongo:
   uri: "${MONGO_URI}"

@@ -28,7 +28,7 @@ func Chat(hub *infrastructure.WebSocketHub, c *gin.Context) {
 	client := infrastructure.NewWebSocketClient(conn, &user)
 
 	hub.Add <- client
-	go client.WritePump()
+	go client.WritePump(hub)
 
 	client.ReadPump(hub)
 

@@ -2,24 +2,13 @@ package websocket
 
 import (
 	"encoding/json"
+	"errors"
 	"go.uber.org/zap"
 	"libs/src/internal/dto"
 	"libs/src/internal/infrastructure"
 	services "libs/src/internal/usecase"
+	"libs/src/settings"
 )
-
-func sendMessageToClients(clients map[*infrastructure.WebSocketClient]bool, withChat int64, msg *dto.ChatCommunication) {
-	for client := range clients {
-		client.Mx.RLock()
-		_, isSubscribed := client.Subscriptions[withChat]
-		client.Mx.RUnlock()
-		if isSubscribed {
-			client.Mx.Lock()
-			client.Messagebox <- msg
-			client.Mx.Unlock()
-		}
-	}
-}
 
 func RunProcessHub(hub *infrastructure.WebSocketHub) {
 	msgService := services.NewMessageService(hub.App)
@@ -54,9 +43,7 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 					Body:   response,
 				}
 			} else {
-				errorMessageBody, _ := json.Marshal(dto.ErrorMessage{Error: "you are not in this chat"})
-				preparedMsg := dto.ChatCommunication{Action: hub.App.Config.WsConfig.Actions.Subscribe, Body: errorMessageBody}
-				subscribe.Client.Messagebox <- &preparedMsg
+				sendErrorMessage(subscribe.Client, errors.New("you are not a member of this chat"))
 			}
 
 		case unsubscribe := <-hub.Unsubscribe:
@@ -71,13 +58,15 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 			}
 
 		case msg := <-hub.Messagebox:
+			if !isSubscribed(msg.From, msg.ToChat) {
+				sendErrorMessage(msg.From, errors.New("you are not subscribed to this chat"))
+			}
+
 			messagePreview, err := msgService.NewMessage(hub.App.Ctx, msg.From.UserDto, msg.Data, msg.ToChat)
 
 			if err != nil {
 				hub.App.Logger.Error("new message failed", zap.Error(err))
-				errorMessageBody, _ := json.Marshal(dto.ErrorMessage{Error: err.Error()})
-				preparedMsg := dto.ChatCommunication{Action: hub.App.Config.WsConfig.Actions.SendMessage, Body: errorMessageBody}
-				msg.From.Messagebox <- &preparedMsg
+				sendErrorMessage(msg.From, err)
 				continue
 			}
 
@@ -92,6 +81,34 @@ func RunProcessHub(hub *infrastructure.WebSocketHub) {
 				Body:   messageBody,
 			}
 			go sendMessageToClients(hub.Clients, msg.ToChat, &preparedMsg)
+		}
+	}
+}
+
+func sendErrorMessage(client *infrastructure.WebSocketClient, err error) {
+	client.Mx.Lock()
+	defer client.Mx.Unlock()
+	errorMessageBody, _ := json.Marshal(dto.ErrorMessage{Error: err.Error()})
+	preparedMsg := dto.ChatCommunication{Action: settings.AppVar.Config.WsConfig.Actions.ErrorMessage, Body: errorMessageBody}
+	client.Messagebox <- &preparedMsg
+}
+
+func isSubscribed(client *infrastructure.WebSocketClient, chatId int64) bool {
+	client.Mx.RLock()
+	defer client.Mx.RUnlock()
+	_, isSubscribed := client.Subscriptions[chatId]
+	return isSubscribed
+}
+
+func sendMessageToClients(clients map[*infrastructure.WebSocketClient]bool, withChat int64, msg *dto.ChatCommunication) {
+	for client := range clients {
+		client.Mx.RLock()
+		_, isSubscribed := client.Subscriptions[withChat]
+		client.Mx.RUnlock()
+		if isSubscribed {
+			client.Mx.Lock()
+			client.Messagebox <- msg
+			client.Mx.Unlock()
 		}
 	}
 }
