@@ -7,6 +7,7 @@ import (
 	"libs/src/internal/dto"
 	"libs/src/internal/repositories"
 	usecase_errors "libs/src/internal/usecase/errors"
+	"libs/src/pkg/utils"
 	"libs/src/settings"
 )
 
@@ -42,8 +43,8 @@ func (s *MessageService) NewMessage(ctx context.Context, sender *dto.UserDTO, me
 	if members[0].MemberRole < enums.MEMBER {
 		return &dto.MessagePreviewDTO{}, usecase_errors.BadRequestError{Msg: "You cannot send a message to this chat"}
 	}
-
-	message := domain.NewMessageObject(sender.ID, chatId, messageR)
+	encryptMessage, _ := utils.Encrypt(s.App.Config.AppConfig.SecretKey, messageR)
+	message := domain.NewMessageObject(sender.ID, chatId, encryptMessage)
 	err = s.MessageRepository.Create(ctx, message)
 	if err != nil {
 		return &dto.MessagePreviewDTO{}, err
@@ -51,7 +52,7 @@ func (s *MessageService) NewMessage(ctx context.Context, sender *dto.UserDTO, me
 
 	messagePreview := &dto.MessagePreviewDTO{
 		Id:             message.Id.Hex(),
-		Content:        message.Content,
+		Content:        messageR,
 		SenderUsername: sender.Username,
 		CreatedAt:      message.CreatedAt,
 		UpdatedAt:      message.UpdatedAt,
